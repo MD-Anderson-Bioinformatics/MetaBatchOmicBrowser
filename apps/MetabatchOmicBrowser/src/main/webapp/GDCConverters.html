@@ -1,0 +1,1513 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang xml:lang>
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Standardized Data GDC Converters</title>
+  <style type="text/css">
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<header>
+<h1 class="title">Standardized Data GDC Converters</h1>
+</header>
+<p><strong>GDC Converters<br />
+Tod Casasent<br />
+2020-03-04-1432</strong></p>
+<h1 id="introduction">Introduction</h1>
+<p>This document purports to cover in somewhat technical terms the way converters take GDC Harmonized data and convert them to Standardized Data. By &quot;technical&quot;, I generally mean specifying columns being converted and the like, rather than code descriptions. The target audience for this document is consumers of Standardized Data who have an interest in how we standardized the data, in order to confirm the data contains what they think it contains.</p>
+<h2 id="data-groups">Data Groups</h2>
+<p>Different kinds of data are acquired from the GDC:</p>
+<ul>
+<li><p>Biospecimen data used to produce batch information</p></li>
+<li><p>(Public) Clinical data used to produce clinical information</p></li>
+<li><p>Workflow data data from a GDC workflow, used to produce matrix and mutation data as appropriate.</p></li>
+</ul>
+<h2 id="output-files">Output Files</h2>
+<p>The conversion process produces four kinds of files:</p>
+<ul>
+<li><p>matrix data data in a samples by features matrix format</p></li>
+<li><p>batch data data in a dataframe giving batch variables and values associated with samples</p></li>
+<li><p>clinical data data in a dataframe giving public clinical variables and values associated with patients (and samples)</p></li>
+<li><p>mutation data data in a sparse matrix-like TSV file describing the different mutation calls--basically a cleaned up version of the basic MAF.</p></li>
+</ul>
+<h2 id="data-categories">Data Categories</h2>
+<p>Standardized Data is divided into categories based on the data. Categories include ideas such as &quot;current&quot; indicating the data is from the current GDC Portal and &quot;legacy&quot; meaning it derives from the GDC Legacy Portal. Other categories are based on the nature of the data (continuous, amenable to most standardize statistical processing, and discrete, generally sparse matrices and not amenable to many statistical methods).</p>
+<h2 id="datasets">Datasets</h2>
+<p>A dataset is defined by a unique set of categories specifying the platform, project, program, and other information that specifies a unique set of samples and data.</p>
+<h2 id="overall-flow">Overall Flow</h2>
+<p>The overall flow of the conversion process is:</p>
+<ol type="1">
+<li><p>From the GDC API, collect manifest information (files, samples, and patients) associated with a dataset. (Manifests exist for Biospecimen, Clinical, and Workflow data.)</p></li>
+<li><p>Download the files associated with a manifest.</p></li>
+<li><p>Convert the Workflow data to a matrix/mutation files, and use related Biospecimen data to generate batch files and Clinical data to general clinical files.</p></li>
+</ol>
+<h1 id="organization-structure">Organization Structure</h1>
+<p>GDC data is divided in general into Programs, which contain Projects, which contain Workflows. (A workflow is a way of processing data from a platform.)</p>
+<h2 id="project-list-json">Project List JSON</h2>
+<p>The first part of each Manifest step is to get the list of Projects available. The JSON for getting projects is:</p>
+<p>{</p>
+<p>&quot;pretty&quot;:&quot;true&quot;,</p>
+<p>&quot;size&quot;:&quot;9999&quot;,</p>
+<p>&quot;filters&quot;:</p>
+<p>{</p>
+<p>&quot;op&quot;:&quot;and&quot;,</p>
+<p>&quot;content&quot;:</p>
+<p>[</p>
+<p><strong>&lt;mLegacyTCGAonly&gt;</strong></p>
+<p>{</p>
+<p>&quot;op&quot;:&quot;=&quot;,</p>
+<p>&quot;content&quot;:</p>
+<p>{</p>
+<p>&quot;field&quot;:&quot;released&quot;,</p>
+<p>&quot;value&quot;:&quot;true&quot;</p>
+<p>}</p>
+<p>},</p>
+<p>{</p>
+<p>&quot;op&quot;:&quot;=&quot;,</p>
+<p>&quot;content&quot;:</p>
+<p>{</p>
+<p>&quot;field&quot;:&quot;state&quot;,</p>
+<p>&quot;value&quot;:&quot;<strong>&lt;mState&gt;</strong>&quot;</p>
+<p>}</p>
+<p>}</p>
+<p>]</p>
+<p>},</p>
+<p>&quot;fields&quot;:&quot;program.name,project_id,disease_type&quot;</p>
+<p>}</p>
+<p>For Current data, the &lt;mLegacyTCGAonly&gt; is replaced with the empty string and &lt;mState&gt; is replaced with &quot;open&quot; and uses the /projects endpoint. For Legacy data, the &lt;mLegacyTCGAonly&gt; is replaced with {&quot;op&quot;:&quot;=&quot;,&quot;content&quot;:{&quot;field&quot;:&quot;program.name&quot;,&quot;value&quot;:&quot;TCGA&quot;}}, and &lt;mState&gt; is replaced with &quot;legacy&quot; and uses the /legacy/projects endpoint.</p>
+<p>The JSON result is processed by grabbing the &quot;data&quot; attribute, and from that iterating the &quot;hits&quot; array. For each element in the hits array, pull the &quot;program&quot; and then the &quot;name&quot; to get the program name. Also from each element, get the &quot;project_id&quot;. Collecting these values provides the program and project for the GDC.</p>
+<h2 id="current-workflows-list-json">Current Workflows List JSON</h2>
+<p>A list of current workflows is collected using the following JSON:</p>
+<p>{</p>
+<p>&quot;pretty&quot;:&quot;true&quot;,</p>
+<p>&quot;size&quot;:&quot;99999&quot;,</p>
+<p>&quot;filters&quot;:</p>
+<p>{</p>
+<p>&quot;op&quot;:&quot;and&quot;,</p>
+<p>&quot;content&quot;:</p>
+<p>[</p>
+<p>{</p>
+<p>&quot;op&quot;:&quot;=&quot;,</p>
+<p>&quot;content&quot;:</p>
+<p>{</p>
+<p>&quot;field&quot;:&quot;state&quot;,</p>
+<p>&quot;value&quot;:&quot;released&quot;</p>
+<p>}</p>
+<p>},</p>
+<p>{</p>
+<p>&quot;op&quot;:&quot;=&quot;,</p>
+<p>&quot;content&quot;:</p>
+<p>{</p>
+<p>&quot;field&quot;:&quot;access&quot;,</p>
+<p>&quot;value&quot;:&quot;open&quot;</p>
+<p>}</p>
+<p>},</p>
+<p>{</p>
+<p>&quot;op&quot;:&quot;=&quot;,</p>
+<p>&quot;content&quot;:</p>
+<p>{</p>
+<p>&quot;field&quot;:&quot;cases.project.project_id&quot;,</p>
+<p>&quot;value&quot;:&quot;&lt;<strong>mProject.mName</strong>&gt;&quot;</p>
+<p>}</p>
+<p>}</p>
+<p>]</p>
+<p>},</p>
+<p>&quot;fields&quot;:&quot;analysis.workflow_type,data_type&quot;</p>
+<p>}</p>
+<p>Workflow data is downloaded from the /files endpoint for &quot;current&quot; data. The &lt;mProject.mName&gt; is replaced with the project_id as described in JSON processing of Project data in Project List.</p>
+<p>The JSON result is processed by grabbing the &quot;data&quot; attribute, and from that iterating the &quot;hits&quot; array. For each element in the hits array, the &quot;workflow_type&quot; attribute of the &quot;analysis&quot; object give the workflow type and the &quot;data_type&quot; attribute gives the type of data (datatype).</p>
+<h2 id="legacy-workflows-list-json">Legacy Workflows List JSON</h2>
+<p>A list of legacy workflows is collected using the following JSON:</p>
+<p>{</p>
+<p>&quot;pretty&quot;:&quot;true&quot;,</p>
+<p>&quot;size&quot;:&quot;99999&quot;,</p>
+<p>&quot;filters&quot;:</p>
+<p>{</p>
+<p>&quot;op&quot;:&quot;and&quot;,</p>
+<p>&quot;content&quot;:</p>
+<p>[</p>
+<p>{</p>
+<p>&quot;op&quot;:&quot;=&quot;,</p>
+<p>&quot;content&quot;:</p>
+<p>{</p>
+<p>&quot;field&quot;:&quot;state&quot;,</p>
+<p>&quot;value&quot;:&quot;live&quot;</p>
+<p>}</p>
+<p>},</p>
+<p>{</p>
+<p>&quot;op&quot;:&quot;=&quot;,</p>
+<p>&quot;content&quot;:</p>
+<p>{</p>
+<p>&quot;field&quot;:&quot;access&quot;,</p>
+<p>&quot;value&quot;:&quot;open&quot;</p>
+<p>}</p>
+<p>},</p>
+<p>{</p>
+<p>&quot;op&quot;:&quot;=&quot;,</p>
+<p>&quot;content&quot;:</p>
+<p>{</p>
+<p>&quot;field&quot;:&quot;cases.project.project_id&quot;,</p>
+<p>&quot;value&quot;:&quot;&lt;<strong>mProject.mName</strong>&gt;&quot;</p>
+<p>}</p>
+<p>}</p>
+<p>&lt;<strong>mWorkflowJson</strong>&gt;</p>
+<p>]</p>
+<p>},</p>
+<p>&quot;fields&quot;:&quot;file_name,data_type,data_category,experimental_strategy,tags,platform&quot;</p>
+<p>}</p>
+<p>Workflow data is downloaded from the /legacy/files endpoint for &quot;legacy&quot; data. The &lt;mProject.mName&gt; is replaced with the project_id as described in JSON processing of Project data in Project List.</p>
+<p>The &lt;mWorkflowJson&gt; is replaced with JSON based on the type of legacy Workflow.</p>
+<p>The RNASeq-Gene V1 data type uses the following JSON:</p>
+<p>,{</p>
+<p>&quot;op&quot;:&quot;=&quot;,</p>
+<p>&quot;content&quot;:</p>
+<p>{</p>
+<p>&quot;field&quot;:&quot;experimental_strategy&quot;,</p>
+<p>&quot;value&quot;:&quot;RNA-Seq&quot;</p>
+<p>}</p>
+<p>},</p>
+<p>{</p>
+<p>&quot;op&quot;:&quot;=&quot;,</p>
+<p>&quot;content&quot;:</p>
+<p>{</p>
+<p>&quot;field&quot;:&quot;platform&quot;,</p>
+<p>&quot;value&quot;:&quot;Illumina HiSeq&quot;</p>
+<p>}</p>
+<p>},</p>
+<p>{</p>
+<p>&quot;op&quot;:&quot;=&quot;,</p>
+<p>&quot;content&quot;:</p>
+<p>{</p>
+<p>&quot;field&quot;:&quot;data_type&quot;,</p>
+<p>&quot;value&quot;:&quot;Gene expression quantification&quot;</p>
+<p>}</p>
+<p>},</p>
+<p>{</p>
+<p>&quot;op&quot;:&quot;in&quot;,</p>
+<p>&quot;content&quot;:</p>
+<p>{</p>
+<p>&quot;field&quot;:&quot;tags&quot;,</p>
+<p>&quot;value&quot;:[&quot;v1&quot;]</p>
+<p>}</p>
+<p>},</p>
+<p>The RNASeq-GeneV2 data type uses the following JSON:</p>
+<p>,{</p>
+<p>&quot;op&quot;:&quot;=&quot;,</p>
+<p>&quot;content&quot;:</p>
+<p>{</p>
+<p>&quot;field&quot;:&quot;experimental_strategy&quot;,</p>
+<p>&quot;value&quot;:&quot;RNA-Seq&quot;</p>
+<p>}</p>
+<p>},</p>
+<p>{</p>
+<p>&quot;op&quot;:&quot;=&quot;,</p>
+<p>&quot;content&quot;:</p>
+<p>{</p>
+<p>&quot;field&quot;:&quot;platform&quot;,</p>
+<p>&quot;value&quot;:&quot;Illumina HiSeq&quot;</p>
+<p>}</p>
+<p>},</p>
+<p>{</p>
+<p>&quot;op&quot;:&quot;=&quot;,</p>
+<p>&quot;content&quot;:</p>
+<p>{</p>
+<p>&quot;field&quot;:&quot;data_type&quot;,</p>
+<p>&quot;value&quot;:&quot;Gene expression quantification&quot;</p>
+<p>}</p>
+<p>},</p>
+<p>{</p>
+<p>&quot;op&quot;:&quot;in&quot;,</p>
+<p>&quot;content&quot;:</p>
+<p>{</p>
+<p>&quot;field&quot;:&quot;tags&quot;,</p>
+<p>&quot;value&quot;:[&quot;unnormalized&quot;]</p>
+<p>}</p>
+<p>},</p>
+<p>{</p>
+<p>&quot;op&quot;:&quot;in&quot;,</p>
+<p>&quot;content&quot;:</p>
+<p>{</p>
+<p>&quot;field&quot;:&quot;tags&quot;,</p>
+<p>&quot;value&quot;:[&quot;v2&quot;]</p>
+<p>}</p>
+<p>},</p>
+<p>The RNASeq-IsoformV2 data type uses the following JSON:</p>
+<p>,{</p>
+<p>&quot;op&quot;:&quot;=&quot;,</p>
+<p>&quot;content&quot;:</p>
+<p>{</p>
+<p>&quot;field&quot;:&quot;experimental_strategy&quot;,</p>
+<p>&quot;value&quot;:&quot;RNA-Seq&quot;</p>
+<p>}</p>
+<p>},</p>
+<p>{</p>
+<p>&quot;op&quot;:&quot;=&quot;,</p>
+<p>&quot;content&quot;:</p>
+<p>{</p>
+<p>&quot;field&quot;:&quot;platform&quot;,</p>
+<p>&quot;value&quot;:&quot;Illumina HiSeq&quot;</p>
+<p>}</p>
+<p>},</p>
+<p>{</p>
+<p>&quot;op&quot;:&quot;=&quot;,</p>
+<p>&quot;content&quot;:</p>
+<p>{</p>
+<p>&quot;field&quot;:&quot;data_type&quot;,</p>
+<p>&quot;value&quot;:&quot;Isoform expression quantification&quot;</p>
+<p>}</p>
+<p>},</p>
+<p>{</p>
+<p>&quot;op&quot;:&quot;in&quot;,</p>
+<p>&quot;content&quot;:</p>
+<p>{</p>
+<p>&quot;field&quot;:&quot;tags&quot;,</p>
+<p>&quot;value&quot;:[&quot;unnormalized&quot;]</p>
+<p>}</p>
+<p>},</p>
+<p>{</p>
+<p>&quot;op&quot;:&quot;in&quot;,</p>
+<p>&quot;content&quot;:</p>
+<p>{</p>
+<p>&quot;field&quot;:&quot;tags&quot;,</p>
+<p>&quot;value&quot;:[&quot;v2&quot;]</p>
+<p>}</p>
+<p>},</p>
+<p>The Methylation27 data type uses the following JSON:</p>
+<p>,{</p>
+<p>&quot;op&quot;:&quot;=&quot;,</p>
+<p>&quot;content&quot;:</p>
+<p>{</p>
+<p>&quot;field&quot;:&quot;experimental_strategy&quot;,</p>
+<p>&quot;value&quot;:&quot;Methylation array&quot;</p>
+<p>}</p>
+<p>},</p>
+<p>{</p>
+<p>&quot;op&quot;:&quot;=&quot;,</p>
+<p>&quot;content&quot;:</p>
+<p>{</p>
+<p>&quot;field&quot;:&quot;platform&quot;,</p>
+<p>&quot;value&quot;:&quot;Illumina Human Methylation 27&quot;</p>
+<p>}</p>
+<p>},</p>
+<p>{</p>
+<p>&quot;op&quot;:&quot;=&quot;,</p>
+<p>&quot;content&quot;:</p>
+<p>{</p>
+<p>&quot;field&quot;:&quot;data_type&quot;,</p>
+<p>&quot;value&quot;:&quot;Methylation beta value&quot;</p>
+<p>}</p>
+<p>},</p>
+<p>The Methylation450 data type uses the following JSON:</p>
+<p>,{</p>
+<p>&quot;op&quot;:&quot;=&quot;,</p>
+<p>&quot;content&quot;:</p>
+<p>{</p>
+<p>&quot;field&quot;:&quot;experimental_strategy&quot;,</p>
+<p>&quot;value&quot;:&quot;Methylation array&quot;</p>
+<p>}</p>
+<p>},</p>
+<p>{</p>
+<p>&quot;op&quot;:&quot;=&quot;,</p>
+<p>&quot;content&quot;:</p>
+<p>{</p>
+<p>&quot;field&quot;:&quot;platform&quot;,</p>
+<p>&quot;value&quot;:&quot;Illumina Human Methylation 450&quot;</p>
+<p>}</p>
+<p>},</p>
+<p>{</p>
+<p>&quot;op&quot;:&quot;=&quot;,</p>
+<p>&quot;content&quot;:</p>
+<p>{</p>
+<p>&quot;field&quot;:&quot;data_type&quot;,</p>
+<p>&quot;value&quot;:&quot;Methylation beta value&quot;</p>
+<p>}</p>
+<p>},</p>
+<p>The RPPA data type uses the following JSON:</p>
+<p>,{</p>
+<p>&quot;op&quot;:&quot;=&quot;,</p>
+<p>&quot;content&quot;:</p>
+<p>{</p>
+<p>&quot;field&quot;:&quot;experimental_strategy&quot;,</p>
+<p>&quot;value&quot;:&quot;Protein expression array&quot;</p>
+<p>}</p>
+<p>},</p>
+<p>{</p>
+<p>&quot;op&quot;:&quot;=&quot;,</p>
+<p>&quot;content&quot;:</p>
+<p>{</p>
+<p>&quot;field&quot;:&quot;platform&quot;,</p>
+<p>&quot;value&quot;:&quot;MDA_RPPA_Core&quot;</p>
+<p>}</p>
+<p>},</p>
+<p>{</p>
+<p>&quot;op&quot;:&quot;=&quot;,</p>
+<p>&quot;content&quot;:</p>
+<p>{</p>
+<p>&quot;field&quot;:&quot;data_type&quot;,</p>
+<p>&quot;value&quot;:&quot;Protein expression quantification&quot;</p>
+<p>}</p>
+<p>},</p>
+<p>The SNP6 data type uses the following JSON:</p>
+<p>,{</p>
+<p>&quot;op&quot;:&quot;=&quot;,</p>
+<p>&quot;content&quot;:</p>
+<p>{</p>
+<p>&quot;field&quot;:&quot;experimental_strategy&quot;,</p>
+<p>&quot;value&quot;:&quot;Genotyping array&quot;</p>
+<p>}</p>
+<p>},</p>
+<p>{</p>
+<p>&quot;op&quot;:&quot;=&quot;,</p>
+<p>&quot;content&quot;:</p>
+<p>{</p>
+<p>&quot;field&quot;:&quot;platform&quot;,</p>
+<p>&quot;value&quot;:&quot;Affymetrix SNP Array 6.0&quot;</p>
+<p>}</p>
+<p>},</p>
+<p>{</p>
+<p>&quot;op&quot;:&quot;=&quot;,</p>
+<p>&quot;content&quot;:</p>
+<p>{</p>
+<p>&quot;field&quot;:&quot;data_type&quot;,</p>
+<p>&quot;value&quot;:&quot;Copy number segmentation&quot;</p>
+<p>}</p>
+<p>},</p>
+<p>{</p>
+<p>&quot;op&quot;:&quot;in&quot;,</p>
+<p>&quot;content&quot;:</p>
+<p>{</p>
+<p>&quot;field&quot;:&quot;tags&quot;,</p>
+<p>&quot;value&quot;:[&quot;hg19&quot;]</p>
+<p>}</p>
+<p>},</p>
+<p>{</p>
+<p>&quot;op&quot;:&quot;in&quot;,</p>
+<p>&quot;content&quot;:</p>
+<p>{</p>
+<p>&quot;field&quot;:&quot;tags&quot;,</p>
+<p>&quot;value&quot;:[&quot;nocnv&quot;]</p>
+<p>}</p>
+<p>},</p>
+<p>The miRNA-gene data type uses the following JSON:</p>
+<p>,{</p>
+<p>&quot;op&quot;:&quot;=&quot;,</p>
+<p>&quot;content&quot;:</p>
+<p>{</p>
+<p>&quot;field&quot;:&quot;experimental_strategy&quot;,</p>
+<p>&quot;value&quot;:&quot;miRNA-Seq&quot;</p>
+<p>}</p>
+<p>},</p>
+<p>{</p>
+<p>&quot;op&quot;:&quot;=&quot;,</p>
+<p>&quot;content&quot;:</p>
+<p>{</p>
+<p>&quot;field&quot;:&quot;platform&quot;,</p>
+<p>&quot;value&quot;:&quot;Illumina HiSeq&quot;</p>
+<p>}</p>
+<p>},</p>
+<p>{</p>
+<p>&quot;op&quot;:&quot;=&quot;,</p>
+<p>&quot;content&quot;:</p>
+<p>{</p>
+<p>&quot;field&quot;:&quot;data_type&quot;,</p>
+<p>&quot;value&quot;:&quot;miRNA gene quantification&quot;</p>
+<p>}</p>
+<p>},</p>
+<p>{</p>
+<p>&quot;op&quot;:&quot;in&quot;,</p>
+<p>&quot;content&quot;:</p>
+<p>{</p>
+<p>&quot;field&quot;:&quot;tags&quot;,</p>
+<p>&quot;value&quot;:[&quot;hg19&quot;]</p>
+<p>}</p>
+<p>},</p>
+<p>The miRNA-isoform data type uses the following JSON:</p>
+<p>,{</p>
+<p>&quot;op&quot;:&quot;=&quot;,</p>
+<p>&quot;content&quot;:</p>
+<p>{</p>
+<p>&quot;field&quot;:&quot;experimental_strategy&quot;,</p>
+<p>&quot;value&quot;:&quot;miRNA-Seq&quot;</p>
+<p>}</p>
+<p>},</p>
+<p>{</p>
+<p>&quot;op&quot;:&quot;=&quot;,</p>
+<p>&quot;content&quot;:</p>
+<p>{</p>
+<p>&quot;field&quot;:&quot;platform&quot;,</p>
+<p>&quot;value&quot;:&quot;Illumina HiSeq&quot;</p>
+<p>}</p>
+<p>},</p>
+<p>{</p>
+<p>&quot;op&quot;:&quot;=&quot;,</p>
+<p>&quot;content&quot;:</p>
+<p>{</p>
+<p>&quot;field&quot;:&quot;data_type&quot;,</p>
+<p>&quot;value&quot;:&quot;miRNA isoform quantification&quot;</p>
+<p>}</p>
+<p>},</p>
+<p>{</p>
+<p>&quot;op&quot;:&quot;in&quot;,</p>
+<p>&quot;content&quot;:</p>
+<p>{</p>
+<p>&quot;field&quot;:&quot;tags&quot;,</p>
+<p>&quot;value&quot;:[&quot;hg19&quot;]</p>
+<p>}</p>
+<p>},</p>
+<p>The mutations data type uses the following JSON:</p>
+<p>,{</p>
+<p>&quot;op&quot;:&quot;=&quot;,</p>
+<p>&quot;content&quot;:</p>
+<p>{</p>
+<p>&quot;field&quot;:&quot;experimental_strategy&quot;,</p>
+<p>&quot;value&quot;:&quot;DNA-Seq&quot;</p>
+<p>}</p>
+<p>},</p>
+<p>{</p>
+<p>&quot;op&quot;:&quot;=&quot;,</p>
+<p>&quot;content&quot;:</p>
+<p>{</p>
+<p>&quot;field&quot;:&quot;data_type&quot;,</p>
+<p>&quot;value&quot;:&quot;Simple somatic mutation&quot;</p>
+<p>}</p>
+<p>},</p>
+<p>The JSON result is processed by grabbing the &quot;data&quot; attribute, and from that iterating the &quot;hits&quot; array. For each element in the hits array, process for the datatype and platform in the table below. For the attribute token strings in the table:</p>
+<ol type="1">
+<li><p>Split the attribute token string by pipes (&quot;|&quot;) into attribute names.</p></li>
+<li><p>If one of the attribute names is &quot;tags&quot; combine all the tags entries into a single string with &quot;-&quot; between tag entries.</p></li>
+<li><p>For other attribute names, get that attribute. If there are multiple attributes requests, combine them into a single string with &quot;-&quot; between tag entries.</p></li>
+</ol>
+<p>The Datatype attribute token strings generate the datatype for the workflow. The Platform attribute token strings generate the platform for the workflow.</p>
+<table>
+<thead>
+<tr class="header">
+<th><strong>Workflow Name</strong></th>
+<th><strong>Datatype Attribute Token String</strong></th>
+<th><strong>Platform Attribute Token String</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>RNASeq-GeneV1</td>
+<td>data_category</td>
+<td>experimental_strategy|tags</td>
+</tr>
+<tr class="even">
+<td>RNASeq-GeneV2</td>
+<td>data_category</td>
+<td>experimental_strategy|tags</td>
+</tr>
+<tr class="odd">
+<td>RNASeq-IsoformV2</td>
+<td>data_category</td>
+<td>experimental_strategy|tags</td>
+</tr>
+<tr class="even">
+<td>Methylation27</td>
+<td>data_category</td>
+<td>platform</td>
+</tr>
+<tr class="odd">
+<td>Methylation450</td>
+<td>data_category</td>
+<td>platform</td>
+</tr>
+<tr class="even">
+<td>RPPA</td>
+<td>data_category</td>
+<td>platform</td>
+</tr>
+<tr class="odd">
+<td>SNP6</td>
+<td>data_category</td>
+<td>platform|tags</td>
+</tr>
+<tr class="even">
+<td>miRNA-gene</td>
+<td>experimental_strategy</td>
+<td>data_type|tags</td>
+</tr>
+<tr class="odd">
+<td>miRNA-isoform</td>
+<td>experimental_strategy</td>
+<td>data_type|tags</td>
+</tr>
+<tr class="even">
+<td>mutations</td>
+<td>data_type</td>
+<td>experimental_strategy|platform</td>
+</tr>
+</tbody>
+</table>
+<h1 id="manifest-collection">Manifest Collection</h1>
+<p>Manifests are collected for Biospecimen, Clinical, and Workflow data by making a JSON request to the GDC API /files endpoint. Manifests contain a list of files for each manifest type. A file consists of a UUID used to identify the file in the GDC along with a filename and MD5 sum, and the list of any patients (UUID and barcode) and samples (UUID and barcode) associated with that file.</p>
+<h2 id="biospecimen-manifests-json">Biospecimen Manifests JSON</h2>
+<p>A Biospecimen Manifest is collected using the following JSON:</p>
+<p>{</p>
+<p>&quot;pretty&quot;:&quot;true&quot;,</p>
+<p>&quot;size&quot;:&quot;99999&quot;,</p>
+<p>&quot;filters&quot;:</p>
+<p>{</p>
+<p>&quot;op&quot;:&quot;and&quot;,</p>
+<p>&quot;content&quot;:</p>
+<p>[</p>
+<p>{</p>
+<p>&quot;op&quot;:&quot;=&quot;,</p>
+<p>&quot;content&quot;:</p>
+<p>{</p>
+<p>&quot;field&quot;:&quot;state&quot;,</p>
+<p>&quot;value&quot;:&quot;released&quot;</p>
+<p>}</p>
+<p>},</p>
+<p>{</p>
+<p>&quot;op&quot;:&quot;=&quot;,</p>
+<p>&quot;content&quot;:</p>
+<p>{</p>
+<p>&quot;field&quot;:&quot;access&quot;,</p>
+<p>&quot;value&quot;:&quot;open&quot;</p>
+<p>}</p>
+<p>},</p>
+<p>{</p>
+<p>&quot;op&quot;:&quot;=&quot;,</p>
+<p>&quot;content&quot;:</p>
+<p>{</p>
+<p>&quot;field&quot;:&quot;data_type&quot;,</p>
+<p>&quot;value&quot;:&quot;Biospecimen Supplement&quot;</p>
+<p>}</p>
+<p>},</p>
+<p>{</p>
+<p>&quot;op&quot;:&quot;=&quot;,</p>
+<p>&quot;content&quot;:</p>
+<p>{</p>
+<p>&quot;field&quot;:&quot;cases.project.project_id&quot;,</p>
+<p>&quot;value&quot;:&quot;<strong>&lt;mBiospecimen.mProject&gt;</strong>&quot;</p>
+<p>}</p>
+<p>},</p>
+<p>{</p>
+<p>&quot;op&quot;:&quot;in&quot;,</p>
+<p>&quot;content&quot;:</p>
+<p>{</p>
+<p>&quot;field&quot;:&quot;data_format&quot;,</p>
+<p>&quot;value&quot;:[&quot;XLSX&quot;,&quot;TSV&quot;,&quot;BCR XML&quot;]</p>
+<p>}</p>
+<p>}</p>
+<p>]</p>
+<p>},</p>
+<p>&quot;fields&quot;:&quot;file_name,file_id,md5sum,cases.case_id,cases.submitter_id,cases.aliquot_ids,cases.submitter_aliquot_ids,cases.submitter_analyte_ids,associated_entities.entity_id,associated_entities.entity_submitter_id,associated_entities.case_id&quot;</p>
+<p>}</p>
+<p>Biospecimen data is downloaded once from &quot;current&quot; and is used for legacy and current data. The &lt;mBiospecimen.mProject&gt; is replaced with the project_id as described in JSON processing of Project data in Project List. This uses the /files endpoint.</p>
+<p>Note the data_format field lists the currently know three data types, but only the BCR XML data format is processed.</p>
+<p>The JSON result is processed by grabbing the &quot;data&quot; attribute, and from that iterating the &quot;hits&quot; array. For each element in the hits array, the following information is grabbed from &quot;file_name&quot;, &quot;md5sum&quot; and &quot;file_id&quot; which give the download name, MD5 check sum, and UUID for downloading files. Then within each element, if there is a &quot;cases&quot; array, for each case element, get the &quot;case_id&quot; which is the patient UUID and the &quot;submitter_id&quot; which is the patient barcode (or other id).</p>
+<h2 id="clinical-manifests-json">Clinical Manifests JSON</h2>
+<p>A Clinical Manifest is collected using the following JSON:</p>
+<p>{</p>
+<p>&quot;pretty&quot;:&quot;true&quot;,</p>
+<p>&quot;size&quot;:&quot;99999&quot;,</p>
+<p>&quot;filters&quot;:</p>
+<p>{</p>
+<p>&quot;op&quot;:&quot;and&quot;,</p>
+<p>&quot;content&quot;:</p>
+<p>[</p>
+<p>{</p>
+<p>&quot;op&quot;:&quot;=&quot;,</p>
+<p>&quot;content&quot;:</p>
+<p>{</p>
+<p>&quot;field&quot;:&quot;state&quot;,</p>
+<p>&quot;value&quot;:&quot;released&quot;</p>
+<p>}</p>
+<p>},</p>
+<p>{</p>
+<p>&quot;op&quot;:&quot;=&quot;,</p>
+<p>&quot;content&quot;:</p>
+<p>{</p>
+<p>&quot;field&quot;:&quot;access&quot;,</p>
+<p>&quot;value&quot;:&quot;open&quot;</p>
+<p>}</p>
+<p>},</p>
+<p>{</p>
+<p>&quot;op&quot;:&quot;=&quot;,</p>
+<p>&quot;content&quot;:</p>
+<p>{</p>
+<p>&quot;field&quot;:&quot;data_type&quot;,</p>
+<p>&quot;value&quot;:&quot;Clinical Supplement&quot;</p>
+<p>}</p>
+<p>},</p>
+<p>{</p>
+<p>&quot;op&quot;:&quot;=&quot;,</p>
+<p>&quot;content&quot;:</p>
+<p>{</p>
+<p>&quot;field&quot;:&quot;cases.project.project_id&quot;,</p>
+<p>&quot;value&quot;:&quot;<strong>&lt;mBiospecimen.mProject&gt;</strong>&quot;</p>
+<p>}</p>
+<p>},</p>
+<p>{</p>
+<p>&quot;op&quot;:&quot;in&quot;,</p>
+<p>&quot;content&quot;:</p>
+<p>{</p>
+<p>&quot;field&quot;:&quot;data_format&quot;,</p>
+<p>&quot;value&quot;:[&quot;XLSX&quot;,&quot;TSV&quot;,&quot;BCR XML&quot;]</p>
+<p>}</p>
+<p>}</p>
+<p>]</p>
+<p>},</p>
+<p>&quot;fields&quot;:&quot;file_name,file_id,md5sum,cases.case_id,cases.submitter_id,cases.aliquot_ids,cases.submitter_aliquot_ids,cases.submitter_analyte_ids,associated_entities.entity_id,associated_entities.entity_submitter_id,associated_entities.case_id&quot;</p>
+<p>}</p>
+<p>Clinical data is downloaded once from &quot;current&quot; and is used for legacy and current data. The &lt;mBiospecimen.mProject&gt; is replaced with the project_id as described in JSON processing of Project data in Project List. This uses the /files endpoint.</p>
+<p>Note the data_format field lists the currently know three data types, but only the BCR XML data format is processed.</p>
+<p>The JSON result is processed by grabbing the &quot;data&quot; attribute, and from that iterating the &quot;hits&quot; array. For each element in the hits array, the following information is grabbed from &quot;file_name&quot;, &quot;md5sum&quot; and &quot;file_id&quot; which give the download name, MD5 check sum, and UUID for downloading files. Then within each element, if there is a &quot;cases&quot; array, for each case element, get the &quot;case_id&quot; which is the patient UUID and the &quot;submitter_id&quot; which is the patient barcode (or other id).</p>
+<h2 id="current-manifests-json">Current Manifests JSON</h2>
+<p>A Current Manifest is collected using the following JSON:</p>
+<p>{</p>
+<p>&quot;pretty&quot;:&quot;true&quot;,</p>
+<p>&quot;size&quot;:&quot;99999&quot;,</p>
+<p>&quot;filters&quot;:</p>
+<p>{</p>
+<p>&quot;op&quot;:&quot;and&quot;,</p>
+<p>&quot;content&quot;:</p>
+<p>[</p>
+<p>{</p>
+<p>&quot;op&quot;:&quot;=&quot;,</p>
+<p>&quot;content&quot;:</p>
+<p>{</p>
+<p>&quot;field&quot;:&quot;state&quot;,</p>
+<p>&quot;value&quot;:&quot;released&quot;</p>
+<p>}</p>
+<p>},</p>
+<p>{</p>
+<p>&quot;op&quot;:&quot;=&quot;,</p>
+<p>&quot;content&quot;:</p>
+<p>{</p>
+<p>&quot;field&quot;:&quot;access&quot;,</p>
+<p>&quot;value&quot;:&quot;open&quot;</p>
+<p>}</p>
+<p>},</p>
+<p>{</p>
+<p>&quot;op&quot;:&quot;=&quot;,</p>
+<p>&quot;content&quot;:</p>
+<p>{</p>
+<p>&quot;field&quot;:&quot;cases.project.project_id&quot;,</p>
+<p>&quot;value&quot;:&quot;&lt;<strong>mManifest.mProject</strong>&gt;&quot;</p>
+<p>}</p>
+<p>},</p>
+<p>{</p>
+<p>&quot;op&quot;:&quot;=&quot;,</p>
+<p>&quot;content&quot;:</p>
+<p>{</p>
+<p>&quot;field&quot;:&quot;data_type&quot;,</p>
+<p>&quot;value&quot;:&quot;&lt;<strong>mManifest.mDataType</strong>&gt;&quot;</p>
+<p>}</p>
+<p>},</p>
+<p>{</p>
+<p>&quot;op&quot;:&quot;=&quot;,</p>
+<p>&quot;content&quot;:</p>
+<p>{</p>
+<p>&quot;field&quot;:&quot;analysis.workflow_type&quot;,</p>
+<p>&quot;value&quot;:&quot;&lt;<strong>mManifest.mWorkflow</strong>&gt;&quot;</p>
+<p>}</p>
+<p>}</p>
+<p>]</p>
+<p>},</p>
+<p>&quot;fields&quot;:&quot;file_name,file_id,md5sum,cases.case_id,cases.submitter_id,cases.aliquot_ids,cases.submitter_aliquot_ids,cases.submitter_analyte_ids,associated_entities.entity_id,associated_entities.entity_submitter_id,associated_entities.case_id&quot;</p>
+<p>}</p>
+<p>Current data is downloaded from the /files endpoint. The &lt;mManifest.mProject&gt; is replaced with the project_id as in Project List. The &lt;mManifest.mDataType&gt; is replaced with the datatype from Current Workflows List JSON. The &lt;mManifest.mWorkflow&gt; is replaced with the workflow type from Current Workflows List JSON.</p>
+<p>The JSON result is processed by grabbing the &quot;data&quot; attribute, and from that iterating the &quot;hits&quot; array. For each element in the hits array, the following information is grabbed from &quot;file_name&quot;, &quot;md5sum&quot; and &quot;file_id&quot; which give the download name, MD5 check sum, and UUID for downloading files. Then within each element, if there is a &quot;cases&quot; array, for each case element, get the &quot;case_id&quot; which is the patient UUID and the &quot;submitter_id&quot; which is the patient barcode (or other id). Also within each element is an &quot;associated_entities&quot; array. For each entity element, get the &quot;entity_id&quot; (sample UUID), &quot;entity_type&quot; if available (sample type), &quot;entity_submitter_id&quot; (sample barcode), and &quot;case_id&quot; (patient UUID).</p>
+<h2 id="legacy-manifests-json">Legacy Manifests JSON</h2>
+<p>A Legacy Manifest is collected using the following JSON:</p>
+<p>{</p>
+<p>&quot;pretty&quot;:&quot;true&quot;,</p>
+<p>&quot;size&quot;:&quot;99999&quot;,</p>
+<p>&quot;filters&quot;:</p>
+<p>{</p>
+<p>&quot;op&quot;:&quot;and&quot;,</p>
+<p>&quot;content&quot;:</p>
+<p>[</p>
+<p>{</p>
+<p>&quot;op&quot;:&quot;=&quot;,</p>
+<p>&quot;content&quot;:</p>
+<p>{</p>
+<p>&quot;field&quot;:&quot;state&quot;,</p>
+<p>&quot;value&quot;:&quot;live&quot;</p>
+<p>}</p>
+<p>},</p>
+<p>{</p>
+<p>&quot;op&quot;:&quot;=&quot;,</p>
+<p>&quot;content&quot;:</p>
+<p>{</p>
+<p>&quot;field&quot;:&quot;access&quot;,</p>
+<p>&quot;value&quot;:&quot;open&quot;</p>
+<p>}</p>
+<p>},</p>
+<p>{</p>
+<p>&quot;op&quot;:&quot;=&quot;,</p>
+<p>&quot;content&quot;:</p>
+<p>{</p>
+<p>&quot;field&quot;:&quot;cases.project.project_id&quot;,</p>
+<p>&quot;value&quot;:&quot;&lt;mManifest.mProject&gt;&quot;</p>
+<p>}</p>
+<p>}</p>
+<p>&lt;getMutationJson&gt;</p>
+<p>&lt;getWorkflowJson&gt;</p>
+<p>]</p>
+<p>},</p>
+<p>&quot;fields&quot;:&quot;archive.submitter_id,file_name,file_id,md5sum,cases.case_id,cases.submitter_id,cases.aliquot_ids,cases.submitter_aliquot_ids,cases.submitter_analyte_ids,associated_entities.entity_id,associated_entities.entity_submitter_id,associated_entities.case_id&quot;</p>
+<p>}</p>
+<p>Legacy data is downloaded from the /legacy/files endpoint. The &lt;mManifest.mProject&gt; is replaced with the project_id as in Project List. The &lt;getMutationJson&gt; is replaced with an empty string for all datatypes except &quot;Simple somatic mutation&quot;. For the mutation datatype, the following JSON is used:</p>
+<p>,{</p>
+<p>&quot;op&quot;:&quot;=&quot;,</p>
+<p>&quot;content&quot;:</p>
+<p>{</p>
+<p>&quot;field&quot;:&quot;experimental_strategy&quot;,</p>
+<p>&quot;value&quot;:&quot;&lt;<strong>mManifest.firstLegacyName</strong>&gt;&quot;</p>
+<p>}</p>
+<p>},</p>
+<p>{</p>
+<p>&quot;op&quot;:&quot;=&quot;,</p>
+<p>&quot;content&quot;:</p>
+<p>{</p>
+<p>&quot;field&quot;:&quot;platform&quot;,</p>
+<p>&quot;value&quot;:&quot;&lt;mManifest.secondLegacyName&gt;&quot;</p>
+<p>}</p>
+<p>}</p>
+<p>The &lt; mManifest.firstLegacyName&gt; is replaced with the datatype from Legacy Workflows List JSON. The &lt; mManifest.secondLegacyName&gt; is replaced with the platform from Legacy Workflows List JSON. The &lt;getWorkflowJson&gt; is replaced with is replaced with the JSON for each workflow as described in Legacy Workflows List JSON.</p>
+<p>The JSON result is processed by grabbing the &quot;data&quot; attribute, and from that iterating the &quot;hits&quot; array. For each element in the hits array, the following information is grabbed from &quot;file_name&quot;, &quot;md5sum&quot; and &quot;file_id&quot; which give the download name, MD5 check sum, and UUID for downloading files. Then within each element, if there is a &quot;cases&quot; array, for each case element, get the &quot;case_id&quot; which is the patient UUID and the &quot;submitter_id&quot; which is the patient barcode (or other id). Also within each element is an &quot;associated_entities&quot; array. For each entity element, get the &quot;entity_id&quot; (sample UUID), &quot;entity_type&quot; if available (sample type), &quot;entity_submitter_id&quot; (sample barcode), and &quot;case_id&quot; (patient UUID).</p>
+<h1 id="file-downloads">File Downloads</h1>
+<p>Files are downloaded by using the file UUID from the manifest and the /data endpoint. Files are named for the MD5SUM and the file name and stored in dataset directories.</p>
+<h1 id="batch-and-clinical-conversion">Batch and Clinical Conversion</h1>
+<h2 id="biospecimen-xml">Biospecimen XML</h2>
+<p>Biospecimen files are XML files. Each file contains information for the same patient and share the same BCR, batch, project, disease, tissue source site (TSS), and sex. Data is used to create a batch file. &quot;Unknown&quot; is used when values are not provided.</p>
+<p>Samples are related to either a &quot;portion&quot; or an &quot;aliquot&quot;.</p>
+<p>For Portion Samples, the following XML conversion is used:</p>
+<table>
+<thead>
+<tr class="header">
+<th><strong>Column Id</strong></th>
+<th><strong>Parent Element</strong></th>
+<th><strong>Tag</strong></th>
+<th><strong>Note</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Project</td>
+<td>admin:admin</td>
+<td>admin:project_code</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>Disease</td>
+<td>admin:admin</td>
+<td>admin:disease_code</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>Batch</td>
+<td>admin:admin</td>
+<td>admin:batch_number</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>Bcr</td>
+<td>admin:admin</td>
+<td>admin:bcr</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>Tss</td>
+<td>document</td>
+<td>shared:tissue_source_site</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>Sex</td>
+<td>document</td>
+<td>shared:gender</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>For each sample element in document with tag bio:sample</td>
+</tr>
+<tr class="even">
+<td>SampleTypeId</td>
+<td>sample</td>
+<td>bio:sample_type_id</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>SampleTypeName</td>
+<td>sample</td>
+<td>bio:sample_type</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>For each portion element in sample element with tag bio:shipment_portion</td>
+</tr>
+<tr class="odd">
+<td>Barcode</td>
+<td>portion</td>
+<td>bio:shipment_portion_bcr_aliquot_barcode</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>Uuid</td>
+<td>portion</td>
+<td>bio:bcr_shipment_portion_uuid</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>PlateId</td>
+<td>portion</td>
+<td>bio:plate_id</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>ShipDate</td>
+<td>portion</td>
+<td>bio:day_of_shipment<br />
+bio:month_of_shipment<br />
+bio:year_of_shipment</td>
+<td>Converted to Date</td>
+</tr>
+<tr class="odd">
+<td>SourceCenter</td>
+<td>portion</td>
+<td>bio:center_id</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>IsFfpe</td>
+<td><p>sample</p>
+<p>portion</p></td>
+<td><p>bio:is_ffpe</p>
+<p>bio:is_ffpe</p></td>
+<td>TRUE if either &quot;yes&quot;</td>
+</tr>
+</tbody>
+</table>
+<p>For Aliquot Samples, the following XML conversion is used:</p>
+<table>
+<thead>
+<tr class="header">
+<th><strong>Column Id</strong></th>
+<th><strong>Parent Element</strong></th>
+<th><strong>Tag</strong></th>
+<th><strong>Note</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Project</td>
+<td>admin:admin</td>
+<td>admin:project_code</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>Disease</td>
+<td>admin:admin</td>
+<td>admin:disease_code</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>Batch</td>
+<td>admin:admin</td>
+<td>admin:batch_number</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>Bcr</td>
+<td>admin:admin</td>
+<td>admin:bcr</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>Tss</td>
+<td>document</td>
+<td>shared:tissue_source_site</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>Sex</td>
+<td>document</td>
+<td>shared:gender</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>For each sample element in document with tag bio:sample</td>
+</tr>
+<tr class="even">
+<td>SampleTypeId</td>
+<td>sample</td>
+<td>bio:sample_type_id</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>SampleTypeName</td>
+<td>sample</td>
+<td>bio:sample_type</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>For each analyte element in sample element with tag bio:analyte</td>
+</tr>
+<tr class="odd">
+<td>For each aliquot element in analyte element with tag bio:aliquot</td>
+</tr>
+<tr class="even">
+<td>Barcode</td>
+<td>aliquot</td>
+<td>bio:bcr_aliquot_barcode</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>Uuid</td>
+<td>aliquot</td>
+<td>bio:bcr_aliquot_uuid</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>PlateId</td>
+<td>aliquot</td>
+<td>bio:plate_id</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>ShipDate</td>
+<td>aliquot</td>
+<td>bio:day_of_shipment<br />
+bio:month_of_shipment<br />
+bio:year_of_shipment</td>
+<td>Converted to Date</td>
+</tr>
+<tr class="even">
+<td>SourceCenter</td>
+<td>aliquot</td>
+<td>bio:center_id</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>AliquotCenter</td>
+<td>aliquot</td>
+<td>bio:source_center</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>AliquotConcentration</td>
+<td>aliquot</td>
+<td>bio:concentration</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>AliquotQuantity</td>
+<td>aliquot</td>
+<td>bio:quantity</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>AliquotVolume</td>
+<td>aliquot</td>
+<td>bio:volume</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>PlateRow</td>
+<td>aliquot</td>
+<td>bio:plate_row</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>PlateColumn</td>
+<td>aliquot</td>
+<td>bio:plate_column</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>IsFfpe</td>
+<td><p>sample</p>
+<p>aliquot</p></td>
+<td><p>bio:is_ffpe</p>
+<p>bio:is_derived_from_ffpe</p></td>
+<td>TRUE if either &quot;yes&quot;</td>
+</tr>
+</tbody>
+</table>
+<h2 id="clinical-xml">Clinical XML</h2>
+<table>
+<thead>
+<tr class="header">
+<th><strong>Column Id</strong></th>
+<th><strong>Parent Element</strong></th>
+<th><strong>Tag</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>bcr_patient_barcode</td>
+<td>document</td>
+<td>shared:bcr_patient_barcode</td>
+</tr>
+<tr class="even">
+<td>bcr_patient_uuid</td>
+<td>document</td>
+<td>shared:bcr_patient_uuid</td>
+</tr>
+<tr class="odd">
+<td>days_to_birth</td>
+<td>document</td>
+<td>clin_shared:days_to_birth</td>
+</tr>
+<tr class="even">
+<td>height</td>
+<td>document</td>
+<td>clin_shared:height</td>
+</tr>
+<tr class="odd">
+<td>weight</td>
+<td>document</td>
+<td>clin_shared:weight</td>
+</tr>
+<tr class="even">
+<td>race</td>
+<td>document</td>
+<td>clin_shared:race<br />
+concatenated pipe delimited</td>
+</tr>
+<tr class="odd">
+<td>ethnicity</td>
+<td>document</td>
+<td>clin_shared:ethnicity</td>
+</tr>
+<tr class="even">
+<td>vital_status</td>
+<td>document</td>
+<td>clin_shared:vital_status</td>
+</tr>
+<tr class="odd">
+<td>days_to_last_followup</td>
+<td>document</td>
+<td>clin_shared:days_to_last_followup</td>
+</tr>
+<tr class="even">
+<td>days_to_last_known_alive</td>
+<td>document</td>
+<td>clin_shared:days_to_last_known_alive</td>
+</tr>
+<tr class="odd">
+<td>days_to_death</td>
+<td>document</td>
+<td>clin_shared:days_to_death</td>
+</tr>
+<tr class="even">
+<td>relative_family_cancer_history</td>
+<td>document</td>
+<td>clin_shared:relative_family_cancer_history</td>
+</tr>
+<tr class="odd">
+<td>cancer_first_degree_relative</td>
+<td>document</td>
+<td>clin_shared:cancer_first_degree_relative</td>
+</tr>
+<tr class="even">
+<td>clinical_stage</td>
+<td>shared_stage:stage_event</td>
+<td>shared_stage:clinical_stage</td>
+</tr>
+<tr class="odd">
+<td>pathologic_stage</td>
+<td>shared_stage:stage_event</td>
+<td>shared_stage:pathologic_stage</td>
+</tr>
+<tr class="even">
+<td>age_at_initial_pathologic_diagnosis</td>
+<td>document</td>
+<td>clin_shared:age_at_initial_pathologic_diagnosis</td>
+</tr>
+<tr class="odd">
+<td>follow_up_vital_status</td>
+<td>document</td>
+<td>clin_shared:vital_status</td>
+</tr>
+<tr class="even">
+<td>follow_up_days_to_last_followup</td>
+<td>document</td>
+<td>clin_shared:days_to_last_followup</td>
+</tr>
+<tr class="odd">
+<td>follow_up_days_to_death</td>
+<td>document</td>
+<td>clin_shared:days_to_death</td>
+</tr>
+<tr class="even">
+<td>follow_up_new_tumor_event_after_initial_treatment</td>
+<td>document</td>
+<td>nte:new_tumor_event_after_initial_treatment</td>
+</tr>
+</tbody>
+</table>
+<h1 id="current-continuous-conversion">Current Continuous Conversion</h1>
+<h2 id="methylation450-txt">Methylation450 TXT</h2>
+<p>Methylation450 text files are used to create a probes file and methylation 450 data files.</p>
+<p>Methylation450 text files contain ids and descriptions of probes used in the data.</p>
+<table>
+<thead>
+<tr class="header">
+<th><strong>Column Id</strong></th>
+<th><strong>Original Column</strong></th>
+<th><strong>Notes</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Probe</td>
+<td>Composite Element REF</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>Chromosome</td>
+<td>Chromosome</td>
+<td>Remove &quot;chr&quot; so values are 1-22, X, and Y.</td>
+</tr>
+<tr class="odd">
+<td>Start</td>
+<td>Start or Genomic_Coordinate</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>End</td>
+<td>End</td>
+<td>NA if no value provided</td>
+</tr>
+<tr class="odd">
+<td>Genes</td>
+<td>Gene_Symbol</td>
+<td>NA or semi colon delimited gene symbol list</td>
+</tr>
+</tbody>
+</table>
+<p>The noXY data is generating by dropping the X and Y chromosome entries from the unfiltered file.</p>
+<p>Once the probe information is collected, the matrix data file is generated.</p>
+<table>
+<thead>
+<tr class="header">
+<th><strong>Sample id</strong></th>
+<th>See Biospecimen XML files for mapping details. Sample UUIDs are provided in manifest or in file.</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Feature id</strong></td>
+<td>Composite Element REF</td>
+</tr>
+<tr class="even">
+<td><strong>Value</strong></td>
+<td>Beta_value (Added to existing value, so multiple entries for same probe are combined)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="mirna-isoform-txt">miRNA Isoform TXT</h2>
+<p>The matrix data file is generated as per below:</p>
+<table>
+<thead>
+<tr class="header">
+<th><strong>Sample id</strong></th>
+<th>See Biospecimen XML files for mapping details. Sample UUIDs are provided in manifest or in file.</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Feature id</strong></td>
+<td><p>if miRNA_region column is not empty:</p>
+<p>if miRNA_region starts with &quot;mature&quot;:</p>
+<p>use miRNA_ID column value, followed by a pipe and the second comma delimited value from the region</p>
+<p>else</p>
+<p>use miRNA_ID column value, followed by a pipe and the region</p>
+<p>if miRNA_region column is empty:</p>
+<p>use miRNA_ID column value</p>
+<p>Feature ids also have &quot;_calculated&quot; removed from the end of the ids, if present.</p></td>
+</tr>
+<tr class="even">
+<td><strong>Value</strong></td>
+<td>reads_per_million_miRNA_mapped (Added to existing value, so multiple entries for same feature are combined)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="mirna-txt">miRNA TXT</h2>
+<p>Uses same logic as miRNA Isoform TXT above.</p>
+<h2 id="rnaseq-htseq-counts-gz">RNASeq HTSeq Counts GZ</h2>
+<p>The matrix data file is generated as per below:</p>
+<table>
+<thead>
+<tr class="header">
+<th><strong>Sample id</strong></th>
+<th>See Biospecimen XML files for mapping details. Sample UUIDs are provided in manifest or in file.</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Feature id</strong></td>
+<td><p>The feature id is based on RNASeq sub-type. In the code, all three potential column ids are tried, with the first valid value used, for column names: gene_id, gene, and isoform_id.</p>
+<p>Feature ids also have &quot;_calculated&quot; removed from the end of the ids, if present.</p></td>
+</tr>
+<tr class="even">
+<td><strong>Value</strong></td>
+<td>The value is based on RNASeq sub-type. In the code, both potential column ids are tried, with the first valid value used, for column names: raw_count and raw_counts.</td>
+</tr>
+</tbody>
+</table>
+<h1 id="legacy-continuous-conversion">Legacy Continuous Conversion</h1>
+<h2 id="current-biospecimen-xml">Current Biospecimen XML</h2>
+<p>See Biospecimen XML conversion under Current Continuous. Legacy uses the Current Biospecimen XML files because UUIDs are the same in both and the Legacy Biospecimen XML files are not populated or refer to non-open files, and generate excessive download times due to errors.</p>
+<h2 id="current-clinical-xml">Current Clinical XML</h2>
+<p>See Clinical XML conversion under Current Continuous. Legacy uses the Current Clinical XML files because UUIDs are the same in both and the Legacy Clinical XML files are not populated or refer to non-open files, and generate excessive download times due to errors.</p>
+<h2 id="methylation450-txt-1">Methylation450 TXT</h2>
+<p>See Methylation450 TXT conversion under Current Continuous.</p>
+<h2 id="mirna-isoform-txt-1">miRNA Isoform TXT</h2>
+<p>See miRNA Isoform TXT conversion under Current Continuous.</p>
+<h2 id="mirna-txt-1">miRNA TXT</h2>
+<p>See miRNA TXT conversion under Current Continuous.</p>
+<h2 id="rnaseq-v1-gene-txt">RNASeq V1 Gene TXT</h2>
+<p>See RNASeq HTSeq Counts GZ conversion under Current Continuous.</p>
+<h2 id="rnaseq-v2-gene-txt">RNASeq V2 Gene TXT</h2>
+<p>See RNASeq HTSeq Counts GZ conversion under Current Continuous.</p>
+<h2 id="rnaseq-v2-isoform-txt">RNASeq V2 Isoform TXT</h2>
+<p>See RNASeq HTSeq Counts GZ conversion under Current Continuous.</p>
+<h1 id="current-discrete-conversion">Current Discrete Conversion</h1>
+<h2 id="biospecimen-xml-1">Biospecimen XML</h2>
+<p>See Clinical XML conversion under Current Continuous.</p>
+<h2 id="clinical-xml-1">Clinical XML</h2>
+<p>See Clinical XML conversion under Current Continuous.</p>
+<h2 id="gistic-txt">GISTIC TXT</h2>
+<p>The matrix data file is generated as per below:</p>
+<table>
+<thead>
+<tr class="header">
+<th><strong>Sample id</strong></th>
+<th>See Biospecimen XML files for mapping details. Sample UUIDs are provided in manifest or in file. In this case, the MAF file contains multiple Sample UUIDs. For the header row, index 3 to the end contain Sample UUIDs. UUIDs are converted to Barcodes based on the FileTo entries.</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Feature id</strong></td>
+<td>The feature id is based on different GISTIC output sub-types. In the code, all column ids are tried, with the first valid value used, for column names: &quot;Gene Symbol&quot; and &quot;Cytoband&quot;.</td>
+</tr>
+<tr class="even">
+<td><strong>Value</strong></td>
+<td>For each feature row, index 3 to the end contain values for UUIDs given in the headers.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="muse-maf-gz">MuSE MAF GZ</h2>
+<p>Mutation MAF GZ files are prepared by disease and generate a matrix file and a mutation file.</p>
+<p>The matrix data file is generated by first filtering each row based on the NCBI_Build column, filtering on the build number 38 (for HG38 releases):</p>
+<table>
+<thead>
+<tr class="header">
+<th><strong>Sample id</strong></th>
+<th>See Biospecimen XML files for mapping details. Sample UUIDs are provided in manifest or in file. The column Tumor_Sample_Barcode is used to generate the barcode.</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Feature id</strong></td>
+<td>The feature id is the gene mutations and comes from the &quot;Gene&quot; column.</td>
+</tr>
+<tr class="even">
+<td><strong>Value</strong></td>
+<td>The value is the number of non-silent mutations called. If the Variant_Classification column is converted to lower case and confirmed not to be &quot;silent&quot;, the count for that barcode and feature is incremented by one.</td>
+</tr>
+</tbody>
+</table>
+<p>To generate a mutation file, first column names in the MAF are converted to a &quot;standard&quot; version, as given below:</p>
+<p>Hugo_Symbol is converted to Gene.</p>
+<p>Entrez_Gene_Id is converted to EntrezId.</p>
+<p>Chromosome is converted to Position_Chromosome.</p>
+<p>Start_Position and Start_position is converted to Position_Start.</p>
+<p>End_Position and End_position is converted to Position_End.</p>
+<p>Strand is converted to Position_Strand.</p>
+<p>Transcript_ID and Annotation_Transcript is converted to TranscriptId.</p>
+<p>t_depth is converted to Tumor_Depth.</p>
+<p>t_ref_count is converted to Tumor_Reference_Count.</p>
+<p>t_alt_count is converted to Tumor_Variant_Count.</p>
+<p>n_depth is converted to Normal_Depth.</p>
+<p>n_ref_count is converted to Normal_Reference_Count.</p>
+<p>n_alt_count is converted to Normal_Variant_Count.</p>
+<p>Protein_Change is converted to HGVSp_Short.</p>
+<p>The resulting mutation file has these columns, with only the given conversions.</p>
+<table>
+<thead>
+<tr class="header">
+<th><strong>Gene</strong></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>EntrezId</strong></td>
+<td></td>
+</tr>
+<tr class="even">
+<td><strong>Position_Chromosome</strong></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td><strong>Position_Start</strong></td>
+<td></td>
+</tr>
+<tr class="even">
+<td><strong>Position_End</strong></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td><strong>Position_Strand</strong></td>
+<td></td>
+</tr>
+<tr class="even">
+<td><strong>TranscriptId</strong></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td><strong>Tumor_Depth</strong></td>
+<td></td>
+</tr>
+<tr class="even">
+<td><strong>Tumor_Reference_Count</strong></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td><strong>Tumor_Variant_Count</strong></td>
+<td></td>
+</tr>
+<tr class="even">
+<td><strong>Normal_Depth</strong></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td><strong>Normal_Reference_Count</strong></td>
+<td></td>
+</tr>
+<tr class="even">
+<td><strong>Normal_Variant_Count</strong></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td><strong>HGVSp_Short</strong></td>
+<td></td>
+</tr>
+<tr class="even">
+<td><strong>amino_acid_position</strong></td>
+<td><p>Amino acid location.</p>
+<p>Use value from HGVSp_Short. If NULL, replace with empty string. If there is a value, trim p from the value and grab the first group of digits.</p></td>
+</tr>
+<tr class="odd">
+<td><strong>amino_acid_normal</strong></td>
+<td><p>Normal amino acid.</p>
+<p>Use value from HGVSp_Short. If NULL, replace with empty string. If there is a value, trim p from the value. If the value contains a &quot;&gt;&quot;, grab the group of non-digits in front of it. Otherwise, grab the group of non-digits in front of the group of digits.</p></td>
+</tr>
+<tr class="even">
+<td><strong>amino_acid_tumor</strong></td>
+<td><p>Tumor/mutations amino acid.</p>
+<p>Use value from HGVSp_Short. If NULL, replace with empty string. If there is a value, trim p from the value. If the value contains a &quot;&gt;&quot;, grab the group of non-digits after it. Otherwise, ignore the first group of letter, the next group of numbers, the group of numbers after an underscore, and use the rest of the string.</p></td>
+</tr>
+</tbody>
+</table>
+<h2 id="mutect2-maf-gz">MuTect2 MAF GZ</h2>
+<p>See MuSE MAF GZ conversion instructions.</p>
+<h2 id="rnaseq-htseq-fpkm-gz">RNASeq HTSeq FPKM GZ</h2>
+<p>See RNASeq HTSeq Counts GZ conversion instructions in Current Continuous.</p>
+<h2 id="rnaseq-htseq-fpkm-uq-gz">RNASeq HTSeq FPKM-UQ GZ</h2>
+<p>See RNASeq HTSeq Counts GZ conversion instructions in Current Continuous.</p>
+<h2 id="snp6-masked-txt">SNP6 Masked TXT</h2>
+<p>SNP6 Masked text files are used to create data matrix files using the simple gene score algorithm described elsewhere.</p>
+<p>SNP6 Masked text files contain ids and descriptions of probes used in the data.</p>
+<table>
+<thead>
+<tr class="header">
+<th><strong>Column Id</strong></th>
+<th><strong>Notes</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Probe</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>Chromosome</td>
+<td>Remove &quot;chr&quot; so values are 1-22, X, and Y.</td>
+</tr>
+<tr class="odd">
+<td>Start</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>Segment_Mean</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>The noXY data is generating by dropping any X and Y chromosome entries from gene score algorithm processing.</p>
+<p>Once the probe information is collected, the matrix data file is generated.</p>
+<table>
+<thead>
+<tr class="header">
+<th><strong>Sample id</strong></th>
+<th>See Biospecimen XML files for mapping details. Sample UUIDs are provided in manifest or in file.</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Feature id</strong></td>
+<td>Gene ids from pre-prepared gene files with location and size information.</td>
+</tr>
+<tr class="even">
+<td><strong>Value</strong></td>
+<td>See gene score algorithm documentation.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="somaticsniper-maf-gz">SomaticSniper MAF GZ</h2>
+<p>See MuSE MAF GZ conversion instructions.</p>
+<h2 id="varscan2-maf-gz">VarScan2 MAF GZ</h2>
+<p>See MuSE MAF GZ conversion instructions.</p>
+<h1 id="legacy-discrete-conversion">Legacy Discrete Conversion</h1>
+<h2 id="current-biospecimen-xml-1">Current Biospecimen XML</h2>
+<p>See Biospecimen XML conversion under Current Continuous. Legacy uses the Current Biospecimen XML files because UUIDs are the same in both and the Legacy Biospecimen XML files are not populated or refer to non-open files, and generate excessive download times due to errors.</p>
+<h2 id="current-clinical-xml-1">Current Clinical XML</h2>
+<p>See Clinical XML conversion under Current Continuous. Legacy uses the Current Clinical XML files because UUIDs are the same in both and the Legacy Clinical XML files are not populated or refer to non-open files, and generate excessive download times due to errors.</p>
+<h2 id="illumina-ga-maf">Illumina GA MAF</h2>
+<p>Converted as per MuSE MAF GZ in Current Discrete, except allowed versions are 37 or 19.</p>
+<h2 id="illumina-hiseq-maf">Illumina HiSeq MAF</h2>
+<p>Converted as per MuSE MAF GZ in Current Discrete, except allowed versions are 37 or 19.</p>
+<h2 id="illumina-miseq-maf">Illumina MiSeq MAF</h2>
+<p>Converted as per MuSE MAF GZ in Current Discrete, except allowed versions are 37 or 19.</p>
+<h2 id="rppa-txt">RPPA TXT</h2>
+<p>The matrix data file is generated as per below:</p>
+<table>
+<thead>
+<tr class="header">
+<th><strong>Sample id</strong></th>
+<th>See Biospecimen XML files for mapping details. Sample UUIDs are provided in manifest or in file.</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Feature id</strong></td>
+<td>The feature id is the &quot;Composite Element REF&quot; value.</td>
+</tr>
+<tr class="even">
+<td><strong>Value</strong></td>
+<td>The value given under &quot;Protein Expression&quot;.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="snp6-txt">SNP6 TXT</h2>
+<p>Converted as per SNP6 Text in Current Discrete.</p>
+</body>
+</html>

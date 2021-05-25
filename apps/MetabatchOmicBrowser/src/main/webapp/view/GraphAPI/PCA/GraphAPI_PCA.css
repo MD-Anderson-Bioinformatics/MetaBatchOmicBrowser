@@ -1,0 +1,119 @@
+svg.pca-plot {
+  font-family: Verdana, Arial, Helvetica, sans-serif;
+  font-size: .688em;
+}
+
+svg.PlotPanel {
+}
+
+rect.pca-background {
+  fill: white;
+}
+
+rect.pca-border {
+  fill: none;
+  stroke: black;
+  shape-rendering: crispEdges;
+  stroke-width: 2px;
+  /* pointer-events: none; */
+}
+
+#var-display {
+  font-family: Verdana, Arial, sans-serif;
+  font-size: 14px;
+}
+
+path.dot {
+  fill: white;
+  stroke-width: 1.5px;
+}
+
+path.centroid {
+  /*fill:*/
+  stroke-width: 1.5px;
+  stroke: black;
+}
+
+.hiliter {
+  pointer-events: none;
+}
+
+.tooltip-pane rect {
+  fill: #fcfdfd;
+  stroke: #a6c9e2;
+  stroke-width: 1px;
+  shape-rendering: crispEdges;
+}
+
+text.tooltip-text {
+  font-family: Verdana, Arial, sans-serif;
+  font-size: 11px;
+}
+
+.plottitle {
+  font-size: .688em;
+  font-weight: bold;
+}
+
+.legendtitle {
+  font-family: Verdana, Arial, sans-serif;
+  font-size: 11px;
+}
+
+rect.legendhilite {
+  fill: none;
+  stroke: black;
+  /*shape-rendering: crispEdges;*/
+}
+
+.extra-info-panel {
+    display: block;
+}
+.extra-info-panel body {
+    background-color: white;
+    font: 10px Verdana,Arial,Helvetica,sans-serif;
+	/* this was 125% to fix font spacing issues */
+	/* but browser updated to no longer need it */
+	/* and in fact, 125% causes problems */
+	/* But need 100% because upstream batcheffects.css changes font size */
+    font-size: 100%;
+    text-align: left;
+}
+.extra-info-panel body div ul {
+  padding-left: 5px;
+  padding-right: 5px;
+  margin-top: 9px;
+  margin-bottom: 9px;
+}
+.extra-info-panel body div ul:first-of-type {
+  margin-top: 0;
+  margin-bottom: 0;
+  border-bottom: 1px solid;
+  padding-bottom: 9px;
+}
+.extra-info-panel body div ul:last-of-type {
+  margin-bottom: 0;
+}
+
+.extra-info-panel body div ul li {
+  list-style-type: none;
+  white-space: nowrap;
+/*  font-family: Verdana, Arial, Helvetica, sans-serif;*/
+/*  font-size: 10px;*/
+  line-height: 1.3em;
+  color: #131313;
+}
+
+span.annot-val {
+  padding-left: 5px;
+}
+
+a.annot-label {
+/*  font-size: 10px;*/
+}
+
+.riskGradient {
+  font-family: Verdana, Arial, Helvetica, sans-serif;
+  font-size: 10px;
+  color: #131313;
+}

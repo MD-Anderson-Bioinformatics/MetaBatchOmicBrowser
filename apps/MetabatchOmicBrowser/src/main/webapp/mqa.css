@@ -1,0 +1,367 @@
+/* *************************** */
+/* Top Level CSS               */
+/* *************************** */
+
+/* header height is 4 pixels larger for space around logo */
+
+:root
+{
+	--body-margin: 4px;
+	--header-height: 30px;
+	--grid-gap: 0px;
+	--dragger-size: 10px;
+	--row-A-height: 60vh;
+	--row-B-height: 40vh;	
+	--col-A-width: 60vw;
+	--col-B-width: 40vw;	
+}
+
+*{ font-family: Arial,sans-serif; }
+*{box-sizing: border-box;}
+
+.no-pointer-events
+{
+	pointer-events: none;
+}
+
+.body-wrapper
+{
+	margin: var(--body-margin);
+	width: calc(100% - 8px);
+	height: calc(100vh - 8px);
+	background-color: lightgrey;
+}
+
+/* ********************************* */
+/* **** Wrapper Grid Definition **** */
+/* ********************************* */
+
+.div-wrapper
+{
+	width: inherit;
+	height: inherit;
+}
+
+/* ******************** */
+/* **** Header Row **** */
+/* ******************** */
+
+.div-header
+{
+	background-color: white;
+}
+
+body
+{
+	background: white;
+}
+
+body.wait, body.wait *
+{
+	cursor: wait !important;
+}
+
+.mdaRounded
+{
+	border: 1px solid black;
+	border-radius: 6px;
+	background: #e6e6e6;
+	color: black;
+	padding: 20px;
+}
+
+.mdaBlue
+{
+	background: #AFA;
+}
+
+.mdaServiceHeader
+{
+	z-index: -1;
+	overflow: hidden;
+	background-image: url('images/banner.png');
+	height: var(--header-height);
+}
+
+.mdaServiceHeaderLogo
+{
+	padding-top: 2px;
+	padding-left: 2px;
+	margin: auto;
+	height: calc(var(--header-height) - 4px);
+}
+
+.mdaTitleText
+{
+	display: inline-block;
+	font-weight: bold;
+	font-size: 16pt;
+	padding-top: 2px;
+}
+
+.mdaHeaderLinks
+{
+	/* reset mdaTitleText changes */
+	font-size: 10px;
+	padding: 0px;
+	font-weight: normal;
+	/* place this div */
+	vertical-align: top;
+	float: right;
+	font-weight: normal;
+	/* stack buttons */
+	display: inline-flex;
+	flex-direction: row;
+	justify-content: flex-end;
+	text-align: right;
+}
+
+.mdaHeaderButtons
+{
+	font-size: 10px;
+	background-color: beige;
+	color: black !important;
+	border-radius: 4px;
+	border-width: 1px;
+	border-color: #757575;
+	padding: 0px;
+	padding-right: 1px;
+	margin: 1px;
+	white-space: nowrap;
+	cursor: pointer;
+}
+
+.mdaHeaderButtons:disabled
+{
+	background-color: lightgray;
+	border-color: darkslategray;
+}
+
+.mdaServiceHeaderTitle
+{
+	color: #403333;
+	font-weight: bold;
+	padding-left: 40px;
+}
+
+ .roundedBox
+ {
+	background: #b7d6fb;
+	margin: 10px 10px 10px 10px;
+	border: 2px solid #000000;
+	border-radius: 10px;
+	padding: 10px;
+	min-width: 600px;
+ }
+ 
+ .buttons
+ {
+	border: none;
+	border-radius: 5px;
+	padding: 3px 9px;
+	color: #ffffff;
+	font: normal 500 16px/1 "Calibri", sans-serif;
+	text-align: center;
+	text-shadow: 1px 1px #000000;
+	font-size: 18px;
+	margin: 2px;
+	display: inline-block;
+	text-decoration: none;
+	background: #3d85c6;
+	background: -webkit-linear-gradient(#3d85c6, #073763);
+	background: linear-gradient(#3d85c6, #073763);
+	white-space: nowrap;
+}
+
+.buttons:hover
+{
+    background: #2d6699;
+    background: -webkit-linear-gradient(#2d6699, #062c4f);
+    background: linear-gradient(#2d6699, #062c4f);
+}
+
+.buttons:active 
+{
+	background: #031f38;
+	background: -webkit-linear-gradient(#031f38, #1d4263);
+	background: linear-gradient(#031f38, #1d4263);
+}
+
+.buttons:disabled
+{
+	background: #afafaf;
+    background: -webkit-linear-gradient(#afafaf, #6b6b6b);
+    background: linear-gradient(#afafaf, #6b6b6b);
+}
+
+.spinner 
+{
+	width: 8px;
+	height: 8px;
+	border: 5px solid #A9A9A9;
+	border-top: 5px solid #000099;
+	border-radius: 100%;
+	display: block;
+	display: inline-block;
+	-webkit-animation: spin 1.5s infinite linear;
+	-moz-animation: spin 1.5s infinite linear;
+	animation: spin 1.5s infinite linear;
+}
+
+@-moz-keyframes spin 
+{
+        from { -moz-transform: rotate(0deg); }
+        to { -moz-transform: rotate(360deg); }
+}
+
+@-webkit-keyframes spin 
+{
+        from { -webkit-transform: rotate(0deg); }
+        to { -webkit-transform: rotate(360deg); }
+}
+
+@keyframes spin 
+{
+	from { transform:rotate(0deg);}
+	to {transform: rotate(360deg);}
+}
+
+/* *************************** */
+/* *************************** */
+/* *** VERTICAL CSS CLASSES ** */
+/* *************************** */
+/* *************************** */
+
+.mqaWrapVertical
+{
+	height: calc(100% - var(--header-height));
+	width: 100%;
+	/* reset mdaTitleText changes */
+	font-size: 10px;
+	padding: 0px;
+	font-weight: normal;
+	/* stack buttons */
+	background-color: yellow;
+    display: grid;
+    grid-gap: var(--grid-gap);
+    grid-template-columns: 1fr;
+    grid-template-rows: 
+		calc(	var(--row-A-height) - 
+				var(--body-margin) - 
+				var(--grid-gap) - 
+				(0.5 * var(--dragger-size)) - 
+				(0.5 * var(--header-height)) )
+		var(	--dragger-size) 
+		calc(	var(--row-B-height) - 
+				var(--body-margin) - 
+				var(--grid-gap) - 
+				(0.5 * var(--dragger-size)) - 
+				(0.5 * var(--header-height)) );
+}
+
+.mqaViewDivVertical
+{
+    grid-column: 1 / span 1;
+    grid-row: 1 / span 1;
+    display: flex;
+    flex-direction: column;
+    background-color: darkgrey;
+    flex: 1;
+}
+
+.mqaSliderDivVertical
+{
+	cursor: ns-resize;
+	grid-column: 1 / span 1;
+	grid-row: 2 / span 1;
+	background-color: #B97A57;
+}
+
+.mqaQueryDivVertical
+{
+    grid-column: 1 / span 1;
+    grid-row: 3 / span 1;
+    display: flex;
+    flex-direction: column;
+    background-color: gray;
+    flex: 1;
+}
+
+/* *************************** */
+/* *************************** */
+/* *** HORIZONTAL CSS CLASSES ** */
+/* *************************** */
+/* *************************** */
+
+.mqaWrapHorizontal
+{
+	height: calc(100% - var(--header-height));
+	width: 100%;
+	/* reset mdaTitleText changes */
+	font-size: 10px;
+	padding: 0px;
+	font-weight: normal;
+	/* stack buttons */
+	background-color: tomato;
+    display: grid;
+    grid-gap: var(--grid-gap);
+    grid-template-columns:
+		calc(	var(--col-A-width) - 
+				var(--body-margin) - 
+				var(--grid-gap) - 
+				(0.5 * var(--dragger-size)) )
+		var(	--dragger-size) 
+		calc(	var(--col-B-width) - 
+				var(--body-margin) - 
+				var(--grid-gap) - 
+				(0.5 * var(--dragger-size)) );
+    grid-template-rows:  1fr;
+}
+
+.mqaQueryDivHorizontal
+{
+    grid-column: 1 / span 1;
+    grid-row: 1 / span 1;
+    display: flex;
+    flex-direction: column;
+    background-color: darkgrey;
+    flex: 1;
+}
+
+.mqaSliderDivHorizontal
+{
+	cursor: ew-resize;
+	grid-column: 2 / span 1;
+	grid-row: 1 / span 1;
+	background-color: #B97A57;
+}
+
+.mqaViewDivHorizontal
+{
+    grid-column: 3 / span 1;
+    grid-row: 1 / span 1;
+    display: flex;
+    flex-direction: column;
+    background-color: gray;
+    flex: 1;
+}
+
+/* *************************** */
+/* *************************** */
+
+.viewIframeStyles
+{
+	width: 100%;
+	height: 100%;
+    overflow: visible;
+}
+
+.queryIframeStyles
+{
+	width: 100%;
+	height: 100%;
+    overflow: visible;
+}
+/* *************************** */
+
+/* *************************** */

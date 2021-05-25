@@ -1,0 +1,49 @@
+
+.ScrollbarBackgroundRect
+{
+	stroke: black;
+	fill: rgb(225, 225, 200);
+	/*cursor: col-resize;*/
+}
+
+.ScrollbarDragRect
+{
+	stroke: black;
+	fill: rgb(185, 185, 160);
+	/*cursor: col-resize;*/
+}
+
+.ZoomOutButton
+{
+	stroke: black;
+	fill: red;
+	cursor: zoom-out;
+}
+
+.ZoomResetButton
+{
+	stroke: black;
+	fill: grey;
+	cursor: nwse-resize;
+}
+
+.ZoomInButton
+{
+	stroke: black;
+	fill: yellow;
+	cursor: zoom-in;
+}
+
+.ScrollLeftButton
+{
+	stroke: black;
+	fill: brown;
+	/*cursor: col-resize;*/
+}
+
+.ScrollRightButton
+{
+	stroke: black;
+	fill: orange;
+	/*cursor: col-resize;*/
+}

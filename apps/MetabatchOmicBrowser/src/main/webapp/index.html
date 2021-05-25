@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<!-- Global site tag (gtag.js) - Google Analytics -->
+		<script type="text/javascript">
+			function loadGoogleAnalytics()
+			{
+				var gaScript = document.createElement('script');
+				gaScript.setAttribute('async', 'true');
+				gaScript.setAttribute('src', `https://www.googletagmanager.com/gtag/js?id=UA-33425717-1`);
+
+				var gaScript2 = document.createElement('script');
+				gaScript2.innerText = `window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag(\'js\', new Date());gtag(\'config\', \'UA-33425717-1\');`;
+
+				document.documentElement.firstChild.appendChild(gaScript);
+				document.documentElement.firstChild.appendChild(gaScript2);
+			};
+			loadGoogleAnalytics();
+		</script>
+		<title>MetaBatch Omic Browser</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<!-- **** icons **** -->
+		<link href="fa5/css/all.css" rel="stylesheet" type="text/css">
+		<link href="mqa.css" rel="stylesheet" type="text/css">
+		<script src="knockout-3.5.1.js" type="text/javascript" charset="utf-8"></script>
+		<script src="jquery-3.5.0.min.js" type="text/javascript" charset="utf-8"></script>
+		<script src="mqa_resize.js" type="text/javascript" charset="utf-8"></script>
+		<script src="MQAAppView.js" type="text/javascript" charset="utf-8"></script>
+		<script type="text/javascript">
+			/* global ko */
+			//console.log("MQA JS loading");
+
+			// this makes sure that nothing gets called until page and required JS files are loaded
+			var appview = null;
+			$(document).ready(function()
+			{
+				//console.log("MQA document ready");
+				// Activates knockout.js
+				ko.options.deferUpdates = true;
+				appview = new AppViewModel();
+				ko.applyBindings(appview);
+				////////////////////////////////////////////////////////////////
+				//// this is used to prevent "flickering" characteristic on load with knockoutJS
+				////////////////////////////////////////////////////////////////
+				appview.makeGuiVisible(true);
+				// note that appviewChildLoadedCallback has additional setup triggered by loading of two child iframes
+			});
+			
+			function setCurrentViewSrcMqa(theUrl)
+			{
+				if (!notUN(theUrl))
+				{
+					enableInput();
+				}
+				else
+				{
+					// called from query IFrame
+					// used to set source in view IFrame
+					document.getElementById('viewIframe').src = theUrl;
+				}
+			}
+			
+			function setCurrentViewDiagramMqa(theId, theDscid)
+			{
+				// called from View IFrame
+				// used to set selected dataset in Query IFrame
+				document.getElementById('queryIframe').contentWindow.setSelectedDatasetQuery(theId, theDscid);
+				enableInput();
+			}
+			
+			function previousDatasetMqa()
+			{
+				//console.log("previousDatasetMqa");
+				disableInput();
+				// called from button on this page
+				// calls query iframe to find previous dataset, which updates the view iframe which calls setCurrentViewDiagramMqa
+				let viewParamsJson = document.getElementById('viewIframe').contentWindow.viewGetUrlParams();
+				document.getElementById('queryIframe').contentWindow.previousDatasetQuery(viewParamsJson);
+			}
+			
+			function nextDatasetMqa()
+			{
+				//console.log("nextDatasetMqa");
+				disableInput();
+				// called from button on this page
+				// calls query iframe to find next dataset, which updates the view iframe which calls setCurrentViewDiagramMqa
+				let viewParamsJson = document.getElementById('viewIframe').contentWindow.viewGetUrlParams();
+				document.getElementById('queryIframe').contentWindow.nextDatasetQuery(viewParamsJson);
+			}
+			
+			function showNotice()
+			{
+				// also, set drag action
+				//document.getElementById('slider-div').onmousedown=onMouseDownRowABMQA;
+				//
+				document.getElementById('alrtLegalNotice').style.display = "block";
+				setTimeout(function() {document.getElementById('alrtLegalNotice').style.display = 'none';},3000);
+			}
+			
+			function rotateSlider()
+			{
+				if (document.getElementById('gui-wrapper-div').classList.contains("mqaWrapVertical"))
+				{
+					// swap to horizontal
+					document.getElementById('gui-wrapper-div').classList.remove("mqaWrapVertical");
+					document.getElementById('view-div').classList.remove("mqaViewDivVertical");
+					document.getElementById('slider-div').classList.remove("mqaSliderDivVertical");
+					document.getElementById('query-div').classList.remove("mqaQueryDivVertical");
+					//
+					document.getElementById('gui-wrapper-div').classList.add("mqaWrapHorizontal");
+					document.getElementById('view-div').classList.add("mqaViewDivHorizontal");
+					document.getElementById('slider-div').classList.add("mqaSliderDivHorizontal");
+					document.getElementById('query-div').classList.add("mqaQueryDivHorizontal");
+					document.getElementById('slider-div').onmousedown=function(event) {onMouseDownColABMQA(event);};
+				}
+				else
+				{
+					// swap to vertical
+					document.getElementById('gui-wrapper-div').classList.remove("mqaWrapHorizontal");
+					document.getElementById('view-div').classList.remove("mqaViewDivHorizontal");
+					document.getElementById('slider-div').classList.remove("mqaSliderDivHorizontal");
+					document.getElementById('query-div').classList.remove("mqaQueryDivHorizontal");
+					//
+					document.getElementById('gui-wrapper-div').classList.add("mqaWrapVertical");
+					document.getElementById('view-div').classList.add("mqaViewDivVertical");
+					document.getElementById('slider-div').classList.add("mqaSliderDivVertical");
+					document.getElementById('query-div').classList.add("mqaQueryDivVertical");
+					document.getElementById('slider-div').onmousedown=function(event) {onMouseDownRowABMQA(event);};
+				}
+				// gui-wrapper-div	mqaWrapVertical	mqaWrapHorizontal
+				// view-div	mqaViewDivVertical	mqaViewDivHorizontal
+				// slider-div	mqaSliderDivVertical	mqaSliderDivHorizontal	onmousedown="onMouseDownRowABMQA(event);"
+				// query-div	mqaQueryDivVertical	mqaQueryDivHorizontal
+			}
+			
+			function queryLoadComplete()
+			{
+				//console.log("queryLoadComplete()");
+				// called from query iframe after load complete
+				//console.log("appview.loadedQuery()=" + appview.loadedQuery());
+				if (false===appview.loadedQuery())
+				{
+					// set self.viewUrl here not in Ajax urls call.
+					// So it is set after the query iframe loads
+					if (""===appview.mqaURLsearchValues())
+					{
+						appview.viewUrl("view/?" + appview.mqaDefaultViewParams());
+					}
+					else
+					{
+						appview.viewUrl("view/" + appview.mqaURLsearchValues());
+					}
+				}
+				appview.loadedQuery(true);
+			}
+
+		</script>	
+	</head>
+	<body class="body-wrapper" onload="showNotice()" style="display: none;" data-bind="visible: $root.makeGuiVisible()">
+		<!-- put cut and paste inputs here, to avoid DOM mangling by tippy -->
+		<input type="text" readonly style="opacity: 0; position: absolute; z-index: -9999; pointer-events: none;" value="" id="mqaCopyUrl">
+		<div id='alrtLegalNotice' style="display: none;">
+			<p onclick="document.getElementById('alrtLegalNotice').style.display = 'none';"><small>Legal notice: Unauthorized access to the network is prohibited. This system is for the use of authorized users only. 
+				Individuals using this computer system without authority, or in excess of their authority, are subject to having all of 
+				their activities on this system monitored and recorded by system personnel. In the course of monitoring individuals 
+				improperly using this system, or in the course of system maintenance, the activities of authorized users may also be 
+				monitored. Anyone using this system expressly consents to such monitoring and is advised that if such monitoring reveals 
+				possible evidence of criminal activity, system personnel may provide the evidence of such monitoring to law enforcement officials.
+				(Auto-displayed notice will close after 3 seconds or click this banner to hide.)
+				<br>
+				This website is for educational and research purposes only.</small>
+			</p>
+		</div>
+		<div class="div-wrapper" id="id-div-wrapper">
+			<div class="div-header">
+				<div class="mdaServiceHeader">
+					<a href="https://bioinformatics.mdanderson.org/public-software/tcga-batch-effects/" target="_blank" style="float: left;"><img class="mdaServiceHeaderLogo" src="images/MDAnderson-Master-Logo_Texas_H_NoTag_RGB-BLACK.png" alt="MDA Logo"></a>
+					<div class="mdaServiceHeaderTitle">
+						<div class="mdaTitleText">
+							&nbsp;&nbsp;<span class="mdaTitleText">MetaBatch Omic Browser</span>&nbsp;<span style="font-size: 60%">BEA_VERSION_TIMESTAMP</span>
+							&nbsp;
+							<button type="button" class="mdaHeaderButtons" onclick="copyURLString();" title="Copy Bookmark-able URL"><i class="fas fa-globe" style="color: green;"></i> Copy URL</button>
+							<button type="button" class="mdaHeaderButtons" onclick="previousDatasetMqa();" title="View previous dataset with results on list"><i class="fas fa-arrow-left" style="color: purple;"></i> Previous Dataset</button>
+							<button type="button" class="mdaHeaderButtons" onclick="nextDatasetMqa();" title="View next dataset with results on list"><i class="fas fa-arrow-right" style="color: blueviolet;"></i> Next Dataset</button>
+							<button type="button" class="mdaHeaderButtons" onclick="rotateSlider();" title="Rotate slider"><i class="fas fa-sync-alt" style="color: brown;"></i> Rotate Slider</button>
+						</div>
+						&nbsp;
+						<div class="mdaHeaderLinks">
+							<button type="button" class="mdaHeaderButtons" onclick="window.open('QFusage.html', '_blank');" title="Query help and usage documentation. (New Tab.)"><i class="fas fa-question-circle" style="color: black;"></i><i class="fas fa-external-link-alt" style="color: black;"></i> Query Help</button>
+							<button type="button" class="mdaHeaderButtons" onclick="window.open('MBatch_04-99_Statistics.html', '_blank');" title="Simplified explanation of some of the MBatch statistical analyses of batch effects. (New Tab.)"><i class="fas fa-question-circle" style="color: black;"></i><i class="fas fa-external-link-alt" style="color: black;"></i> Statistics</button>
+							<button type="button" class="mdaHeaderButtons" onclick="window.open('GDCConverters.html', '_blank');" title="Explanation of converters from GDC to Standardized Data. (New Tab.)"><i class="fas fa-question-circle" style="color: black;"></i><i class="fas fa-external-link-alt" style="color: black;"></i> Converters</button>
+							<button type="button" class="mdaHeaderButtons" onclick="window.open('about.html', '_blank');" title="Help, funding, code, MD Anderson, and other links. (New Tab.)"><i class="fas fa-question-circle" style="color: blue;"></i><i class="fas fa-external-link-alt" style="color: black;"></i> About/Help</button>
+							<button type="button" class="mdaHeaderButtons" onclick="document.getElementById('alrtLegalNotice').style.display = 'block';" title="Display legal Notice"><i class="fas fa-exclamation-circle" style="color: purple;"></i> Legal Notice</button>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="mqaWrapVertical" id="gui-wrapper-div">
+				<div class="mqaViewDivVertical" id="view-div">
+					<iframe class="viewIframeStyles" id="viewIframe" name="viewIframe" data-bind="attr:{src:$root.viewIframeSrc}"></iframe>
+				</div>
+				<div class="mqaSliderDivVertical" id="slider-div" onmousedown="onMouseDownRowABMQA(event);"></div>
+				<div class="mqaQueryDivVertical" id="query-div">
+					<iframe class="queryIframeStyles" id="queryIframe" name="queryIframe" data-bind="attr:{src:$root.queryIframeSrc}"></iframe>
+				</div>
+			</div>
+		</div>
+	</body>
+ </html>

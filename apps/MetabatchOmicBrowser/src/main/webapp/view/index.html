@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<!-- Global site tag (gtag.js) - Google Analytics -->
+		<script type="text/javascript">
+			function loadGoogleAnalytics()
+			{
+				var gaScript = document.createElement('script');
+				gaScript.setAttribute('async', 'true');
+				gaScript.setAttribute('src', `https://www.googletagmanager.com/gtag/js?id=UA-33425717-2`);
+
+				var gaScript2 = document.createElement('script');
+				gaScript2.innerText = `window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag(\'js\', new Date());gtag(\'config\', \'UA-33425717-2\');`;
+
+				document.documentElement.firstChild.appendChild(gaScript);
+				document.documentElement.firstChild.appendChild(gaScript2);
+			};
+			loadGoogleAnalytics();
+		</script>
+		<title>MetaBatch Omic Browser Visualizer</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<script src="lib/modernizr-use.js"></script>
+		<script type="text/javascript">
+			Modernizr.on('arrow', function(result) { if (result) { console.log("has arrow");} else { document.location.href = "bev_error.html"; }});
+			try 
+			{ 
+				eval("async function f() { let promise = new Promise((resolve, reject) => { setTimeout(() => resolve('done!'), 10) }); let result = await promise; } f();"); 
+				console.log("async good");
+			} 
+			catch (e) 
+			{
+				document.location.href = "bev_error.html";
+			}
+		</script>
+		<!-- **** icons **** -->
+		<!-- all tag attributes (src, type, rel) are required for proper generation of standalone file BEV_AppGenerator.java -->
+		<link href="fa5/css/all.css" rel="stylesheet" type="text/css">
+		<!-- **** CSS Entries **** -->
+		<!-- all tag attributes (src, type, rel) are required for proper generation of standalone file BEV_AppGenerator.java -->
+		<link href="lib/jquery-ui-1.12.1/jquery-ui.min.css" rel="stylesheet" type="text/css">
+		<link href="lib/DataTables/DataTables-1.10.20/css/jquery.dataTables.min.css" rel="stylesheet" type="text/css">
+		<link href="bev_basic.css" rel="stylesheet" type="text/css">
+		<link href="GraphAPI/HC/GraphAPI_HC.css" rel="stylesheet" type="text/css">
+		<link href="GraphAPI/PCA/GraphAPI_PCA.css" rel="stylesheet" type="text/css">
+		<link href="GraphAPI/BP/boxplot_internal_styles.css" rel="stylesheet" type="text/css">
+		<link href="GraphAPI/BP/boxplot_styles.css" rel="stylesheet" type="text/css">
+		<link href="GraphAPI/BP/scrollbar_styles.css" rel="stylesheet" type="text/css">
+		<!-- **** JavaScript Entries **** -->
+		<!-- all tag attributes (src, type, charset) are required for proper generation of standalone file BEV_AppGenerator.java -->
+		<script src="lib/knockout-3.5.1.js" type="text/javascript" charset="utf-8"></script>
+		<script src="lib/papaparse.min.js" type="text/javascript" charset="utf-8"></script>
+		<script src="lib/d3.3.5.15.min.js" type="text/javascript" charset="utf-8"></script>
+		<script src="GraphAPI/PCA/risk-gradient.js" type="text/javascript" charset="utf-8"></script>
+		<script src="GraphAPI/PCA/pca-plot.js" type="text/javascript" charset="utf-8"></script>
+		<script src="GraphAPI/BP/boxplot_detailed.js" type="text/javascript" charset="utf-8"></script>
+		<script src="GraphAPI/BP/boxplot_inner.js" type="text/javascript" charset="utf-8"></script>
+		<script src="lib/d3plus-text.v0.9.full.min.js" type="text/javascript" charset="utf-8"></script>
+		<script src="GraphAPI/BP/boxplot_outer.js" type="text/javascript" charset="utf-8"></script>
+		<script src="GraphAPI/BP/boxplot_pixels.js" type="text/javascript" charset="utf-8"></script>
+		<script src="GraphAPI/BP/boxplot_scrollbar.js" type="text/javascript" charset="utf-8"></script>
+		<script src="GraphAPI/BP/bea_boxplot.js" type="text/javascript" charset="utf-8"></script>
+		<script src="GraphAPI/HC/hierclust-plot.js" type="text/javascript" charset="utf-8"></script>
+		<script src="GraphAPI/HC/matchColors.js" type="text/javascript" charset="utf-8"></script>
+		<script src="GraphAPI/DSC/bea_dsc.js" type="text/javascript" charset="utf-8"></script>
+		<script src="GraphAPI/plot-lib-utils.js" type="text/javascript" charset="utf-8"></script>
+		<script src="lib/queue.v1.min.js" type="text/javascript" charset="utf-8"></script>
+		<script src="lib/jquery-3.5.0.min.js" type="text/javascript" charset="utf-8"></script>
+		<script src="lib/jquery-ui-1.12.1/jquery-ui.min.js" type="text/javascript" charset="utf-8"></script>
+		<script src="DataAccess.js" type="text/javascript" charset="utf-8"></script>
+		<script src="DataAccess_http.js" type="text/javascript" charset="utf-8"></script>
+		<script src="DataAccess_file.js" type="text/javascript" charset="utf-8"></script>
+		<script src="UtilBoxplot.js" type="text/javascript" charset="utf-8"></script>
+		<script src="UtilPca.js" type="text/javascript" charset="utf-8"></script>
+		<script src="UtilHierClust.js" type="text/javascript" charset="utf-8"></script>
+		<script src="UtilDsc.js" type="text/javascript" charset="utf-8"></script>
+		<script src="UtilNgchm.js" type="text/javascript" charset="utf-8"></script>
+		<script src="DiagramControl.js" type="text/javascript" charset="utf-8"></script>
+		<script src="lib/DataTables/DataTables-1.10.20/js/jquery.dataTables.min.js" type="text/javascript" charset="utf-8"></script>
+		<script src="bev_resize.js" type="text/javascript" charset="utf-8"></script>
+		<script src="lib/jszip.min.js" type="text/javascript" charset="utf-8"></script>
+		<!-- based on https://alafr.github.io/SVG-to-PDFKit/examples/demo.htm -->
+		<script src="lib/alafr/blobstream.js" type="text/javascript" charset="utf-8"></script>
+		<script src="lib/alafr/svgToPdfkit.js" type="text/javascript" charset="utf-8"></script>
+		<script src="lib/pdfkit.standalone.0.11.0.js" type="text/javascript" charset="utf-8"></script>
+		<script src="BEVAppView.js" type="text/javascript" charset="utf-8"></script>
+		<script type="text/javascript">
+			/* global ko */
+			//console.log("query js loading");
+
+			// flag which is set to true when load is finished
+			var isLoaded = false;
+			// this makes sure that nothing gets called until page and required JS files are loaded
+			var appview = null;
+			// actually parses URL
+			var globalDataAccess = new DataAccess();
+			var bevUrl = window.location.origin + window.location.pathname;
+			var globalDiagramControl = new DiagramControl(globalDataAccess, "BEVDisplay_Diagram", "BEVDisplay_Legend_Content", "BEVDisplay_Datapane_Content", bevUrl);
+			$(document).ready(function()
+			{
+				//console.log("view document ready");
+				// This is a simple *viewmodel* - JavaScript that defines the data and behavior of your UI
+				// handles URL containing link to specific dataset and diagram
+				// see DataAccess for URL processing
+				appview = new BEVAppView();
+				// Activates knockout.js
+				ko.applyBindings(appview);
+				// theDataAccess, theDiagramId, theLegendId, theDatapaneId
+				//console.log(appview.algorithmOptions());
+				// other setup
+				$( "#dbtabs" ).tabs();
+				$( '#databrowserFileInput' ).on("change", function(theEvent)
+				{
+					//console.log("event call");
+					processZipSelectEvent(theEvent);
+				});
+				// resize before showing popup, to prevent d3 plotting weirdly partly off the page
+				bodyResize();
+				//window.parent.viewLoaded();
+			});
+			
+			function viewGetUrlParams()
+			{
+				//console.log("viewGetUrlParams - returns JSON object");
+				// id index alg lvl1 lvl2
+				let urlParams = { };
+				if (appview.protocol() !== 'file:')
+				{
+					var tmpId = appview.requestedId();
+					var tmpDscid = appview.requestedDscid();
+					var tmpIndex = appview.requestedIndex();
+					if ((null !== tmpId) && (null !== tmpIndex))
+					{
+						urlParams["id"] = tmpId;
+						urlParams["dscid"] = tmpDscid;
+						urlParams["index"] = tmpIndex;
+						if (notUN(appview.algorithmSelected()))
+						{
+							urlParams["alg"] = appview.algorithmSelected().entry_label;
+						}
+						if (notUN(appview.level1Selected()))
+						{
+							urlParams["lvl1"] = appview.level1Selected().entry_label;
+						}
+						if (notUN(appview.level2Selected()))
+						{
+							urlParams["lvl2"] = appview.level2Selected().entry_label;
+						}
+						//console.log("globalOn_DB="+globalOn_DB);
+						if (globalOn_DB)
+						{
+							urlParams["hideDB"] = true;
+						}
+						//console.log("globalOn_LP="+globalOn_LP);
+						if (globalOn_LP)
+						{
+							urlParams["hideLP"] = true;
+						}
+					}
+				}
+				return urlParams;
+			}
+		</script>
+	</head>
+	<body class="body-wrapper" onresize="bodyResize();" style="display: none;" data-bind="visible: $root.makeGuiVisible()">
+		<div class="div-wrapper" id="id-div-wrapper">
+			<div class="div-data-browser" id="BEV_DataBrowser">
+				<div class="div-data-browser-title">
+					<span style="font-weight: normal; font-size: smaller;">Data Browser</span>
+					<button type="button" span style="float: right;" class="bev-control-button" 
+							data-bind="click: function () { hideDataBrowser(); globalDiagramControl.resize(); return false; }">
+						<i class="fas fa-minus-square"></i> Hide
+					</button>
+				</div>
+				<div class="div-databrowser-file" style="display: none;" data-bind="visible: $root.protocol() === 'file:'">
+					<input id="databrowserFileInput" type="file" name="databrowserFileInput" />
+				</div>
+				<div class="div-data-browser-content">
+					<div id="dbtabs">
+						<ul class="dataBrowserTabText">
+							<li class="dataBrowserTabText"><a class="dataBrowserTabText" href="#dbtab-1">Analysis Results</a></li>
+							<li class="dataBrowserTabText"><a class="dataBrowserTabText" href="#dbtab-2">Dataset Details</a></li>
+						</ul>
+						<table class="mdaCompactTable" id="dbtab-1">
+							<tbody>
+								<tr>
+									<td style="white-space: nowrap;"><span data-bind="text: $root.algorithmLabel()"></span></td>
+									<td><select data-bind="options: $root.algorithmOptions, optionsText: 'entry_label', value: $root.algorithmSelected"></select></td>
+								</tr>
+								<tr style="display: none;" data-bind="visible: (null !== $root.level1Label())">
+									<td style="white-space: nowrap;"><span data-bind="text: $root.level1Label()"></span></td>
+									<td><select data-bind="options: $root.level1Options, optionsText: 'entry_label', value: $root.level1Selected"></select></td>
+								</tr>
+								<tr style="display: none;" data-bind="visible: (null !== $root.level2Label())">
+									<td style="white-space: nowrap;"><span data-bind="text: $root.level2Label()"></span></td>
+									<td><select data-bind="options: $root.level2Options, optionsText: 'entry_label', value: $root.level2Selected"></select></td>
+								</tr>
+								<tr style="background-color: greenyellow;"><td colspan="2"><center>Basic Dataset Details</center></td></tr>
+								<tr><td style="white-space: nowrap;">Source</td><td><span data-bind="text: $root.indexSource()"></span></td></tr>
+								<tr><td style="white-space: nowrap;">Study ID</td><td><span data-bind="text: $root.indexProject()"></span></td></tr>
+								<tr><td style="white-space: nowrap;">Analysis ID</td><td><span data-bind="text: $root.indexSubProject()"></span></td></tr>
+								<tr><td style="white-space: nowrap;">Platform</td><td><span data-bind="text: $root.indexPlatform()"></span></td></tr>
+								<tr><td style="white-space: nowrap;">Data</td><td><span data-bind="text: $root.indexData()"></span></td></tr>
+								<tr data-bind="visible: ('MW' === $root.indexSource())">
+									<td>Metabolomics Workbench Link to Study</td>
+									<td><a target="_blank" data-bind="attr: { href: 'https://www.metabolomicsworkbench.org/data/DRCCMetadata.php?StudyID=' + $root.indexProject(), title: 'Link to Study' }">Link to Study</a></td>
+								</tr>
+							</tbody>
+						</table>
+						<table class="mdaCompactTable" id="dbtab-2">
+							<tbody>
+								<tr><td>BEV ID</td><td><span data-bind="text: $root.requestedId()"></span></td></tr>
+								<tr><td>Source ID</td><td><span data-bind="text: $root.indexSourceID()"></span></td></tr>
+								<tr><td>Source</td><td><span data-bind="text: $root.indexSource()"></span></td></tr>
+								<tr><td>Derivation</td><td><span data-bind="text: $root.indexVariant()"></span></td></tr>
+								<tr><td>Study ID</td><td><span data-bind="text: $root.indexProject()"></span></td></tr>
+								<tr><td>Analysis ID</td><td><span data-bind="text: $root.indexSubProject()"></span></td></tr>
+								<tr><td>Category</td><td><span data-bind="text: $root.indexCategory()"></span></td></tr>
+								<tr><td>Platform</td><td><span data-bind="text: $root.indexPlatform()"></span></td></tr>
+								<tr><td>Data</td><td><span data-bind="text: $root.indexData()"></span></td></tr>
+								<tr><td>Algorithm</td><td><span data-bind="text: $root.indexAlgorithm()"></span></td></tr>
+								<tr><td>Study Title</td><td><span data-bind="text: $root.indexDetails()"></span></td></tr>
+								<tr><td>Version</td><td><span data-bind="text: $root.indexVersion()"></span></td></tr>
+								<tr><td>MBatch ID</td><td><span data-bind="text: $root.indexMbatchMBatchID()"></span></td></tr>
+								<tr><td>MBatch Run</td><td><span data-bind="text: $root.indexMbatchMBatchRun()"></span></td></tr>
+								<tr><td>Dataset Type</td><td><span data-bind="text: $root.indexMbatchMBatchDatasetType()"></span></td></tr>
+								<tr data-bind="visible: ('MW' === $root.indexSource())">
+									<td>Metabolomics Workbench Link to Study</td>
+									<td><a target="_blank" data-bind="attr: { href: 'https://www.metabolomicsworkbench.org/data/DRCCMetadata.php?StudyID=' + $root.indexProject(), title: 'Link to Study' }">Link to Study</a></td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+			<div class="div-a-b-drag-bar" id="id-a-b-drag-bar" onmousedown="onMouseDownColAB(event);"></div>
+			<div class="div-diagram-viewer" id="BEV_Diagram">
+				<div class="div-diagram-viewer-title">
+					<span>
+						<span class="bevTitleText">&nbsp;&nbsp;MetaBatch Omic Browser Visualizer&nbsp;<span style="font-size: 60%">BEA_VERSION_TIMESTAMP</span></span>
+					</span>
+					<span style="display: inline-block; margin-left: auto;"> <!-- moves to right -->
+						<span style="font-weight: normal; font-size: smaller;">Data Viewer</span>
+						<span class="showDVButtons">
+							&nbsp;
+							<button type="button" class="bevQfButton" id="BEV_DataBrowserbutton" 
+									data-bind="click: function () { displayDataBrowser(); globalDiagramControl.resize(); return false; }">
+								<i class="fas fa-plus-square"></i> Data Browser
+							</button>
+							&nbsp;
+							<button type="button" class="bevLpButton" id="BEV_LegPaneButton"
+									data-bind="click: function () { displayLegPaneColumn(); globalDiagramControl.resize(); return false; }">
+								<i class="fas fa-plus-square"></i> Legend/Datapane
+							</button>
+						</span>
+					</span>
+				</div>
+				<div class="div-diagram-viewer-control">
+					<span style="display: none;" data-bind="visible: (null !== $root.requestedId())">
+						&nbsp;<button type="button" class="bev-control-button" 
+									  data-bind="click: function(){ location.href='../dszipresults?id='+ $root.requestedId(); return false; }" 
+									  title="Download results, includes corrected data if pertinent."><i class="fas fa-download" style="color: red;"> </i> Results</button>
+					</span>
+					<span style="display: none;" data-bind="visible: (null !== $root.requestedId())">
+						&nbsp;<button type="button" class="bev-control-button" 
+									  data-bind="click: function(){ location.href='../dszipdata?id='+ $root.requestedId(); return false; }" 
+									  title="Download original data and metadata."><i class="fas fa-download" style="color: firebrick;"> </i> Data</button>
+					</span>
+					<span data-bind="visible: $root.isPngDiagram()">
+						&nbsp;
+						<button type="button" class="bev-control-button" id="BEV_ToggleFitButton" 
+								data-bind="click: function () { globalDiagramControl.toggleImgFit(); return false; }">
+							<i class="fas fa-expand-arrows-alt" style="color: seagreen;"></i> Toggle Fit
+						</button>
+					</span>
+					<span data-bind="visible: supportsPdf($root.algorithmSelected)">
+						&nbsp;
+						<button type="button" class="bev-control-button" id="BEV_SaveAsPDFButton" 
+								data-bind="click: function () { globalDiagramControl.saveAsPdf(); return false; }">
+							<i class="fas fa-file-download" style="color: royalblue;"></i> Save PDF
+						</button>
+					</span>
+				</div>
+				<div class="div-diagram-viewer-content" id="BEVDisplay_Diagram"></div>
+			</div>
+			<div class="div-b-c-drag-bar" id="id-b-c-drag-bar" onmousedown="onMouseDownColBC(event);"></div>
+			<div class="div-legpane" id="BEV_LegPane" >
+				<div class="div-legend" id="BEVDisplay_Legend">
+					<div class="div-legend-title">
+						<span style="font-weight: normal; font-size: smaller;">Legend</span>
+						<button type="button" style="float: right;" class="bev-control-button" 
+								data-bind="click: function () { hideLegPaneColumn(); globalDiagramControl.resize(); return false; }">
+							<i class="fas fa-minus-square"></i> Hide
+						</button>
+					</div>
+					<div class="div-legend-content" id="BEVDisplay_Legend_Content"></div>
+				</div>
+				<div class="div-l-p-drag-bar" id="id-l-p-drag-bar" onmousedown="onMouseDownRowAB(event);"></div>
+				<div class="div-datapane" id="BEVDisplay_Datapane">
+					<div class="div-datapane-title"><span style="font-weight: normal; font-size: smaller;">Datapane</span></div>
+					<div class="div-datapane-control">
+						<button type="button" id="DPCopyAllButton" class="bev-control-button" data-bind="click: function () { bevDatapaneCopyAll(); return false; }">
+							<span class="fa-stack fa-lg controlButtonIcon">
+								<i class="fas fa-copy fa-stack-1x controlButtonIcon" style="color:blue;"></i>
+								<i class="far fa-copy fa-stack-1x controlButtonIcon" style="color:black;"></i>
+							</span> Copy All
+						</button>
+						<button type="button" id="DPClearButton" class="bev-control-button" data-bind="click: function () { bevDatapaneClear(); return false; }">
+							<span class="fa-stack fa-lg controlButtonIcon">
+								<i class="fas fa-eraser fa-stack-1x controlButtonIcon" style="color:deeppink;"></i>
+							</span>&nbsp;Clear
+						</button>
+					</div>
+					<div class="div-datapane-content" id="BEVDisplay_Datapane_Content"></div>
+				</div>
+			</div>
+		</div>
+		<!-- see DiagramControl.js SVG to PDF code -->
+		<div style="display: none;" id="renderSvgForPrinting"></div>
+	</body>
+ </html>

@@ -1,0 +1,40 @@
+# this is the docker-compose version
+version: '3'
+
+# file version BEA_VERSION_TIMESTAMP1
+
+networks:
+    # network for this compose stack
+    mob_network_<ENVIRON>:
+        driver: bridge
+#SUBNET        ipam:
+#SUBNET            config:
+#SUBNET            - subnet: <SUBNET>
+services:
+    mob_service:
+        networks:
+            - mob_network_<ENVIRON>
+        # restart this container if it crashes
+        restart: always
+        build:
+            # build from directory in context and Dockerfile
+            context: .
+            dockerfile: Dockerfile
+        container_name: mob_cont_<ENVIRON>
+        image: <IMAGEURL>
+        volumes:
+            # outside access for data files outside:inside
+            - <INDEXPATH>:/DAPI/INDEXES:ro
+            - <DSCPATH>:/DAPI/DSC_INDEXES:ro
+            - <CONFIGPATH>:/DAPI/CONFIG:ro
+            - <OUTSIDE_DATA_PATH>:/DAPI/DATA:ro
+            - <LOGPATH>:/opt/tomcat/logs
+            # read-only file to set time and timezone to same in image as on server
+            - /etc/localtime:/etc/localtime:ro
+            - /etc/timezone:/etc/timezone:ro
+        ports:
+            # (outside)host port:container port(inside) for Tomcat
+            # outside/host port is only set here (other docker compose have ports in more than one place)
+            - "<OUTSIDE_PORT>:8080"
+        tty: true
+

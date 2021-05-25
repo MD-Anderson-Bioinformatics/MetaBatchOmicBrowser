@@ -1,0 +1,287 @@
+
+.BoxplotPlottingDiv
+{
+	width: auto;
+}
+
+.BoxplotDetailedDiv
+{
+	width: auto;
+	padding-right: 10px;
+}
+
+.BoxplotLegendDiv
+{
+	width: auto;
+}
+
+.SelectedBatch
+{
+	stroke: red	!important;
+	/* important used to override class order and local styles */
+}
+
+.GXScaleAreaSvg
+{
+	/* font-family: "Arial Black", Gadget, sans-serif; */
+	font-family: Tahoma, Geneva, sans-serif;
+}
+
+body
+{
+	font-family: Arial, Arial, Sans-serif;
+}
+
+.toolArea
+{
+	stroke: black;
+	fill: grey;
+}
+
+.BoxplotLegend
+{
+	overflow: auto;
+	background-color: lightgray;
+}
+
+.BoxplotDatapointLog
+{
+	overflow: auto;
+	background-color: lightblue;
+}
+
+.BoxplotParentDiv
+{
+	float: left
+}
+
+.BPPopup
+{
+	overflow: auto;
+	width: 100%;
+	height: 100%;
+}
+
+.LegendContainerBP
+{
+	/*overflow: auto;*/
+}
+
+.LegendViewBP
+{
+	/*overflow: auto;*/
+}
+
+.BoxplotDetailed
+{
+	overflow: auto;
+	background-color: white;
+}
+
+.BoxplotDetailedTitle
+{
+    font-size: 9px;
+	fill: black;
+}
+
+
+.BoxplotTop
+{
+	font-family: 'Arial', Arial, Sans-serif;
+}
+
+/* change internal */
+.TimerText
+{
+	fill: white;
+}
+
+/* change internal */
+.GScrollbarArea
+{
+}
+
+.ViewBorder
+{
+	stroke: black;
+	fill: none;
+}
+
+.BoxplotTopBorder
+{
+	stroke: none;
+	fill: none;
+}
+
+.BoxplotTopTitle
+{
+    font-size: 10px;
+	fill: black;
+}
+
+.BoxplotXLabel
+{
+    font-size: 12px;
+}
+
+.BoxplotYLabel
+{
+    font-size: 12px;
+}
+
+.GXScaleArea
+{
+    font-size: 12px;
+}
+
+.GYScaleArea
+{
+    font-size: 12px;
+}
+
+.boxplotBox
+{
+
+}
+
+.boxplotBoxG
+{
+
+}
+
+.boxplotBoxText
+{
+    font-size: 10px;
+}
+
+/* Box at medium resolution */  
+.boxBox
+{
+	stroke: black;
+	stroke-width: 1px;
+}
+
+.boxLine
+{
+	stroke-width: 2px;
+}
+
+/* Single line for both whiskers at low and medium resolution */  
+.whiskerLine
+{
+	stroke: gray;
+	stroke-width: 1px;
+}
+
+/* Horizontal lines at whisker ends medium resolution */  
+.upperHorizontalWhiskerLine
+{
+	stroke: gray;
+	stroke-width: 1px;
+}
+
+.lowerHorizontalWhiskerLine
+{
+	stroke: gray;
+	stroke-width: 1px;
+}
+
+.upperOutLine
+{
+	stroke: DarkBlue;
+	stroke-width: 1.0px;
+}
+
+.lowerOutLine
+{
+	stroke: DarkBlue;
+	stroke-width: 1.0px;
+}
+
+.medianLine
+{
+	stroke: black;
+	stroke-width: 1px;
+}
+
+.OutlierDot
+{
+	stroke: black;
+	fill: black;	
+}
+
+.leftLine,.rightLine
+{
+	stroke: blue;
+	stroke-width: 2;
+	fill: none;
+}
+
+.legendsymbol
+{
+	shape-rendering: crispedges;
+	stroke: black;
+}
+
+#YScaleItself>path
+{
+	fill: none;
+	stroke: black;
+	shape-rendering: crispEdges;
+}
+
+#YScaleItself>g>line
+{
+	fill: none;
+	stroke: black;
+	shape-rendering: crispEdges;
+}
+
+#GXScaleAreaPanAndZoom>path
+{
+	fill: none;
+	stroke: none;
+	/*stroke: black;*/
+	shape-rendering: crispEdges;
+}
+
+#GXScaleAreaPanAndZoom>g>line
+{
+	fill: none;
+	stroke: none;
+	/*stroke: black;*/
+	shape-rendering: crispEdges;
+}
+
+#DetailYScaleItself>path
+{
+	fill: none;
+	stroke: none;
+	/*stroke: black;*/
+	shape-rendering: crispEdges;
+}
+
+#DetailYScaleItself>g>line
+{
+	fill: none;
+	stroke: black;
+	shape-rendering: crispEdges;
+}
+
+.GTitleAreaRect
+{
+	fill: none;
+	stroke: none;
+}
+
+.TitleSvgBoxRect
+{
+	fill: none;
+	stroke: none;
+}
+
+.TitleViewBoxRect
+{
+	fill: none;
+	stroke: none;
+}

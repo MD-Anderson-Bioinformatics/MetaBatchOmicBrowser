@@ -1,0 +1,60 @@
+svg.hc-plot {
+  font-family: Verdana, Arial, Helvetica, sans-serif;
+  font-size: 11px;
+  /*font-size: 100%;*/	/* counteract rule in batcheffects.css */
+}
+
+rect.covar-rect {
+ /* fill: none; */
+ /* stroke: black; */
+  shape-rendering: crispEdges;
+}
+
+.DendroPanel line {
+	stroke-width: 1;
+	stroke: black;
+}
+
+.AxisTicks line {
+	stroke-width: 1;
+	stroke: black;
+}
+
+.tooltip-pane rect {
+  fill: #fcfdfd;
+  stroke: #a6c9e2;
+  stroke-width: 1px;
+  shape-rendering: crispEdges;
+}
+
+.tooltip-text {
+  font-family: Verdana, Arial, sans-serif;
+  font-size: 11px;
+}
+
+.hilite-label {
+	font-weight: bold;
+}
+
+.legendtitle, .legendtext, .barlabel {
+  font-family: Verdana, Arial, sans-serif;
+  font-size: 11px;
+  /*font-weight: bold;*/
+}
+
+.barlabelbold{
+    font-weight: bold;
+    color:#2222dd;
+}
+
+.legendSplitter{
+    background: none;
+    height: 5px;
+    left: 0px;  
+    top: 41px;
+    position: absolute;
+    width: -webkit-fill-available;
+    border-top: 1px solid var(--border-color-grey);
+    border-bottom: 1px solid var(--border-color-grey);
+    background-color: var(--body-bg-color);
+}

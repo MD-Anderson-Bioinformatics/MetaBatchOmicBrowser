@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<!-- Global site tag (gtag.js) - Google Analytics -->
+		<script type="text/javascript">
+			function loadGoogleAnalytics()
+			{
+				var gaScript = document.createElement('script');
+				gaScript.setAttribute('async', 'true');
+				gaScript.setAttribute('src', `https://www.googletagmanager.com/gtag/js?id=UA-33425717-1`);
+
+				var gaScript2 = document.createElement('script');
+				gaScript2.innerText = `window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag(\'js\', new Date());gtag(\'config\', \'UA-33425717-1\');`;
+
+				document.documentElement.firstChild.appendChild(gaScript);
+				document.documentElement.firstChild.appendChild(gaScript2);
+			};
+			loadGoogleAnalytics();
+		</script>
+		<title>MetaBatch Omic Browser About/Help</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<!-- **** icons **** -->
+		<!-- all tag attributes (src, type, rel) are required for proper generation of standalone file BEV_AppGenerator.java -->
+		<link href="fa5/css/all.css" rel="stylesheet" type="text/css">
+		<!-- **** CSS Entries **** -->
+		<link href="mqa.css" rel="stylesheet" type="text/css">
+	</head>
+	<body>
+		<div class="div-wrapper" id="id-div-wrapper">
+			<div class="div-header">
+				<div class="mdaServiceHeader">
+					<a href="https://bioinformatics.mdanderson.org/public-software/tcga-batch-effects/" target="_blank" style="float: left;"><img class="mdaServiceHeaderLogo" src="images/MDAnderson-Master-Logo_Texas_H_NoTag_RGB-BLACK.png" alt="MDA Logo"></a>
+					<div class="mdaServiceHeaderTitle">
+						<div class="mdaTitleText">
+							&nbsp;&nbsp;<span class="mdaTitleText">MetaBatch Omic Browser About/Help</span>&nbsp;<span style="font-size: 60%">BEA_VERSION_TIMESTAMP</span>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<hr>
+		<h2>Things to Do</h2>
+		<p><strong>To view an analysis</strong>, click the "View Analysis" link under the View Results column or use the Previous or Next buttons at the top of the page.</p>
+		<p><strong>To download data</strong>, click the "Data" link under the Data Download column or use the Data button in Data Viewer.</p>
+		<p><strong>To download results for use with the standalone viewer</strong>, click the "Results" link under the Results Download column or use the Results button in Data Viewer.</p>
+		<p><strong>To bookmark a URL for a search and diagram</strong>, click the "Copy URL" button at the top of the page. Paste the URL and bookmark that URL.</p>
+		<hr>
+		<h2>Details about Batch Effects and Various GUI Components</h2>
+		<p>
+			<a href="https://bioinformatics.mdanderson.org/public-software/tcga-batch-effects" target="_blank">Batch Effects Overview and Interpretation</a> Link to BCB website concerning Batch Effects analysis and interpretation and how to use the GUI.
+		</p>
+		<p>
+			<a href="bevApp.html" download="BatchEffectsViewer.html">Download Stand Alone Viewer</a> Download the off-line HTML file version of the MetaBatch Omic Browser, allowing user to use the MBatch ZIP Archive to access dynamic plots as seen on the website.
+		</p>
+		<p>
+			<a href="GDCConverters.html" target="_blank">GDC Converters</a> Documentation of conversion/standardization of GDC data. (New Tab.)
+		</p>
+		<hr>
+		<h2>Software and BCB at MDA</h2>
+		<p>
+			<a href="https://github.com/MD-Anderson-Bioinformatics/MetaBatchOmicBrowser" target="_blank">GitHub</a> Link to public software release for MetaBatch Omic Browser. Includes docker-compose files for using Docker Hub images.
+		</p>
+		<p>
+			<a href="https://bioinformatics.mdanderson.org" target="_blank">About BCB at MD Anderson</a> Link to the Bioinformatics and Computations Biology website at UT MD Anderson Cancer Center.
+		</p>
+		<hr>
+		<h2>Funding</h2>
+		<p>
+			This work was supported in part by Weinstein, Broom, Akbani. Computational Tools for Analysis and Visualization of Quality Control Issues in Metabolomic Data, U01CA235510, NIH/NCI<br>
+			NGCHM work was supported in part by U.S. National Cancer Institute (NCI) grant:  Weinstein, Broom. "Next Generation" Clustered Heat Maps for Fluent, Interactive Exploration of Omic Data, 5U24CA199461
+		</p>
+	</body>
+</html>

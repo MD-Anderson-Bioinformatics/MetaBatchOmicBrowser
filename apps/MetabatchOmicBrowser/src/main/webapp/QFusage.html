@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang xml:lang>
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Query Form Usage</title>
+  <style type="text/css">
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<header>
+<h1 class="title">Query Form Usage</h1>
+</header>
+<p><strong>Data Query Form<br />
+Tod Casasent<br />
+2020-08-12-1430</strong></p>
+<h1 id="introduction">Introduction</h1>
+<p>This document gives simple instructions for using the Data Query Form. This document will provide minimal, but some, descriptions of elements such as Platforms and data descriptions. It also includes instructions for accessing Standardized Data from the DAPIR (Data API for R) R package.</p>
+<h2 id="links">Links</h2>
+<p>Query Form / Standardized Data Browser<br />
+<a href="https://bioinformatics.mdanderson.org/StandardizedDataBrowser" class="uri">https://bioinformatics.mdanderson.org/StandardizedDataBrowser</a></p>
+<p>Batch Effects Viewer<br />
+<a href="https://bioinformatics.mdanderson.org/BatchEffectsViewer" class="uri">https://bioinformatics.mdanderson.org/BatchEffectsViewer</a></p>
+<p>DAPIR on GitHub<br />
+<a href="https://github.com/MD-Anderson-Bioinformatics/DataAPI" class="uri">https://github.com/MD-Anderson-Bioinformatics/DataAPI</a></p>
+<p>BCB on GitHub (source code and additional documentation)<br />
+<a href="https://github.com/MD-Anderson-Bioinformatics/" class="uri">https://github.com/MD-Anderson-Bioinformatics/</a></p>
+<p>BCB on Docker Hub (Docker images)<br />
+<a href="https://hub.docker.com/u/mdabcb" class="uri">https://hub.docker.com/u/mdabcb</a></p>
+<h1 id="categories-and-category-options">Categories and Category Options</h1>
+<p>The Data Query Form has 11 categories. Most categories work the same for selecting and filtering data---Versions is the one exception. For the regular categories, selecting an option within a category limits the results to elements with that option. Selecting more than one option acts as an &quot;or&quot; so that, for example if you select &quot;TCGA-COAD&quot; and &quot;TCGA-READ&quot; Sub-Projects, you get both COAD and READ data.</p>
+<h2 id="files-category">Files Category</h2>
+<p>The Files Category lists the available types of files found within each dataset archive.</p>
+<h2 id="sources-category">Sources Category</h2>
+<p>The Source Category lists the source of the data, such as the GDC or PanCan Study Group.</p>
+<h2 id="derivations-category">Derivations Category</h2>
+<p>The Derivations Category lists the derivation of data within a Source, such as, for the GDC, &quot;current&quot; or &quot;legacy&quot; data.</p>
+<h2 id="archive-type-category">Archive Type Category</h2>
+<p>The Archive Type Category lists the variation of data in the dataset--for the GDC, this is &quot;standardized&quot;. Other datasets may provide other Archive Type Categories.</p>
+<h2 id="algorithms-category">Algorithms Category</h2>
+<p>The Algorithms Category divides the data into &quot;continuous&quot;, amenable to most standardize statistical processing, and &quot;discrete&quot;, generally sparse matrices and not amenable to many statistical methods</p>
+<h2 id="versions-category">Versions Category</h2>
+<p>The Versions Category are the timestamps for when the data was acquired by the Query Form. This Category works different from the rest. By default, the Query Form will show the newest version of each dataset. Selecting one or more Versions, limits the results to that particular version. Note that in Standardized Data, each Version may only contain a single dataset.</p>
+<h2 id="projects-category">Projects Category</h2>
+<p>The Projects Category lists the higher-level project, like TCGA or TARGET, for the dataset.</p>
+<h2 id="sub-projects-category">Sub-Projects Category</h2>
+<p>The Sub-Projects Category lists what is generally the disease (cancer type) being processed. Some Projects do not divide data by disease, hence the more generic name for this Category.</p>
+<h2 id="data-type-category">Data Type Category</h2>
+<p>The Data Type Category divides the datasets into general type of data. Currently, some categories can be overly specific (such as for different mutation data) and some overly general or redundant (such as &quot;Copy Number Segment&quot; and &quot;Copy number variation&quot;). Filters are in place to address much of that.</p>
+<h2 id="details-category">Details Category</h2>
+<p>The Details Category allows filtering on detailed options for datasets, in particular the Methylation data option to include (wXY) or exclude (noXY) sex chromosomes.</p>
+<h2 id="platforms-category">Platforms Category</h2>
+<p>The Platforms Category lists the available platforms. Currently, some may be redundant and misleading, such as the Legacy GDC data having &quot;Illumina Human Methylation 27&quot; and &quot;Illumina Human Methylation 450&quot; compared to the Current GDC data using &quot;Liftover&quot;.</p>
+<h1 id="file-formats">File Formats</h1>
+<p>There are five files provided within datasets.</p>
+<h2 id="matrix_data.tsv">matrix_data.tsv</h2>
+<p>The Standardized Data &quot;Data Matrix&quot; format is a tab delimited file. The first line of the file begins with a tab and contains sample identifiers. For Standardized Data, the sample identifiers are bar codes. Each subsequent row begins with a Feature Identifier and is followed by numeric data. Feature Identifiers are specific to the platform but can be values such as Hugo Gene ids, probe ids, or microRNA identifiers.</p>
+<p>This extract from the Data Matrix format shows four sample ids and five feature ids. Note that the first blank cell indicates the starting tab for the sample identifiers line. The features (left-most column) can be any set of unique strings. For proper processing, the rows and columns should be sorted.</p>
+<table>
+<thead>
+<tr class="header">
+<th></th>
+<th>TCGA-OR-A5J2-01A-21-A39K-20</th>
+<th>TCGA-OR-A5J3-01A-21-A39K-20</th>
+<th>TCGA-OR-A5J6-01A-41-A39K-20</th>
+<th>TCGA-OR-A5J7-01A-21-A39K-20</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>14-3-3_beta-R-V</td>
+<td>0.211404</td>
+<td>-0.14778</td>
+<td>0.220188</td>
+<td>-0.02738</td>
+</tr>
+<tr class="even">
+<td>14-3-3_epsilon-M-C</td>
+<td>-0.03151</td>
+<td>-0.12861</td>
+<td>-0.0762</td>
+<td>-0.02275</td>
+</tr>
+<tr class="odd">
+<td>14-3-3_zeta-R-V</td>
+<td>-0.01203</td>
+<td>0.032791</td>
+<td>-0.34541</td>
+<td>0.136629</td>
+</tr>
+<tr class="even">
+<td>4E-BP1-R-V</td>
+<td>0.589134</td>
+<td>0.365167</td>
+<td>0.297887</td>
+<td>7.34E-05</td>
+</tr>
+</tbody>
+</table>
+<h2 id="batches.tsv">batches.tsv</h2>
+<p>The Standardized Data Batch File format is also a tab delimited file. The first line of the file contains the sample id column id and batch type identifiers, none of which should contain spaces. The first entry should be the &quot;Sample&quot; column, which contains sample ids. Some non-batch types may include type and patient entries for cross-reference purposes.</p>
+<table>
+<thead>
+<tr class="header">
+<th>Sample</th>
+<th>Type</th>
+<th>BatchId</th>
+<th>PlateId</th>
+<th>ShipDate</th>
+<th>TSS</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>TCGA-OR-A5J2-01A-21-A39K-20</td>
+<td>1</td>
+<td>304</td>
+<td>A39K</td>
+<td>5/7/2014</td>
+<td>OR - University of Michigan</td>
+</tr>
+<tr class="even">
+<td>TCGA-OR-A5J3-01A-21-A39K-20</td>
+<td>1</td>
+<td>304</td>
+<td>A39K</td>
+<td>5/7/2014</td>
+<td>OR - University of Michigan</td>
+</tr>
+<tr class="odd">
+<td>TCGA-OR-A5J6-01A-41-A39K-20</td>
+<td>1</td>
+<td>304</td>
+<td>A39K</td>
+<td>5/7/2014</td>
+<td>OR - University of Michigan</td>
+</tr>
+<tr class="even">
+<td>TCGA-OR-A5J7-01A-21-A39K-20</td>
+<td>1</td>
+<td>304</td>
+<td>A39K</td>
+<td>5/7/2014</td>
+<td>OR - University of Michigan</td>
+</tr>
+</tbody>
+</table>
+<h2 id="clinical.tsv">clinical.tsv</h2>
+<p>Clinical TSV files follow the same format as batches.tsv with different column headers rather than batch information.</p>
+<h2 id="index.json">index.json</h2>
+<p>This is a simple JSON file describing each Category option that defines this dataset:</p>
+<p>{</p>
+<p>&quot;source&quot;: &quot;GDC&quot;,</p>
+<p>&quot;variant&quot;: &quot;current&quot;,</p>
+<p>&quot;project&quot;: &quot;TCGA&quot;,</p>
+<p>&quot;subProject&quot;: &quot;TCGA-CHOL&quot;,</p>
+<p>&quot;category&quot;: &quot;Copy Number Segment&quot;,</p>
+<p>&quot;platform&quot;: &quot;DNAcopy&quot;,</p>
+<p>&quot;data&quot;: &quot;standardized&quot;,</p>
+<p>&quot;algorithm&quot;: &quot;discrete&quot;,</p>
+<p>&quot;details&quot;: &quot;&quot;,</p>
+<p>&quot;version&quot;: &quot;2020_01_31_0845&quot;</p>
+<p>}</p>
+<h2 id="mutations.tsv">mutations.tsv</h2>
+<p>The mutations.tsv file is a tab delimited file based on the Mutation MAF files with column headers standardized. Headers should be self-evident to users familiar with mutation datasets.</p>
+<h1 id="urls-and-r-package-utilities">URLs and R Package Utilities</h1>
+<p><img src="data:image/png;base64,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" style="width:3.53125in;height:2.125in" /></p>
+<h2 id="copy-query-string-for-r-package">Copy Query String for R Package</h2>
+<p>Clicking <span id="_Hlk48135152" class="anchor"></span>the &quot;Copy Query String for R Package&quot; button copies a string to the clipboard based on the data query selected in the GUI. For example, this string gives current TCGA-ACC data from the 2020_01_31_0845 data run.</p>
+<p>{\&quot;mFiles\&quot;:[\&quot;batches.tsv\&quot;],\&quot;mSources\&quot;:[],\&quot;mVariants\&quot;:[\&quot;current\&quot;],\&quot;mProjects\&quot;:[],\&quot;mSubprojects\&quot;:[\&quot;TCGA-ACC\&quot;],\&quot;mCategories\&quot;:[],\&quot;mPlatforms\&quot;:[],\&quot;mData\&quot;:[],\&quot;mAlgorithms\&quot;:[],\&quot;mDetails\&quot;:[],\&quot;mVersions\&quot;:[\&quot;2020_01_31_0845\&quot;]}</p>
+<p>This string is used in the DAPIR R Package function checkDownloadedDataStatus to create and update a local copy of Standardized Data.</p>
+<h2 id="copy-bookmark-able-url">Copy Bookmark-able URL</h2>
+<p>Clicking the &quot;Copy Bookmark-able URL&quot; button copies a string to the clipboard based on the data query selected in the GUI. The string is a URL that links to the selected query defined in the GUI.</p>
+<h1 id="dapir-r-package">DAPIR R Package</h1>
+<p>The DataAPI project page ( <a href="https://github.com/MD-Anderson-Bioinformatics/DataAPI" class="uri">https://github.com/MD-Anderson-Bioinformatics/DataAPI</a> ) on GitHub gives instructions for installing the DAPIR R package.</p>
+<p>And example of downloading data using the Query String is given below.</p>
+<p># TCGA-ACC data -- pasted the &quot;Copy Query String for R Package&quot; button into queryOne &lt;- paste(&quot;&quot;)</p>
+<p>queryOne &lt;- paste(&quot;{\&quot;mFiles\&quot;:[\&quot;batches.tsv\&quot;],\&quot;mSources\&quot;:[],\&quot;mVariants\&quot;:[\&quot;current\&quot;],&quot;,</p>
+<p>&quot;\&quot;mProjects\&quot;:[],\&quot;mSubprojects\&quot;:[\&quot;TCGA-ACC\&quot;],\&quot;mCategories\&quot;:[],&quot;,</p>
+<p>&quot;\&quot;mPlatforms\&quot;:[],\&quot;mData\&quot;:[],\&quot;mAlgorithms\&quot;:[],\&quot;mDetails\&quot;:[],&quot;,</p>
+<p>&quot;\&quot;mVersions\&quot;:[]}&quot;, sep=&quot;&quot;)</p>
+<p># temp directory</p>
+<p>datasetDir &lt;- file.path(tempdir(), &quot;DAPIR&quot;)</p>
+<p>print(datasetDir)</p>
+<p>dir.create(datasetDir, showWarnings=FALSE, recursive=TRUE)</p>
+<p># get data status</p>
+<p>results &lt;- checkDownloadedDataStatus(queryOne, datasetDir)</p>
+<p>print(results)</p>
+<p># Download initial datasets</p>
+<p>newDatasets &lt;- results$NEW</p>
+<p>downloadData(newDatasets, datasetDir)</p>
+</body>
+</html>

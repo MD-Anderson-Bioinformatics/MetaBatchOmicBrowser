@@ -1,0 +1,68 @@
+FROM centos:centos8
+
+# reminder, use {} around environmental variables, otherwise docker uses it as a literal
+
+LABEL edu.mda.bcb.name="MBatch Omics Browser" \
+      edu.mda.bcb.sub="mob" \
+      edu.mda.bcb.mob.version="BEA_VERSION_TIMESTAMP" \
+      edu.mda.bcb.mob.log="<LOG_DIR>" \
+      edu.mda.bcb.mob.start="<START_SCRIPT>" \
+      edu.mda.bcb.mob.stop="<STOP_SCRIPT>" \
+      edu.mda.bcb.mob.upcheck="<UPCHECK_SCRIPT>"
+
+# Use Java 8, still supported, and all the tools depend on it -- simplifies other installs and maintenance
+RUN dnf -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm && \
+    dnf -y install java-1.8.0-openjdk java-1.8.0-openjdk-devel java-1.8.0-openjdk-headless && \
+    update-alternatives --install /usr/bin/java java /usr/lib/jvm/java-1.8.0-openjdk-1.8.0.265.b01-0.el8_2.x86_64/jre/bin/java 1 && \
+    update-alternatives --install /usr/bin/javac javac /usr/lib/jvm/java-1.8.0-openjdk-1.8.0.265.b01-0.el8_2.x86_64/bin/javac 1 && \
+    update-alternatives --install /usr/bin/jar jar /usr/lib/jvm/java-1.8.0-openjdk-1.8.0.265.b01-0.el8_2.x86_64/bin/jar 1 && \
+    update-alternatives --install /usr/bin/javah javah /usr/lib/jvm/java-1.8.0-openjdk-1.8.0.265.b01-0.el8_2.x86_64/bin/javah 1 && \
+    echo "export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.265.b01-0.el8_2.x86_64" >> /etc/profile.d/java.sh && \
+    yum update -y && \
+    yum clean all
+
+# create and setup bcbuser
+# also, set permissions and ownerships on internal docker directories
+RUN useradd -l -s /bin/bash -d /home/bcbuser -u <USERID> bcbuser && \
+    chown -R bcbuser:bcbuser /home/bcbuser
+
+# install Tomcat 9, set to run as bcbuser
+
+ENV TOMCAT_MAJOR=9 \
+    TOMCAT_VERSION=9.0.39 \
+    TOMCAT_HOME=/opt/tomcat \
+    CATALINA_HOME=/opt/tomcat \
+    CATALINA_OUT=/dev/null
+
+RUN curl -jksSL -o /tmp/apache-tomcat.tar.gz http://archive.apache.org/dist/tomcat/tomcat-${TOMCAT_MAJOR}/v${TOMCAT_VERSION}/bin/apache-tomcat-${TOMCAT_VERSION}.tar.gz && \
+    gunzip /tmp/apache-tomcat.tar.gz && \
+    tar -C /opt -xf /tmp/apache-tomcat.tar && \
+    mv /opt/apache-tomcat-${TOMCAT_VERSION} ${TOMCAT_HOME} && \
+    rm -rf ${TOMCAT_HOME}/webapps/docs && \
+    rm -rf ${TOMCAT_HOME}/webapps/ROOT && \
+    rm -rf ${TOMCAT_HOME}/webapps/examples && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* && \
+    chown -R bcbuser:bcbuser ${TOMCAT_HOME} && \
+    ln -s /opt/apache-tomcat-${TOMCAT_VERSION} ${TOMCAT_HOME} && \
+    yum clean all
+
+# copy installs
+# COPY is always done as root!!!!
+# copy server.xml to start compression - may need to be merged with above later
+# also formats output for LOGREPORT
+COPY installations/server.xml ${CATALINA_HOME}/conf/server.xml
+RUN chown -R bcbuser:bcbuser ${CATALINA_HOME}/conf && \
+    chmod -R u+rwx ${CATALINA_HOME}/conf
+
+# copy installs
+# COPY is always done as root!!!!
+# destination is dir/ not dir/. because docker insists on being different
+COPY installations/*.war ${CATALINA_HOME}/webapps/
+RUN chown -R bcbuser:bcbuser ${CATALINA_HOME}/webapps && \
+    chmod -R u+rwx ${CATALINA_HOME}/webapps
+
+# switch from root to bcbuser user
+USER bcbuser
+
+CMD ["/opt/tomcat/bin/catalina.sh", "run"]
+

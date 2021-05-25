@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<!-- Global site tag (gtag.js) - Google Analytics -->
+		<script type="text/javascript">
+			function loadGoogleAnalytics()
+			{
+				var gaScript = document.createElement('script');
+				gaScript.setAttribute('async', 'true');
+				gaScript.setAttribute('src', `https://www.googletagmanager.com/gtag/js?id=UA-33425717-3`);
+
+				var gaScript2 = document.createElement('script');
+				gaScript2.innerText = `window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag(\'js\', new Date());gtag(\'config\', \'UA-33425717-3\');`;
+
+				document.documentElement.firstChild.appendChild(gaScript);
+				document.documentElement.firstChild.appendChild(gaScript2);
+			};
+			loadGoogleAnalytics();
+		</script>
+		<title>MetaBatch Omic Browser Query</title>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<!-- **** icons **** -->
+		<link href="fa5/css/all.css" rel="stylesheet" type="text/css">
+		
+		<link href="tippy.css" rel="stylesheet" type="text/css">
+		<link href="jquery-ui-1.12.1/jquery-ui.min.css" rel="stylesheet" type="text/css">
+		<link href="sel2-4.0.13/select2.min.css" rel="stylesheet" type="text/css">
+		<link href="DataTables/DataTables-1.10.20/css/jquery.dataTables.min.css" rel="stylesheet" type="text/css">
+		<link href="DataTables/ColReorder-1.5.3/colReorder.dataTables.min.css" rel="stylesheet" type="text/css">
+		<link href="dapi.css" rel="stylesheet" type="text/css">
+		
+		<script src="knockout-3.5.1.js" type="text/javascript" charset="utf-8"></script>
+		<script src="jquery-3.5.0.min.js" type="text/javascript" charset="utf-8"></script>
+		<script src="jquery-ui-1.12.1/jquery-ui.min.js" type="text/javascript" charset="utf-8"></script>
+		<script src="sel2-4.0.13/select2.full.min.js" type="text/javascript" charset="utf-8"></script>
+		<script src="DataTables/DataTables-1.10.20/js/jquery.dataTables.min.js" type="text/javascript" charset="utf-8"></script>
+		<script src="DataTables/ColReorder-1.5.3/dataTables.colReorder.min.js" type="text/javascript" charset="utf-8"></script>
+		<script src="DAPIAppView.js" type="text/javascript" charset="utf-8"></script>
+		<script type="text/javascript" src="tippy.js"></script>
+		
+		<script type="text/javascript">
+			/* global ko */
+		
+			//console.log("query js loading");
+			// this makes sure that nothing gets called until page and required JS files are loaded
+			var appview = null;
+			$(document).ready(function()
+			{
+				//("query document ready");
+				// Activates knockout.js
+				ko.options.deferUpdates = true;
+				appview = new AppViewModel();
+				ko.applyBindings(appview);
+				initializeTooltips();
+				////////////////////////////////////////////////////////////////
+				//// this is used to prevent "flickering" characteristic on load with knockoutJS
+				////////////////////////////////////////////////////////////////
+				appview.makeGuiVisible(true);
+				//window.parent.queryLoaded();
+			});
+			
+			function queryGetUrlParams()
+			{
+				//console.log("queryGetUrlParams - returns JSON object");
+				return urlParamsJson();
+			}
+			
+			function setSelectedDatasetQuery(theId, theDscid)
+			{
+				//console.log("setSelectedDatasetQuery");
+				$("#" + appview.viewedDatasetId()).removeClass( 'viewed-dataset-highlight' );
+				$("#" + appview.viewedDatasetDscid()).removeClass( 'viewed-dataset-highlight' );
+				appview.viewedDatasetId(theId);
+				appview.viewedDatasetDscid(theDscid);
+				$("#" + theId).addClass( 'viewed-dataset-highlight' );
+				if (notUN(document.getElementById(theId)))
+				{
+					document.getElementById(theId).scrollIntoView();
+				}
+				$("#" + theDscid).addClass( 'viewed-dataset-highlight' );
+				// tell the parent window the iframe query has loaded
+				window.parent.queryLoadComplete();
+			}
+			
+			function previousDatasetQuery(theParamsJson)
+			{
+				// called from button on MQA page
+				// find previous dataset and update view, keeping current diagram settings
+				// find previous dataset
+				var previousIndex = null;
+				var testIndex = null;
+				var currentId = appview.viewedDatasetId();
+				var currentDscId = theParamsJson.dscid;
+				var dataRows = $('#resultsTable').DataTable().rows().data();
+				for (var index=dataRows.length-1; (index>=0)&&(null===previousIndex); index--)
+				{
+					// check regular and DSC ID
+					if ((dataRows[index][0]===currentId)||(dataRows[index][0]===currentDscId))
+					{
+						if (0===index)
+						{
+							// at first entry
+							previousIndex = -1;
+						}
+						else if (""!==dataRows[index-1][dataRows[index-1].length-1])
+						{
+							// if previous index has a View Analysis link, use it
+							previousIndex = index-1;
+						}
+						else
+						{
+							// find previous index that does not have empty string for last value
+							testIndex = index-1;
+						}
+					}
+					else if (notUN(testIndex))
+					{
+						if (0===testIndex)
+						{
+							// no previous index with viewable analysis
+							previousIndex = -1;
+						}
+						else if (""!==dataRows[testIndex][dataRows[testIndex].length-1])
+						{
+							// if previous index has a View Analysis link, use it
+							previousIndex = testIndex;
+						}
+						else
+						{
+							// find previous index that does not have empty string for last value
+							testIndex = testIndex-1;
+						}
+					}
+				}
+				if (notUN(previousIndex)&&(previousIndex>=0))
+				{
+					var resultsUrl = dataRows[previousIndex][dataRows[previousIndex].length-1];
+					// build URL without alg or lvl1 entries
+					var urlParts = resultsUrl.split('?');
+					var params = new URLSearchParams(urlParts[1]);
+					params.delete('alg');
+					params.delete('lvl1');
+					resultsUrl = urlParts[0] + '?' + params.toString();
+					// get current diagram settings
+					if (notUN(theParamsJson.alg))
+					{
+						resultsUrl = resultsUrl + '&alg='+ encodeURIComponent(theParamsJson.alg);
+					}
+					if (notUN(theParamsJson.lvl1))
+					{
+						resultsUrl = resultsUrl + '&lvl1='+ encodeURIComponent(theParamsJson.lvl1);
+					}
+					if (notUN(theParamsJson.lvl2))
+					{
+						resultsUrl = resultsUrl + '&lvl2='+ encodeURIComponent(theParamsJson.lvl2);
+					}
+					if (notUN(theParamsJson.hideDB))
+					{
+						resultsUrl = resultsUrl + '&hideDB='+ theParamsJson.hideDB;
+					}
+					if (notUN(theParamsJson.hideLP))
+					{
+						resultsUrl = resultsUrl + '&hideLP='+ theParamsJson.hideLP;
+					}
+					window.parent.setCurrentViewSrcMqa(resultsUrl);
+				}
+				else
+				{
+					alert("At first (viewable) dataset");
+					window.parent.setCurrentViewSrcMqa(null);
+				}
+			}
+			
+			function nextDatasetQuery(theParamsJson)
+			{
+				// called from button on MQA page
+				// find next dataset and update view, keeping current diagram settings
+				// find next dataset
+				var nextIndex = null;
+				var testIndex = null;
+				var currentId = appview.viewedDatasetId();
+				var currentDscId = theParamsJson.dscid;
+				var dataRows = $('#resultsTable').DataTable().rows().data();
+				for (var index=0; (index<dataRows.length)&&(null===nextIndex); index++)
+				{
+					// check regular and DSC ID
+					if ((dataRows[index][0]===currentId)||(dataRows[index][0]===currentDscId))
+					{
+						if (index>=dataRows.length-1)
+						{
+							// at last index
+							nextIndex = -1;
+						}
+						else if (""!==dataRows[index+1][dataRows[index+1].length-1])
+						{
+							// if next index has a View Analysis link, use it
+							nextIndex = index+1;
+						}
+						else
+						{
+							// find next index that does not have empty string for last value
+							testIndex = index+1;
+						}
+					}
+					else if (notUN(testIndex))
+					{
+						if (testIndex>=dataRows.length-1)
+						{
+							// no next index with viewable analysis
+							nextIndex = -1;
+						}
+						else if (""!==dataRows[testIndex][dataRows[testIndex].length-1])
+						{
+							// if next index has a View Analysis link, use it
+							nextIndex = testIndex;
+						}
+						else
+						{
+							// find next index that does not have empty string for last value
+							testIndex = testIndex+1;
+						}
+					}
+				}
+				if ((notUN(nextIndex))&&(nextIndex>=0))
+				{
+					var resultsUrl = dataRows[nextIndex][dataRows[nextIndex].length-1];
+					// build URL without alg or lvl1 entries
+					var urlParts = resultsUrl.split('?');
+					var params = new URLSearchParams(urlParts[1]);
+					params.delete('alg');
+					params.delete('lvl1');
+					resultsUrl = urlParts[0] + '?' + params.toString();
+					// get current diagram settings
+					if (notUN(theParamsJson.alg))
+					{
+						resultsUrl = resultsUrl + '&alg='+ encodeURIComponent(theParamsJson.alg);
+					}
+					if (notUN(theParamsJson.lvl1))
+					{
+						resultsUrl = resultsUrl + '&lvl1='+ encodeURIComponent(theParamsJson.lvl1);
+					}
+					if (notUN(theParamsJson.lvl2))
+					{
+						resultsUrl = resultsUrl + '&lvl2='+ encodeURIComponent(theParamsJson.lvl2);
+					}
+					if (notUN(theParamsJson.hideDB))
+					{
+						resultsUrl = resultsUrl + '&hideDB='+ theParamsJson.hideDB;
+					}
+					if (notUN(theParamsJson.hideLP))
+					{
+						resultsUrl = resultsUrl + '&hideLP='+ theParamsJson.hideLP;
+					}
+					window.parent.setCurrentViewSrcMqa(resultsUrl);
+				}
+				else
+				{
+					alert("At last (viewable) dataset");
+				}
+			}
+		</script>
+	</head>
+	<body class="body-wrapper" style="display: none;" data-bind="visible: $root.makeGuiVisible()">
+		<!-- put cut and paste inputs here, to avoid DOM mangling by tippy -->
+		<input type="text" readonly style="opacity: 0; position: absolute; z-index: -9999; pointer-events: none;" value="" id="dapiCopyQuery">
+		<div class="div-wrapper" id="id-div-wrapper">
+			<!-- column for selection criteria -->
+			<div class="div-query-categories">
+				<div class="div-query-categories-content">
+					<div data-bind="visible: ('dsc'===$root.urlShowParam())" class="availSelDiv">
+						<div class="availSelDevLabel">
+							<label class="gridSizesTitle">DSC P-Value*</label>
+							<div class="tooltip inlineblock">
+								<button type="button" class="qf-control-button" title="Show all options" data-bind="visible: ($root.classOverallDSCpvalue()==='availSelPaddedDiv divSelectedLess'), click: function () { $root.classOverallDSCpvalue('availSelPaddedDiv divSelectedMore'); }">More</button>
+								<button type="button" class="qf-control-button" title="Show fewer options"  data-bind="visible: ($root.classOverallDSCpvalue()==='availSelPaddedDiv divSelectedMore'), click: function () { $root.classOverallDSCpvalue('availSelPaddedDiv divSelectedLess'); }">Less</button>
+								<button type="button" class="qf-control-button" title="Clear selected" data-bind="click: function () { $root.selectedOverallDSCpvalue.removeAll(); }"><small><i class="fas fa-trash-alt" style="color: darkslateblue;"></i></small></button>
+								<img id="tooltipImage_CATDSCPvalue" title="DSC P-Value Category" data-theme="myTooltipTheme" src="images/Tooltip_icon.png" class="guiIconDimensions" alt="More Info on DSC P-Value Category">
+								<div id="tooltipContent_CATDSCPvalue" class="tooltiptext">
+									<div class="marginTop10px">
+										<p>*DSC P-Values are not corrected for multiple testing.<br>The DSC P-Value Category lists common p-value cut-offs.</p>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div data-bind='class: $root.classOverallDSCpvalue' id="div-selectedOverallDSCpvalue">
+							<!-- ko foreach: $root.optionsOverallDSCpvalue -->
+								<input type="checkbox" data-bind="checkedValue: $data, checked: $root.selectedOverallDSCpvalue" /><span data-bind="text: $data"></span><br>
+							<!-- /ko -->
+						</div>
+					</div>
+					<div data-bind="visible: ('dsc'===$root.urlShowParam())" class="availSelDiv">
+						<div class="availSelDevLabel">
+							<label class="gridSizesTitle">Min DSC Value</label>
+							<div class="tooltip inlineblock">
+								<a title='Clear selected' data-bind="click: function () { document.getElementById('InputOverallDSCmin').value = ''; $root.enteredOverallDSCmin(''); updateEnteredSelected($root.enteredOverallDSCmin, $root.selectedOverallDSCmin, 'InputOverallDSCmin'); }">
+									<small><i class="fas fa-trash-alt" style="color: darkslateblue;"></i></small>
+								</a>
+								<img id="tooltipImage_CATDSCmin" title="Min DSC Value Category" data-theme="myTooltipTheme" src="images/Tooltip_icon.png" class="guiIconDimensions" alt="More Info on Min DSC Value Category">
+								<div id="tooltipContent_CATDSCmin" class="tooltiptext">
+									<div class="marginTop10px">
+										<p>The Min DSC Value indicates the DSC of the results should be less than or equal to this value. Empty means accept any value.</p>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="availSelPaddedDiv">
+							<input id="InputOverallDSCmin" type="number" step="0.001" min="0"
+								   onfocusout="updateEnteredSelected(appview.enteredOverallDSCmin, appview.selectedOverallDSCmin, 'InputOverallDSCmin');" 
+								   data-bind="value: $root.enteredOverallDSCmin">
+							<button type="button" style="font-size: 10px; padding: 0px;" data-bind="click:  function() { updateEnteredSelected($root.enteredOverallDSCmin, $root.selectedOverallDSCmin, 'InputOverallDSCmin'); }">Apply</button>
+						</div>
+					</div>
+					<div data-bind="visible: ('dsc'===$root.urlShowParam())" class="availSelDiv">
+						<div class="availSelDevLabel">
+							<label class="gridSizesTitle">Max DSC Value</label>
+							<div class="tooltip inlineblock">
+								<a title='Clear selected' data-bind="click: function () { document.getElementById('InputOverallDSCmax').value = ''; $root.enteredOverallDSCmax(''); updateEnteredSelected($root.enteredOverallDSCmax, $root.selectedOverallDSCmax, 'InputOverallDSCmax'); }">
+									<small><i class="fas fa-trash-alt" style="color: darkslateblue;"></i></small>
+								</a>
+								<img id="tooltipImage_CATDSCmax" title="Max DSC Value Category" data-theme="myTooltipTheme" src="images/Tooltip_icon.png" class="guiIconDimensions" alt="More Info on Max DSC Value Category">
+								<div id="tooltipContent_CATDSCmax" class="tooltiptext">
+									<div class="marginTop10px">
+										<p>The Max DSC Value indicates the DSC of the results should be less than or equal to this value. Empty means accept any value.</p>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="availSelPaddedDiv">
+							<input id="InputOverallDSCmax" type="number" step="0.001" min="0"
+								   onfocusout="updateEnteredSelected(appview.enteredOverallDSCmax, appview.selectedOverallDSCmax, 'InputOverallDSCmax');" 
+								   data-bind="value: $root.enteredOverallDSCmax">
+							<button type="button" style="font-size: 10px; padding: 0px;" data-bind="click:  function() { updateEnteredSelected($root.enteredOverallDSCmax, $root.selectedOverallDSCmax, 'InputOverallDSCmax'); }">Apply</button>
+						</div>
+					</div>
+					<div class="availSelDiv">
+						<div class="availSelDevLabel">
+							<label class="gridSizesTitle">Sources</label>
+							<div>
+								<a title='Show all options' data-bind="visible: ($root.classSources()==='availSelPaddedDiv divSelectedLess'), click: function () { $root.classSources('availSelPaddedDiv divSelectedMore') }"><button class="qf-control-button">More</button></a>
+								<a title='Show fewer options' data-bind="visible: ($root.classSources()==='availSelPaddedDiv divSelectedMore'), click: function () { $root.classSources('availSelPaddedDiv divSelectedLess') }"><button class="qf-control-button">Less</button></a>
+								<a title='Clear selected' data-bind="click: function () { $root.selectedSources.removeAll(); }">
+									<small><i class="fas fa-trash-alt" style="color: darkslateblue;"></i></small>
+								</a>
+								<div class="tooltip inlineblock">
+									<img id="tooltipImage_CATSources" title="Sources Category" data-theme="myTooltipTheme" src="images/Tooltip_icon.png" class="guiIconDimensions" alt="More Info on Sources Category">
+									<div id="tooltipContent_CATSources" class="tooltiptext">
+										<div class="marginTop10px">
+											<p>The Source Category lists the source of the data, such as the Metabolomics Workbench.</p>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div data-bind='class: $root.classSources' id="div-selectedSources">
+							<!-- ko foreach: $root.optionsSources -->
+								<input type="checkbox" data-bind="checkedValue: $data, checked: $root.selectedSources" /><span data-bind="text: $data"></span><br>
+							<!-- /ko -->
+						</div>
+					</div>
+					<div class="availSelDiv">
+						<div class="availSelDevLabel">
+							<label class="gridSizesTitle">Derivations</label>
+							<div>
+								<a title='Show all options' data-bind="visible: ($root.classVariants()==='availSelPaddedDiv divSelectedLess'), click: function () { $root.classVariants('availSelPaddedDiv divSelectedMore') }"><button class="qf-control-button">More</button></a>
+								<a title='Show fewer options' data-bind="visible: ($root.classVariants()==='availSelPaddedDiv divSelectedMore'), click: function () { $root.classVariants('availSelPaddedDiv divSelectedLess') }"><button class="qf-control-button">Less</button></a>
+								<a title='Clear selected' data-bind="click: function () { $root.selectedVariants.removeAll(); }">
+									<small><i class="fas fa-trash-alt" style="color: darkslateblue;"></i></small>
+								</a>
+								<div class="tooltip inlineblock">
+									<img id="tooltipImage_CATDerivations" title="Derivations Category" data-theme="myTooltipTheme" src="images/Tooltip_icon.png" class="guiIconDimensions" alt="More Info on Derivations Category">
+									<div id="tooltipContent_CATDerivations" class="tooltiptext">
+										<div class="marginTop10px">
+											<p>The Derivations Category lists the derivation of data within a Source, such as, for the Metabolomics Workbench, "API" indicating data was accessed via the Metabolomics Workbench API.</p>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div data-bind='class: $root.classVariants' id="div-selectedVariants">
+							<!-- ko foreach: $root.optionsVariants -->
+								<input type="checkbox" data-bind="checkedValue: $data, checked: $root.selectedVariants" /><span data-bind="text: $data"></span><br>
+							<!-- /ko -->
+						</div>
+					</div>
+					<div class="availSelDiv">
+						<div class="availSelDevLabel">
+							<label class="gridSizesTitle">Study IDs</label>
+							<div>
+								<a title='Show all options' data-bind="visible: ($root.classProjects()==='availSelPaddedDiv divSelectedLess'), click: function () { $root.classProjects('availSelPaddedDiv divSelectedMore') }"><button class="qf-control-button">More</button></a>
+								<a title='Show fewer options' data-bind="visible: ($root.classProjects()==='availSelPaddedDiv divSelectedMore'), click: function () { $root.classProjects('availSelPaddedDiv divSelectedLess') }"><button class="qf-control-button">Less</button></a>
+								<a title='Clear selected' data-bind="click: function () { $root.selectedProjects.removeAll(); }">
+									<small><i class="fas fa-trash-alt" style="color: darkslateblue;"></i></small>
+								</a>
+								<div class="tooltip inlineblock">
+									<img id="tooltipImage_CATProjects" title="Study IDs Category" data-theme="myTooltipTheme" src="images/Tooltip_icon.png" class="guiIconDimensions" alt="More Info on Projects Category">
+									<div id="tooltipContent_CATProjects" class="tooltiptext">
+										<div class="marginTop10px">
+											<p>The Study IDs Category lists the higher-level project for the dataset -- for Metabolomics Workbench datasets, this is the Study ID.</p>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div data-bind='class: $root.classProjects' id="div-selectedProjects">
+							<!-- ko foreach: $root.optionsProjects -->
+								<input type="checkbox" data-bind="checkedValue: $data, checked: $root.selectedProjects" /><span data-bind="text: $data"></span><br>
+							<!-- /ko -->
+						</div>
+					</div>
+					<div class="availSelDiv">
+						<div class="availSelDevLabel">
+							<label class="gridSizesTitle">Analysis IDs</label>
+							<div>
+								<a title='Show all options' data-bind="visible: ($root.classSubprojects()==='availSelPaddedDiv divSelectedLess'), click: function () { $root.classSubprojects('availSelPaddedDiv divSelectedMore') }"><button class="qf-control-button">More</button></a>
+								<a title='Show fewer options' data-bind="visible: ($root.classSubprojects()==='availSelPaddedDiv divSelectedMore'), click: function () { $root.classSubprojects('availSelPaddedDiv divSelectedLess') }"><button class="qf-control-button">Less</button></a>
+								<a title='Clear selected' data-bind="click: function () { $root.selectedSubprojects.removeAll(); }">
+									<small><i class="fas fa-trash-alt" style="color: darkslateblue;"></i></small>
+								</a>
+								<div class="tooltip inlineblock">
+									<img id="tooltipImage_CATSubProjects" title="Analysis IDs Category" data-theme="myTooltipTheme" src="images/Tooltip_icon.png" class="guiIconDimensions" alt="More Info on Sub-Projects Category">
+									<div id="tooltipContent_CATSubProjects" class="tooltiptext">
+										<div class="marginTop10px">
+											<p>The Analysis IDs Category lists the lower-level project for the dataset -- for Metabolomics Workbench datasets, this is the Analysis ID.</p>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div data-bind='class: $root.classSubprojects' id="div-selectedSubprojects">
+							<!-- ko foreach: $root.optionsSubprojects -->
+								<input type="checkbox" data-bind="checkedValue: $data, checked: $root.selectedSubprojects" /><span data-bind="text: $data"></span><br>
+							<!-- /ko -->
+						</div>
+					</div>
+					<div class="availSelDiv">
+						<div class="availSelDevLabel">
+							<label class="gridSizesTitle">Data Type</label>
+							<div>
+								<a title='Show all options' data-bind="visible: ($root.classCategories()==='availSelPaddedDiv divSelectedLess'), click: function () { $root.classCategories('availSelPaddedDiv divSelectedMore') }"><button class="qf-control-button">More</button></a>
+								<a title='Show fewer options' data-bind="visible: ($root.classCategories()==='availSelPaddedDiv divSelectedMore'), click: function () { $root.classCategories('availSelPaddedDiv divSelectedLess') }"><button class="qf-control-button">Less</button></a>
+								<a title='Clear selected' data-bind="click: function () { $root.selectedCategories.removeAll(); }">
+									<small><i class="fas fa-trash-alt" style="color: darkslateblue;"></i></small>
+								</a>
+								<div class="tooltip inlineblock">
+									<img id="tooltipImage_CATCategories" title="Data Type Category" data-theme="myTooltipTheme" src="images/Tooltip_icon.png" class="guiIconDimensions" alt="More Info on Data Type Category">
+									<div id="tooltipContent_CATCategories" class="tooltiptext">
+										<div class="marginTop10px">
+											<p>The Data Type Category divides the datasets into general type of data. Some names have been converted to generic version for usability.</p>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div data-bind='class: $root.classCategories' id="div-selectedCategories">
+							<!-- ko foreach: $root.optionsCategories -->
+								<input type="checkbox" data-bind="checkedValue: $data, checked: $root.selectedCategories" /><span data-bind="text: $data"></span><br>
+							<!-- /ko -->
+						</div>
+					</div>
+					<div class="availSelDiv">
+						<div class="availSelDevLabel">
+							<label class="gridSizesTitle">Study Titles</label>
+							<div>
+								<a title='Show all options' data-bind="visible: ($root.classDetails()==='availSelPaddedDiv divSelectedLess'), click: function () { $root.classDetails('availSelPaddedDiv divSelectedMore') }"><button class="qf-control-button">More</button></a>
+								<a title='Show fewer options' data-bind="visible: ($root.classDetails()==='availSelPaddedDiv divSelectedMore'), click: function () { $root.classDetails('availSelPaddedDiv divSelectedLess') }"><button class="qf-control-button">Less</button></a>
+								<a title='Clear selected' data-bind="click: function () { $root.selectedDetails.removeAll(); }">
+									<small><i class="fas fa-trash-alt" style="color: darkslateblue;"></i></small>
+								</a>
+								<div class="tooltip inlineblock">
+									<img id="tooltipImage_CATDetails" title="Details Category" data-theme="myTooltipTheme" src="images/Tooltip_icon.png" class="guiIconDimensions" alt="More Info on Details Category">
+									<div id="tooltipContent_CATDetails" class="tooltiptext">
+										<div class="marginTop10px">
+											<p>The Study Title Category allows filtering or searching on study titles.</p>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div data-bind='class: $root.classDetails' id="div-selectedDetails">
+							<!-- ko foreach: $root.optionsDetails -->
+								<input type="checkbox" data-bind="checkedValue: $data, checked: $root.selectedDetails" /><span data-bind="text: $data"></span><br>
+							<!-- /ko -->
+						</div>
+					</div>
+					<div class="availSelDiv">
+						<div class="availSelDevLabel">
+							<label class="gridSizesTitle">Platforms</label>
+							<div>
+								<a title='Show all options' data-bind="visible: ($root.classPlatforms()==='availSelPaddedDiv divSelectedLess'), click: function () { $root.classPlatforms('availSelPaddedDiv divSelectedMore') }"><button class="qf-control-button">More</button></a>
+								<a title='Show fewer options' data-bind="visible: ($root.classPlatforms()==='availSelPaddedDiv divSelectedMore'), click: function () { $root.classPlatforms('availSelPaddedDiv divSelectedLess') }"><button class="qf-control-button">Less</button></a>
+								<a title='Clear selected' data-bind="click: function () { $root.selectedPlatforms.removeAll(); }">
+									<small><i class="fas fa-trash-alt" style="color: darkslateblue;"></i></small>
+								</a>
+								<div class="tooltip inlineblock">
+									<img id="tooltipImage_CATPlatforms" title="Platforms Category" data-theme="myTooltipTheme" src="images/Tooltip_icon.png" class="guiIconDimensions" alt="More Info on Platforms Category">
+									<div id="tooltipContent_CATPlatforms" class="tooltiptext">
+										<div class="marginTop10px">
+											<p>The Platforms Category lists the available platforms. For metabolomics data, this is negative, positive, and unspecified.</p>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div data-bind='class: $root.classPlatforms' id="div-selectedPlatforms">
+							<!-- ko foreach: $root.optionsPlatforms -->
+								<input type="checkbox" data-bind="checkedValue: $data, checked: $root.selectedPlatforms" /><span data-bind="text: $data"></span><br>
+							<!-- /ko -->
+						</div>
+					</div>
+					<div class="availSelDiv">
+						<div class="availSelDevLabel">
+							<label class="gridSizesTitle">Archive Type</label>
+							<div>
+								<a title='Show all options' data-bind="visible: ($root.classData()==='availSelPaddedDiv divSelectedLess'), click: function () { $root.classData('availSelPaddedDiv divSelectedMore') }"><button class="qf-control-button">More</button></a>
+								<a title='Show fewer options' data-bind="visible: ($root.classData()==='availSelPaddedDiv divSelectedMore'), click: function () { $root.classData('availSelPaddedDiv divSelectedLess') }"><button class="qf-control-button">Less</button></a>
+								<a title='Clear selected' data-bind="click: function () { $root.selectedData.removeAll(); }">
+									<small><i class="fas fa-trash-alt" style="color: darkslateblue;"></i></small>
+								</a>
+								<div class="tooltip inlineblock">
+									<img id="tooltipImage_CATData" title="Archive Type Category" data-theme="myTooltipTheme" src="images/Tooltip_icon.png" class="guiIconDimensions" alt="More Info on Archive Type Category">
+									<div id="tooltipContent_CATData" class="tooltiptext">
+										<div class="marginTop10px">
+											<p>The Archive Type Category lists the variation of data in the dataset--this is Original-Analyzed for a traditional batch effect analysis and Original-MutBatch for a Kuskal-Wallis non-parametric analysis.</p>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div data-bind='class: $root.classData' id="div-selectedData">
+							<!-- ko foreach: $root.optionsData -->
+								<input type="checkbox" data-bind="checkedValue: $data, checked: $root.selectedData" /><span data-bind="text: $data"></span><br>
+							<!-- /ko -->
+						</div>
+					</div>
+					<div class="availSelDiv">
+						<div class="availSelDevLabel">
+							<label class="gridSizesTitle">Algorithms</label>
+							<div>
+								<a title='Show all options' data-bind="visible: ($root.classAlgorithms()==='availSelPaddedDiv divSelectedLess'), click: function () { $root.classAlgorithms('availSelPaddedDiv divSelectedMore') }"><button class="qf-control-button">More</button></a>
+								<a title='Show fewer options' data-bind="visible: ($root.classAlgorithms()==='availSelPaddedDiv divSelectedMore'), click: function () { $root.classAlgorithms('availSelPaddedDiv divSelectedLess') }"><button class="qf-control-button">Less</button></a>
+								<a title='Clear selected' data-bind="click: function () { $root.selectedAlgorithms.removeAll(); }">
+									<small><i class="fas fa-trash-alt" style="color: darkslateblue;"></i></small>
+								</a>
+								<div class="tooltip inlineblock">
+									<img id="tooltipImage_CATAlgorithms" title="Algorithms Category" data-theme="myTooltipTheme" src="images/Tooltip_icon.png" class="guiIconDimensions" alt="More Info on Algorithms Category">
+									<div id="tooltipContent_CATAlgorithms" class="tooltiptext">
+										<div class="marginTop10px">
+											<p>The Algorithms Category divides the data into "continuous", amenable to most standard statistical processing, and "discrete", generally sparse matrices and not amenable to many statistical methods. Metabolomics data is classified as "continuous" but run as both.</p>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div data-bind='class: $root.classAlgorithms' id="div-selectedAlgorithms">
+							<!-- ko foreach: $root.optionsAlgorithms -->
+								<input type="checkbox" data-bind="checkedValue: $data, checked: $root.selectedAlgorithms" /><span data-bind="text: $data"></span><br>
+							<!-- /ko -->
+						</div>
+					</div>
+					<div class="availSelDiv">
+						<div class="availSelDevLabel">
+							<label class="gridSizesTitle">Versions (special filter)</label>
+							<div>
+								<a title='Show all options' data-bind="visible: ($root.classVersions()==='availSelPaddedDiv divSelectedLess'), click: function () { $root.classVersions('availSelPaddedDiv divSelectedMore') }"><button class="qf-control-button">More</button></a>
+								<a title='Show fewer options' data-bind="visible: ($root.classVersions()==='availSelPaddedDiv divSelectedMore'), click: function () { $root.classVersions('availSelPaddedDiv divSelectedLess') }"><button class="qf-control-button">Less</button></a>
+								<a title='Clear selected' data-bind="click: function () { $root.selectedVersions.removeAll(); }">
+									<small><i class="fas fa-trash-alt" style="color: darkslateblue;"></i></small>
+								</a>
+								<div class="tooltip inlineblock">
+									<img id="tooltipImage_CATVersions" title="Versions Category" data-theme="myTooltipTheme" src="images/Tooltip_icon.png" class="guiIconDimensions" alt="More Info on Versions Category">
+									<div id="tooltipContent_CATVersions" class="tooltiptext">
+										<div class="marginTop10px">
+											<p>The Versions Category are the timestamps for when the data was acquired by the Query Form. This Category works different from the rest. By default, the Query Form will show the newest version of each dataset. Selecting one or more Versions, limits the results to that particular version. Note that in Standardized Data, each Version may only contain a single dataset.</p>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div data-bind='class: $root.classVersions' id="div-selectedVersions">
+							<!-- ko foreach: $root.optionsVersions -->
+								<input type="checkbox" data-bind="checkedValue: $data, checked: $root.selectedVersions" /><span data-bind="text: $data"></span><br>
+							<!-- /ko -->
+						</div>
+					</div>
+					<div class="availSelDiv">
+						<div class="availSelDevLabel">
+							<label class="gridSizesTitle">Files</label>
+							<div>
+								<a title='Show all options' data-bind="visible: ($root.classFiles()==='availSelPaddedDiv divSelectedLess'), click: function () { $root.classFiles('availSelPaddedDiv divSelectedMore') }"><button class="qf-control-button">More</button></a>
+								<a title='Show fewer options' data-bind="visible: ($root.classFiles()==='availSelPaddedDiv divSelectedMore'), click: function () { $root.classFiles('availSelPaddedDiv divSelectedLess') }"><button class="qf-control-button">Less</button></a>
+								<a title='Clear selected' data-bind="click: function () { $root.selectedFiles.removeAll(); }">
+									<small><i class="fas fa-trash-alt" style="color: darkslateblue;"></i></small>
+								</a>
+								<div class="tooltip inlineblock">
+									<img id="tooltipImage_CATfiles" title="Files Category" data-theme="myTooltipTheme" src="images/Tooltip_icon.png" class="guiIconDimensions" alt="More Info on Files Category">
+									<div id="tooltipContent_CATfiles" class="tooltiptext">
+										<div class="marginTop10px">
+											<p>The Files Category lists the available types of files found within each dataset archive. You can use this to look for data with batch information or mutation files.</p>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div data-bind='class: $root.classFiles' id="div-selectedFiles">
+							<!-- ko foreach: $root.optionsFiles -->
+								<input type="checkbox" data-bind="checkedValue: $data, checked: $root.selectedFiles" /><span data-bind="text: $data"></span><br>
+							<!-- /ko -->
+						</div>
+					</div>
+				</div>
+			</div>
+			<!-- column for option list -->
+			<div class="div-result-list">
+				<div class="div-result-list-content">
+					<div class="div-tool-bar">
+						<div class="mdaTitleText">&nbsp;&nbsp;MetaBatch Omic Browser Query&nbsp;<span style="font-size: 60%">BEA_VERSION_TIMESTAMP</span></div>
+						<span style="margin-left: auto;">
+							<span data-bind="if: ('matrix'===$root.urlShowParam())">
+								&nbsp;<button type="button" class="sdb-control-button" onclick="location.href='?show=dsc'" title="Switch to DSC Values. (Refreshes page.)"><i class="fas fa-sync-alt" style="color: blue;"></i> Switch to DSC Values</button>
+							</span>
+							<span data-bind="if: ('dsc'===$root.urlShowParam())">
+								&nbsp;<button type="button" class="sdb-control-button" onclick="location.href='?show=matrix'" title="Switch to Datasets. (Refreshes page.)"><i class="fas fa-sync-alt" style="color: blue;"></i> Switch to Datasets</button>
+							</span>
+							&nbsp;<button type="button" class="sdb-control-button" data-bind="attr: { onclick: 'copyQueryString()' , title: 'Copy Query String for R Package' }"><i class="fab fa-r-project" style="color: red;"></i> Copy Query</button>
+							<!--
+							&nbsp;<button type="button" class="sdb-control-button" data-bind="attr: { onclick: 'copyURLString()' , title: 'Copy Bookmark-able URL' }"><i class="fas fa-globe" style="color: green;"></i> Copy URL</button>
+							-->
+							&nbsp;<button type="button" class="sdb-control-button" data-bind="attr: { onclick: 'downloadManifest()', title: 'Download TSV List for Available Data' }"><i class="fas fa-download" style="color: purple;"></i> Download List</button>
+							&nbsp;<button type="button" class="sdb-control-button" data-bind="attr: { onclick: 'clearSearch()', title: 'Clear Search' }"><i class="fas fa-trash-alt" style="color: darkslateblue;"></i> Clear Search</button>
+						</span>
+					</div>
+					<center class="centerTableHeader">
+						<div class="sdb-control-text">
+							<strong>Available Data:</strong> N=<span data-bind="text: $root.queryResultLength()"></span>
+							&nbsp;<strong>Query:</strong> <span data-bind="text: $root.populatedOnlyQueryString()"></span>
+						</div>
+					</center>
+					<table class="display compact order-column mdaSmallText" id="resultsTable" style="width:100%"></table>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>
