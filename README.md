@@ -11,8 +11,6 @@ Samples from large research projects are often processed and run in multiple bat
 
 This is a project for accesing and viewing the data and analysis (particulary of Batch Effects) of large datasets in Standardized Data format.
 
-Additional information can be found at http://bioinformatics.mdanderson.org/main/TCGABatchEffects:Overview
-
 MD Anderson Cancer Center Bioinformatics link
 https://bioinformatics.mdanderson.org
 
