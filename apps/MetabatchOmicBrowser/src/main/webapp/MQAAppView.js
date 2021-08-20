@@ -25,6 +25,7 @@ disableInput = function()
 
 enableInput = function()
 {
+	//console.log("MQAAppView::enable input");
 	$(":input, a, button").prop("disabled",false);
 };
 

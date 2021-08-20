@@ -11,6 +11,7 @@ disableInput = function()
 
 enableInput = function()
 {
+	//console.log("DAPIAppView::enable input");
 	$(":input, a, button").prop("disabled",false);
 };
 
@@ -388,6 +389,23 @@ function AppViewModel()
 		}
 		return result;
 	}
+	
+	
+	function getOriginalOrder(theLength)
+	{
+		var indexes = Array.from(Array(theLength)).map((e,i)=>i);
+		return indexes;
+	}
+	
+	function getNewOrder(theLength)
+	{
+		var indexes = Array.from(Array(theLength)).map((e,i)=>i);
+		indexes = indexes.map((e,i)=>i-3);
+		indexes[0] = theLength - 2;
+		indexes[1] = theLength - 1;
+		indexes[2] = theLength;
+		return indexes;
+	}
 
 	function getJsonFromObservableDouble(theObsDouble)
 	{
@@ -624,18 +642,24 @@ function AppViewModel()
 						//BEA#325 }
 						//console.log("headers length = " + theJson.headers.length);
 						//console.log(theJson.headers);
+						//{ fixedHeader: { header: true, footer: true } }
 						$('#resultsTable').DataTable(
 						{
-							rowId: (function (x) { return x[0]; }),
+							rowId: (function (x) { return x[3]; }),
 							destroy: true,
 							data: theJson.data,
 							columns: theJson.headers,
-							//BEA#325 pageLength: pgLen,
-							//BEA#325 lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
-							lengthMenu: [[-1], ["All"]],
 							order: [[ 8, 'asc' ], [ 1, 'asc' ], [ 2, 'asc' ], [ 3, 'asc' ], 
 									[ 4, 'asc' ], [ 5, 'asc' ], [ 6, 'asc' ], [ 7, 'asc' ],  
-									[ 9, 'asc' ], [ 10, 'asc' ], [ 11, 'asc' ], [ 12, 'asc' ]]
+									[ 9, 'asc' ], [ 10, 'asc' ], [ 11, 'asc' ], [ 12, 'asc' ]],
+							info:			false,	// hide paging info at bottom of screen
+							deferRender:    true,	// requiref for most other options to work
+							paging:			false,	// no paging, hide page selection at top and bottom
+							scrollCollapse: true,	// if small enough to fix screen, no scroll
+							scrollX:		false,	// don't scroll left-right, does not work because of scrollResize:true
+							fixedHeader:	false,	// keep header row on screen set to false, since scroll resize does this too
+							scrollResize:	true,	// resize scroll area to fit screen
+							scrollY:		100		// value is needed, but ignored due to scrollResize:true
 						} );
 						setSelectedDatasetQuery(self.viewedDatasetId(), self.viewedDatasetDscid());
 					}

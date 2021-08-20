@@ -343,9 +343,10 @@
 			var histogramScaleRightX = d3.scale.linear()
 				.domain([0, maxX])
 				.range([(thePlotboxWidth/2.0), thePlotboxWidth]);
-			var histogramScaleY = d3.scale.linear()
-				.domain([minY, maxY])
-				.range([0, thePlotboxHeight]);
+			////var histogramScaleY = d3.scale.linear()
+			////	.domain([minY, maxY])
+			////	.range([0, thePlotboxHeight]);
+			var histogramScaleY = theYScale;
 			//console.log("thePlotboxHeight=" + thePlotboxHeight);
 			//console.log("thePlotboxWidth=" + thePlotboxWidth);
 			//console.log("histogramScaleLeftX.domain()=" + histogramScaleLeftX.domain());

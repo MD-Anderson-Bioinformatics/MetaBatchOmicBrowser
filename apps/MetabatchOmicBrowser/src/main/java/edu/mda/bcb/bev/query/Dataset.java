@@ -202,6 +202,9 @@ public class Dataset implements Comparable<Dataset>
 	private ArrayList<String> headers()
 	{
 		ArrayList<String> list = new ArrayList<>();
+		list.add("Data Download");
+		list.add("Results Download");
+		list.add("View Results");
 		list.add("ID");
 		list.add("Files");
 		list.add("Source");
@@ -215,9 +218,6 @@ public class Dataset implements Comparable<Dataset>
 		list.add("Study Titles");
 		list.add("Version");
 		getHeadersOptional(list);
-		list.add("Data Download");
-		list.add("Results Download");
-		list.add("View Results");
 		return list;
 	}
 	
@@ -333,7 +333,6 @@ public class Dataset implements Comparable<Dataset>
 	
 	private ArrayList<String> getStrings(String theDownloadBase, String theJsonQuery) throws UnsupportedEncodingException
 	{
-		ArrayList<String> list = new ArrayList<>();
 		String downloadDataUrl = null;
 		String downloadResultsUrl = null;
 		String viewResultsUrl = null;
@@ -383,6 +382,10 @@ public class Dataset implements Comparable<Dataset>
 			downloadResultsUrl = "";
 			viewResultsUrl = "";
 		}
+		ArrayList<String> list = new ArrayList<>();
+		list.add(downloadDataUrl);
+		list.add(downloadResultsUrl);
+		list.add(viewResultsUrl);
 		list.add(mID);
 		list.add(getFilesAsString());
 		list.add(mSource);
@@ -396,9 +399,6 @@ public class Dataset implements Comparable<Dataset>
 		list.add(mDetail);
 		list.add(mVersion);
 		toStringOptional(list);
-		list.add(downloadDataUrl);
-		list.add(downloadResultsUrl);
-		list.add(viewResultsUrl);
 		return list;
 	}
 	

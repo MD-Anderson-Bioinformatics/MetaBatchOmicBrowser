@@ -67,6 +67,12 @@ public class dsexists extends HttpServlet
 			out.print(Boolean.toString(exists));
 			this.log("dsexists: after existsFile");
 		}
+		catch(Exception exp)
+		{
+			log("dsexists::processRequest failed", exp);
+			response.setStatus(400);
+			response.sendError(400);
+		}
 	}
 
 	// <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">

@@ -7,7 +7,7 @@
 :root
 {
 	--body-margin: 4px;
-	--header-height: 30px;
+	--header-height: 36px;
 	--grid-gap: 0px;
 	--dragger-size: 10px;
 	--row-A-height: 60vh;
@@ -77,10 +77,15 @@ body.wait, body.wait *
 
 .mdaServiceHeader
 {
-	z-index: -1;
 	overflow: hidden;
 	background-image: url('images/banner.png');
 	height: var(--header-height);
+}
+
+.mdaHeaderRow
+{
+	display: flex;
+	flex-direction: row;
 }
 
 .mdaServiceHeaderLogo
@@ -93,10 +98,14 @@ body.wait, body.wait *
 
 .mdaTitleText
 {
-	display: inline-block;
 	font-weight: bold;
-	font-size: 16pt;
-	padding-top: 2px;
+	font-size: 14pt;
+	/* stack buttons */
+	display: inline-flex;
+	flex-direction: column;
+	justify-content: flex-end;
+	text-align: left;
+	white-space: nowrap;
 }
 
 .mdaHeaderLinks
@@ -105,15 +114,12 @@ body.wait, body.wait *
 	font-size: 10px;
 	padding: 0px;
 	font-weight: normal;
-	/* place this div */
-	vertical-align: top;
-	float: right;
-	font-weight: normal;
-	/* stack buttons */
-	display: inline-flex;
+	display: flex;
+	flex-wrap: wrap;
 	flex-direction: row;
-	justify-content: flex-end;
-	text-align: right;
+	justify-content: right;
+	align-content: space-between;
+	width: 100%;
 }
 
 .mdaHeaderButtons
@@ -353,14 +359,14 @@ body.wait, body.wait *
 {
 	width: 100%;
 	height: 100%;
-    overflow: visible;
+	/* min-width: 1000px; */
 }
 
 .queryIframeStyles
 {
 	width: 100%;
 	height: 100%;
-    overflow: visible;
+	/* min-width: 1000px; */
 }
 /* *************************** */
 

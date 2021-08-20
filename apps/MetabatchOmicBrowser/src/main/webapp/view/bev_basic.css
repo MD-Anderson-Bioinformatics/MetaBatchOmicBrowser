@@ -7,11 +7,11 @@
 	--body-margin: 4px;
 	--grid-gap: 0px;
 
-	--column-A-width: 25vw;
+	--column-A-width: 25%;
 	--dragger-AB-size: 5px;
-	--column-B-width: 50vw;
+	--column-B-width: 50%;
 	--dragger-BC-size: 5px;
-	--column-C-width: 25vw;
+	--column-C-width: 25%;
 
 	--column-A-col: 1;
 	--dragger-AB-col: 2;
@@ -20,8 +20,8 @@
 	--column-C-col: 5;
 
 	--dragger-ROW-size: 5px;
-	--row-A-height: 60vh;
-	--row-B-height: 40vh;	
+	--row-A-height: 60%;
+	--row-B-height: 40%;	
 }
 
 .no-pointer-events
@@ -35,9 +35,12 @@
 .body-wrapper
 {
 	margin: var(--body-margin);
-	width: calc(100% - 8px);
-	height: calc(100vh - 8px);
+	/* try setting minimum width to 1000, but bev_resize.js uses viewport size */
+	width: max(1000px, calc(100% - 12px));
+	height: calc(100vh - 16px);
 	background-color: lightgrey;
+	overflow-x: scroll;
+	overflow-y: hidden;
 }
 
 body.wait, body.wait *
@@ -229,13 +232,22 @@ body.wait, body.wait *
 	display: grid;
 	grid-gap: var(--grid-gap);
 	grid-template-columns:
+		calc(var(--column-A-width) - var(--dragger-AB-size))
+		var(--dragger-AB-size)
+		var(--column-B-width)
+		var(--dragger-BC-size)
+		var(--column-C-width);
+	grid-template-rows: minmax(0, 1fr);
+	max-height: calc(100% - 12px);
+}
+
+/*
 		calc(var(--column-A-width) - var(--body-margin) - var(--grid-gap) - var(--dragger-AB-size))
 		var(--dragger-AB-size)
 		calc(var(--column-B-width) - var(--body-margin) - var(--grid-gap) - var(--grid-gap) - var(--body-margin) - var(--body-margin))
 		var(--dragger-BC-size)
 		calc(var(--column-C-width) - var(--body-margin) - var(--grid-gap) - var(--dragger-BC-size));
-	grid-template-rows: minmax(0, 1fr);
-}
+*/
 
 .div-a-b-drag-bar
 {
@@ -266,6 +278,8 @@ body.wait, body.wait *
 	flex: 1;
 	color: #403333;
 }
+
+/*	white-space: nowrap; */
 
 .bevTitleText
 {
@@ -369,7 +383,7 @@ table.autoWidth
 	display: flex;
 	flex-direction: column;
 	background-color: white;
-	min-height: 100%;
+	min-height: 97%;
 }
 
 .div-data-browser.hide-databrowser
@@ -475,7 +489,7 @@ table.autoWidth
 	display: flex;
 	flex-direction: column;
 	background-color: white;
-	min-height: 100%;
+	min-height: 97%;
 }
 
 .div-diagram-viewer-title
@@ -519,16 +533,21 @@ table.autoWidth
 .div-legpane
 {
 	grid-column: 5 / span 1;
-	grid-row: 2 / span 1;
 	display: grid;
 	grid-gap: var(--grid-gap);
 	grid-template-columns: 1fr;
 	grid-template-rows:
-		calc(var(--row-A-height) - var(--body-margin) - var(--grid-gap) - var(--dragger-ROW-size))
+		calc(var(--row-A-height) - var(--grid-gap) - var(--dragger-ROW-size))
 		var(--dragger-ROW-size)
-		calc(var(--row-B-height) - var(--body-margin) - var(--grid-gap) - var(--grid-gap));
-	min-height: 100%;
+		var(--row-B-height);
+	min-height: 97%;
 }
+
+/*
+ 		calc(var(--row-A-height) - var(--body-margin) - var(--grid-gap) - var(--dragger-ROW-size))
+ 		var(--dragger-ROW-size)
+-		calc(var(--row-B-height) - var(--body-margin) - var(--grid-gap) - var(--grid-gap));
+*/
 
 .div-legpane.hide-legpane
 {

@@ -13,6 +13,7 @@ package edu.mda.bcb.bev.query;
 
 import edu.mda.bcb.bev.indexes.Indexes;
 import java.util.ArrayList;
+import javax.servlet.ServletContext;
 
 /**
  *
@@ -109,8 +110,8 @@ public class Query
 		return cnt;
 	}
 	
-	public Result process(Indexes theIndexes)
+	public Result process(Indexes theIndexes, ServletContext theSC)
 	{
-		return theIndexes.query(this);
+		return theIndexes.query(this, theSC);
 	}
 }

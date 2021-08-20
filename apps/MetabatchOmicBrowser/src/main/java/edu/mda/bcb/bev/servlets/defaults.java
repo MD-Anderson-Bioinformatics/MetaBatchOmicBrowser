@@ -65,6 +65,12 @@ public class defaults extends HttpServlet
 			Gson gson = builder.create();
 			out.print(gson.toJson(ds));
 		}
+		catch(Exception exp)
+		{
+			log("defaults::processRequest failed", exp);
+			response.setStatus(400);
+			response.sendError(400);
+		}
 	}
 
 	// <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">

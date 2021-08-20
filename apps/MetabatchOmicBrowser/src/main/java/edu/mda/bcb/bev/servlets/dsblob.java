@@ -66,8 +66,8 @@ public class dsblob extends HttpServlet
 		catch(Exception exp)
 		{
 			log("dsblob::processRequest failed", exp);
-			response.setStatus(500);
-			response.sendError(500, exp.getMessage());
+			response.setStatus(400);
+			response.sendError(400);
 		}
 	}
 

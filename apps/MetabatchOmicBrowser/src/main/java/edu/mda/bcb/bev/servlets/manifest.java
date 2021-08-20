@@ -51,51 +51,60 @@ public class manifest extends HttpServlet
 	protected void processRequest(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException
 	{
-		response.setContentType("application/text;charset=UTF-8");
-		Calendar calendar = Calendar.getInstance();
-		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy_MM_dd_HHmm");
-		response.setHeader("Content-Disposition", "attachment; filename=\"manifest-" + dateFormat.format(calendar.getTime()) + ".tsv\"");
-		String json = request.getParameter("search");
-		String baseUrl = request.getParameter("baseURL");
-		GsonBuilder builder = new GsonBuilder();
-		builder.setPrettyPrinting();
-		Gson gson = builder.create();
-		this.log("baseUrl=" + baseUrl);
-		this.log("manifest=" + json);
-		Query queryInst = gson.fromJson(json, Query.class);
-		try (PrintWriter out = response.getWriter())
+		try
 		{
-			Indexes myIndexes = null;
-			String show = request.getParameter("show");
-			if ("dsc".equals(show))
+			response.setContentType("application/text;charset=UTF-8");
+			Calendar calendar = Calendar.getInstance();
+			SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy_MM_dd_HHmm");
+			response.setHeader("Content-Disposition", "attachment; filename=\"manifest-" + dateFormat.format(calendar.getTime()) + ".tsv\"");
+			String json = request.getParameter("search");
+			String baseUrl = request.getParameter("baseURL");
+			GsonBuilder builder = new GsonBuilder();
+			builder.setPrettyPrinting();
+			Gson gson = builder.create();
+			this.log("baseUrl=" + baseUrl);
+			this.log("manifest=" + json);
+			Query queryInst = gson.fromJson(json, Query.class);
+			try (PrintWriter out = response.getWriter())
 			{
-				myIndexes = LoadIndexFiles.M_BEV_DSC_INDEXES;
-			}
-			else
-			{
-				myIndexes = LoadIndexFiles.M_BEV_DIA_INDEXES;
-			}
-			if (null!=myIndexes)
-			{
-				Result resp = queryInst.process(myIndexes);
-				if (resp.mDatasets.size()>0)
+				Indexes myIndexes = null;
+				String show = request.getParameter("show");
+				if ("dsc".equals(show))
 				{
-					String mqaURL = baseUrl;
-					out.println(resp.mDatasets.first().getHeaders());
-					for (Dataset ds : resp.mDatasets)
+					myIndexes = LoadIndexFiles.M_BEV_DSC_INDEXES;
+				}
+				else
+				{
+					myIndexes = LoadIndexFiles.M_BEV_DIA_INDEXES;
+				}
+				if (null!=myIndexes)
+				{
+					Result resp = queryInst.process(myIndexes, this.getServletContext());
+					if (resp.mDatasets.size()>0)
 					{
-						out.println(ds.toString(mqaURL, json));
+						String mqaURL = baseUrl;
+						out.println(resp.mDatasets.first().getHeaders());
+						for (Dataset ds : resp.mDatasets)
+						{
+							out.println(ds.toString(mqaURL, json));
+						}
+					}
+					else
+					{
+						out.println("");
 					}
 				}
 				else
 				{
-					out.println("");
+					this.log("query - no indexes yet");
 				}
 			}
-			else
-			{
-				this.log("query - no indexes yet");
-			}
+		}
+		catch (Exception exp)
+		{
+			log("manifest::processRequest failed", exp);
+			response.setStatus(400);
+			response.sendError(400);
 		}
 	}
 

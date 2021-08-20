@@ -36,7 +36,6 @@ public class LoadIndexFiles implements ServletContextListener
 	static public String M_BEV_DSC_INDEX_FILES = "/DAPI/DSC_INDEXES";
 	static public String M_CONFIG_PROP = "/DAPI/CONFIG/dapi.properties";
 	static public String M_CONFIG_FILTER = "/DAPI/CONFIG/dapi-filter.tsv";
-	// used for BEI implementation - does not need to be mapped in docker
 	static public String M_BEI_DATA_DIR = "/DAPI/DATA";
 
 	static public Indexes M_BEV_DIA_INDEXES = null;

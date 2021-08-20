@@ -23,9 +23,10 @@ a { cursor: pointer; }
 {
 	margin: var(--body-margin);
 	width: calc(100% - 8px);
-	height: calc(100vh - 8px);
+	height: calc(100vh - 16px);
 	background-color: lightgrey;
-	overflow: hidden;
+	overflow-x: scroll;
+	overflow-y: hidden;
 }
 
 tr.viewed-dataset-highlight *
@@ -44,8 +45,9 @@ tr.viewed-dataset-highlight *
 	height: inherit;
 	display: grid;
 	grid-gap: var(--grid-gap);
-	grid-template-columns: 20% auto;
+	grid-template-columns: 20% 80%;
 	grid-template-rows: minmax(0, 1fr);
+	min-width: 1000px;
 }
 
 /* ***************************** */
@@ -59,7 +61,7 @@ tr.viewed-dataset-highlight *
 	display: flex;
 	flex-direction: column;
 	background-color: lightgray;
-	min-height: 100%;
+	min-height: 97%;
 }
 
 .div-query-categories-content
@@ -84,19 +86,20 @@ tr.viewed-dataset-highlight *
 	display: flex;
 	flex-direction: column;
 	background-color: lightgray;
-	min-height: 100%;
-	overflow: auto;
+	min-height: 97%;
 }
 
 .div-result-list-content
 {
-	flex: 1;
 	border: 1px solid gray;
 	border-top-style: none;
+	height: 100%;
 }
 
-
-
+.mqaTableWrapper
+{
+	height: calc(100% - 19px - 23px - 23px);
+}
 
 /* ******************************* */
 /* **** Tool Bar and Buttons **** */
@@ -408,6 +411,7 @@ input
 	font-size: 12pt;
 	padding-top: 0px;
 	color: black;
+	white-space: nowrap;
 }
 
 .mdaHeaderLinks

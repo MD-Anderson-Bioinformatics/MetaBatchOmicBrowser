@@ -1206,7 +1206,7 @@ var lastPixelRatio = null;
 		var	titleArray = breakStringForWrap (plotTitle, plotGeometry.plotWidth, titleElem.node());
 		var lineHeight = getRealLineHeight (titleElem.node());
 
-		if (installedOptions["autoAdjustTitleHeight"] && titleArray != null) {
+		if (installedOptions["autoAdjustTitleHeight"] && titleArray !== null) {
 			plotGeometry.titleHeight = lineHeight * titleArray.length + 3;	// ???
 		}
 
@@ -1287,8 +1287,10 @@ var lastPixelRatio = null;
 			.attr("y", plotGeometry.titleHeight - 2);
 
 		var titleArrayWithLineNums = [];
-		if (titleArray != null)
+		if (titleArray !== null)
+		{
 			titleArray.forEach (function (line, ix) { titleArrayWithLineNums.push ([ix, line]); });
+		}
 
 		var	titleSpans = titleElem.selectAll("tspan")
 				.data(titleArrayWithLineNums);

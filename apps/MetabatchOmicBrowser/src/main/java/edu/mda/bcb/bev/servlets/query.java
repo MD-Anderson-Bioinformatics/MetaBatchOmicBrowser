@@ -60,111 +60,120 @@ public class query extends HttpServlet
 	protected void processRequest(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException
 	{
-		long start = System.currentTimeMillis();
-		response.setContentType("application/json;charset=UTF-8");
-		String json = request.getParameter("search");
-		String baseUrl = request.getParameter("baseUrl");
-		GsonBuilder builder = new GsonBuilder();
-		builder.setPrettyPrinting();
-		Gson gson = builder.create();
-		this.log("query=" + json);
-		Query queryInst = gson.fromJson(json, Query.class);
-		try (PrintWriter out = response.getWriter())
+		try
 		{
-			Indexes myIndexes = null;
-			String show = request.getParameter("show");
-			if ("dsc".equals(show))
+			long start = System.currentTimeMillis();
+			response.setContentType("application/json;charset=UTF-8");
+			String json = request.getParameter("search");
+			String baseUrl = request.getParameter("baseUrl");
+			GsonBuilder builder = new GsonBuilder();
+			builder.setPrettyPrinting();
+			Gson gson = builder.create();
+			this.log("query=" + json);
+			Query queryInst = gson.fromJson(json, Query.class);
+			try (PrintWriter out = response.getWriter())
 			{
-				myIndexes = LoadIndexFiles.M_BEV_DSC_INDEXES;
-			}
-			else if (null!=LoadIndexFiles.M_BEV_DIA_INDEXES)
-			{
-				myIndexes = LoadIndexFiles.M_BEV_DIA_INDEXES;
-			}
-			if (null!=myIndexes)
-			{
-				Result resp = queryInst.process(myIndexes);
-				out.println("{");
-				out.print("\"headers\": ");
-				if (resp.mDatasets.size()<1)
+				Indexes myIndexes = null;
+				String show = request.getParameter("show");
+				if ("dsc".equals(show))
 				{
-					out.print("[ ]");
+					myIndexes = LoadIndexFiles.M_BEV_DSC_INDEXES;
 				}
-				else
+				else if (null!=LoadIndexFiles.M_BEV_DIA_INDEXES)
 				{
-					out.print(resp.mDatasets.first().getJsonHeaders());
+					myIndexes = LoadIndexFiles.M_BEV_DIA_INDEXES;
 				}
-				out.println(",");
-				out.print("\"data\": ");
-				out.println("[");
-				if (resp.mDatasets.size()<1)
+				if (null!=myIndexes)
 				{
-					out.print(" ");
-				}
-				else
-				{
-					boolean first = true;
-					String mqaURL = baseUrl;
-					for (Dataset ds : resp.mDatasets)
+					Result resp = queryInst.process(myIndexes, this.getServletContext());
+					out.println("{");
+					out.print("\"headers\": ");
+					if (resp.mDatasets.size()<1)
 					{
-						if (true==first)
-						{
-							first = false;
-						}
-						else
-						{
-							out.println(",");
-						}
-						out.print(ds.getJson(gson, mqaURL));
+						out.print("[ ]");
 					}
+					else
+					{
+						out.print(resp.mDatasets.first().getJsonHeaders());
+					}
+					out.println(",");
+					out.print("\"data\": ");
+					out.println("[");
+					if (resp.mDatasets.size()<1)
+					{
+						out.print(" ");
+					}
+					else
+					{
+						boolean first = true;
+						String mqaURL = baseUrl;
+						for (Dataset ds : resp.mDatasets)
+						{
+							if (true==first)
+							{
+								first = false;
+							}
+							else
+							{
+								out.println(",");
+							}
+							out.print(ds.getJson(gson, mqaURL));
+						}
+						out.println("");
+					}
+					out.println("],");
+					out.print("\"availableFiles\": ");
+					out.print(gson.toJson(resp.mOptions.mFiles));
+					out.println(",");
+					out.print("\"availableSources\": ");
+					out.print(gson.toJson(resp.mOptions.mSource));
+					out.println(",");
+					out.print("\"availableVariants\": ");
+					out.print(gson.toJson(resp.mOptions.mVariant));
+					out.println(",");
+					out.print("\"availableProjects\": ");
+					out.print(gson.toJson(resp.mOptions.mProject));
+					out.println(",");
+					out.print("\"availableSubprojects\": ");
+					out.print(gson.toJson(resp.mOptions.mSubproject));
+					out.println(",");
+					out.print("\"availableCategories\": ");
+					out.print(gson.toJson(resp.mOptions.mCategory));
+					out.println(",");
+					out.print("\"availablePlatforms\": ");
+					out.print(gson.toJson(resp.mOptions.mPlatform));
+					out.println(",");
+					out.print("\"availableData\": ");
+					out.print(gson.toJson(resp.mOptions.mData));
+					out.println(",");
+					out.print("\"availableAlgorithms\": ");
+					out.print(gson.toJson(resp.mOptions.mAlgorithm));
+					out.println(",");
+					out.print("\"availableDetails\": ");
+					out.print(gson.toJson(resp.mOptions.mDetail));
+					out.println(",");
+					out.print("\"availableVersions\": ");
+					out.print(gson.toJson(resp.mOptions.mVersion));
+					out.println(",");
+					out.print("\"availableOverallDSCpvalue\": ");
+					out.print(gson.toJson(resp.mOptions.mOverallDSCpvalue));
 					out.println("");
+					out.println("}");
 				}
-				out.println("],");
-				out.print("\"availableFiles\": ");
-				out.print(gson.toJson(resp.mOptions.mFiles));
-				out.println(",");
-				out.print("\"availableSources\": ");
-				out.print(gson.toJson(resp.mOptions.mSource));
-				out.println(",");
-				out.print("\"availableVariants\": ");
-				out.print(gson.toJson(resp.mOptions.mVariant));
-				out.println(",");
-				out.print("\"availableProjects\": ");
-				out.print(gson.toJson(resp.mOptions.mProject));
-				out.println(",");
-				out.print("\"availableSubprojects\": ");
-				out.print(gson.toJson(resp.mOptions.mSubproject));
-				out.println(",");
-				out.print("\"availableCategories\": ");
-				out.print(gson.toJson(resp.mOptions.mCategory));
-				out.println(",");
-				out.print("\"availablePlatforms\": ");
-				out.print(gson.toJson(resp.mOptions.mPlatform));
-				out.println(",");
-				out.print("\"availableData\": ");
-				out.print(gson.toJson(resp.mOptions.mData));
-				out.println(",");
-				out.print("\"availableAlgorithms\": ");
-				out.print(gson.toJson(resp.mOptions.mAlgorithm));
-				out.println(",");
-				out.print("\"availableDetails\": ");
-				out.print(gson.toJson(resp.mOptions.mDetail));
-				out.println(",");
-				out.print("\"availableVersions\": ");
-				out.print(gson.toJson(resp.mOptions.mVersion));
-				out.println(",");
-				out.print("\"availableOverallDSCpvalue\": ");
-				out.print(gson.toJson(resp.mOptions.mOverallDSCpvalue));
-				out.println("");
-				out.println("}");
+				else
+				{
+					this.log("query - no indexes yet");
+				}
 			}
-			else
-			{
-				this.log("query - no indexes yet");
-			}
+			long finish = System.currentTimeMillis();
+			this.log("query time = " + ((finish - start)/1000.00) + " seconds" );
 		}
-		long finish = System.currentTimeMillis();
-		this.log("query time = " + ((finish - start)/1000.00) + " seconds" );
+		catch (Exception exp)
+		{
+			log("query::processRequest failed", exp);
+			response.setStatus(400);
+			response.sendError(400);
+		}
 	}
 
 	// <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">

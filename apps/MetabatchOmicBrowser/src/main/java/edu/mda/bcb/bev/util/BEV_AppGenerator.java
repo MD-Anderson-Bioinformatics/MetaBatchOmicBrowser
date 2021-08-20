@@ -185,6 +185,7 @@ public class BEV_AppGenerator
 					// Recognized Javascript file; convert to string and write to "compiled" output
 					String jsFile = extractTokenFromString(line, "src=");
 					jsFile = jsFile.replace("src=", "").replaceAll("\"", "");
+					jsFile = jsFile.replaceFirst("\\?v=.*$", "");
 					System.out.println("BEV_AppGenerator jsFile=" + jsFile);
 					System.out.flush();
 					String jsString = jsToString(args[0], jsFile);
@@ -197,6 +198,8 @@ public class BEV_AppGenerator
 					// Recognized CSS file; convert to string and write to "compiled" output
 					String cssFile = extractTokenFromString(line, "href=");
 					cssFile = cssFile.replace("href=", "").replaceAll("\"", "");
+					cssFile = cssFile.replaceFirst("\\?v=.*$", "");
+					// replace ?v= to end of string with nothing
 					System.out.println("BEV_AppGenerator cssFile=" + cssFile);
 					System.out.flush();
 					bw.write("<style data-href=" + cssFile + " type='text/css'>");

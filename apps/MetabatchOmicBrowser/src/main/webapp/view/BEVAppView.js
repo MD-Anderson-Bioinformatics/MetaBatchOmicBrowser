@@ -12,6 +12,7 @@ disableInput = function()
 
 enableInput = function()
 {
+	//console.log("BEVAppView::enable input");
 	$(":input, a, button").prop("disabled",false);
 };
 

@@ -22,23 +22,23 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 		
 		<!-- **** icons **** -->
-		<link href="fa5/css/all.css" rel="stylesheet" type="text/css">
+		<link href="fa5/css/all.css?v=BEA_VERSION_TIMESTAMP" rel="stylesheet" type="text/css">
 		
-		<link href="tippy.css" rel="stylesheet" type="text/css">
-		<link href="jquery-ui-1.12.1/jquery-ui.min.css" rel="stylesheet" type="text/css">
-		<link href="sel2-4.0.13/select2.min.css" rel="stylesheet" type="text/css">
-		<link href="DataTables/DataTables-1.10.20/css/jquery.dataTables.min.css" rel="stylesheet" type="text/css">
-		<link href="DataTables/ColReorder-1.5.3/colReorder.dataTables.min.css" rel="stylesheet" type="text/css">
-		<link href="dapi.css" rel="stylesheet" type="text/css">
+		<link href="tippy.css?v=BEA_VERSION_TIMESTAMP" rel="stylesheet" type="text/css">
+		<link href="jquery-ui-1.12.1/jquery-ui.min.css?v=BEA_VERSION_TIMESTAMP" rel="stylesheet" type="text/css">
+		<link href="sel2-4.0.13/select2.min.css?v=BEA_VERSION_TIMESTAMP" rel="stylesheet" type="text/css">
+		<link href="DataTables/datatables.min.css?v=BEA_VERSION_TIMESTAMP" rel="stylesheet" type="text/css">
+		<link href="dapi.css?v=BEA_VERSION_TIMESTAMP" rel="stylesheet" type="text/css">
 		
-		<script src="knockout-3.5.1.js" type="text/javascript" charset="utf-8"></script>
-		<script src="jquery-3.5.0.min.js" type="text/javascript" charset="utf-8"></script>
-		<script src="jquery-ui-1.12.1/jquery-ui.min.js" type="text/javascript" charset="utf-8"></script>
-		<script src="sel2-4.0.13/select2.full.min.js" type="text/javascript" charset="utf-8"></script>
-		<script src="DataTables/DataTables-1.10.20/js/jquery.dataTables.min.js" type="text/javascript" charset="utf-8"></script>
-		<script src="DataTables/ColReorder-1.5.3/dataTables.colReorder.min.js" type="text/javascript" charset="utf-8"></script>
-		<script src="DAPIAppView.js" type="text/javascript" charset="utf-8"></script>
-		<script type="text/javascript" src="tippy.js"></script>
+		<script src="knockout-3.5.1.js?v=BEA_VERSION_TIMESTAMP" type="text/javascript" charset="utf-8"></script>
+		<script src="jquery-3.5.0.min.js?v=BEA_VERSION_TIMESTAMP" type="text/javascript" charset="utf-8"></script>
+		<script src="jquery-ui-1.12.1/jquery-ui.min.js?v=BEA_VERSION_TIMESTAMP" type="text/javascript" charset="utf-8"></script>
+		<script src="sel2-4.0.13/select2.full.min.js?v=BEA_VERSION_TIMESTAMP" type="text/javascript" charset="utf-8"></script>
+		<script src="DataTables/datatables.min.js?v=BEA_VERSION_TIMESTAMP" type="text/javascript" charset="utf-8"></script>
+		<!-- https://datatables.net/blog/2017-12-31 -->
+		<script src="DataTables/dataTables.scrollResize.min.js?v=BEA_VERSION_TIMESTAMP" type="text/javascript" charset="utf-8"></script>
+		<script src="DAPIAppView.js?v=BEA_VERSION_TIMESTAMP" type="text/javascript" charset="utf-8"></script>
+		<script type="text/javascript" src="tippy.js?v=BEA_VERSION_TIMESTAMP"></script>
 		
 		<script type="text/javascript">
 			/* global ko */
@@ -86,6 +86,7 @@
 			
 			function previousDatasetQuery(theParamsJson)
 			{
+				console.log("previousDatasetQuery")
 				// called from button on MQA page
 				// find previous dataset and update view, keeping current diagram settings
 				// find previous dataset
@@ -93,19 +94,23 @@
 				var testIndex = null;
 				var currentId = appview.viewedDatasetId();
 				var currentDscId = theParamsJson.dscid;
+				// this does not create the table, it references one created in DAPIAppView.js
 				var dataRows = $('#resultsTable').DataTable().rows().data();
 				for (var index=dataRows.length-1; (index>=0)&&(null===previousIndex); index--)
 				{
 					// check regular and DSC ID
-					if ((dataRows[index][0]===currentId)||(dataRows[index][0]===currentDscId))
+					console.log(dataRows[index]);
+					// NOTE CHANGING ORDER OF HEADERs/DATA will CHANGE INDEX 3
+					if ((dataRows[index][3]===currentId)||(dataRows[index][3]===currentDscId))
 					{
 						if (0===index)
 						{
 							// at first entry
 							previousIndex = -1;
 						}
-						else if (""!==dataRows[index-1][dataRows[index-1].length-1])
+						else if (""!==dataRows[index-1][2])
 						{
+							// NOTE CHANGING ORDER OF HEADERs/DATA will CHANGE INDEX 2 above
 							// if previous index has a View Analysis link, use it
 							previousIndex = index-1;
 						}
@@ -122,8 +127,9 @@
 							// no previous index with viewable analysis
 							previousIndex = -1;
 						}
-						else if (""!==dataRows[testIndex][dataRows[testIndex].length-1])
+						else if (""!==dataRows[testIndex][2])
 						{
+							// NOTE CHANGING ORDER OF HEADERs/DATA will CHANGE INDEX 2 above
 							// if previous index has a View Analysis link, use it
 							previousIndex = testIndex;
 						}
@@ -136,7 +142,8 @@
 				}
 				if (notUN(previousIndex)&&(previousIndex>=0))
 				{
-					var resultsUrl = dataRows[previousIndex][dataRows[previousIndex].length-1];
+					var resultsUrl = dataRows[previousIndex][2];
+					// NOTE CHANGING ORDER OF HEADERs/DATA will CHANGE INDEX 2 above
 					// build URL without alg or lvl1 entries
 					var urlParts = resultsUrl.split('?');
 					var params = new URLSearchParams(urlParts[1]);
@@ -182,19 +189,22 @@
 				var testIndex = null;
 				var currentId = appview.viewedDatasetId();
 				var currentDscId = theParamsJson.dscid;
+				// this does not create the table, it references one created in DAPIAppView.js
 				var dataRows = $('#resultsTable').DataTable().rows().data();
 				for (var index=0; (index<dataRows.length)&&(null===nextIndex); index++)
 				{
 					// check regular and DSC ID
-					if ((dataRows[index][0]===currentId)||(dataRows[index][0]===currentDscId))
+					// NOTE CHANGING ORDER OF HEADERs/DATA will CHANGE INDEX 3
+					if ((dataRows[index][3]===currentId)||(dataRows[index][3]===currentDscId))
 					{
 						if (index>=dataRows.length-1)
 						{
 							// at last index
 							nextIndex = -1;
 						}
-						else if (""!==dataRows[index+1][dataRows[index+1].length-1])
+						else if (""!==dataRows[index+1][2])
 						{
+							// NOTE CHANGING ORDER OF HEADERs/DATA will CHANGE INDEX 2 above
 							// if next index has a View Analysis link, use it
 							nextIndex = index+1;
 						}
@@ -211,8 +221,9 @@
 							// no next index with viewable analysis
 							nextIndex = -1;
 						}
-						else if (""!==dataRows[testIndex][dataRows[testIndex].length-1])
+						else if (""!==dataRows[testIndex][2])
 						{
+							// NOTE CHANGING ORDER OF HEADERs/DATA will CHANGE INDEX 2 above
 							// if next index has a View Analysis link, use it
 							nextIndex = testIndex;
 						}
@@ -225,7 +236,8 @@
 				}
 				if ((notUN(nextIndex))&&(nextIndex>=0))
 				{
-					var resultsUrl = dataRows[nextIndex][dataRows[nextIndex].length-1];
+					// NOTE CHANGING ORDER OF HEADERs/DATA will CHANGE INDEX 2
+					var resultsUrl = dataRows[nextIndex][2];
 					// build URL without alg or lvl1 entries
 					var urlParts = resultsUrl.split('?');
 					var params = new URLSearchParams(urlParts[1]);
@@ -258,6 +270,7 @@
 				else
 				{
 					alert("At last (viewable) dataset");
+					window.parent.setCurrentViewSrcMqa(null);
 				}
 			}
 		</script>
@@ -617,6 +630,18 @@
 					<div class="div-tool-bar">
 						<div class="mdaTitleText">&nbsp;&nbsp;MetaBatch Omic Browser Query&nbsp;<span style="font-size: 60%">BEA_VERSION_TIMESTAMP</span></div>
 						<span style="margin-left: auto;">
+							<button type="button" class="sdb-control-button" onclick="window.parent.previousDatasetMqa();" title="View previous dataset with results on list"><i class="fas fa-arrow-left" style="color: purple;"></i> Previous Dataset</button>
+							<button type="button" class="sdb-control-button" onclick="window.parent.nextDatasetMqa();" title="View next dataset with results on list"><i class="fas fa-arrow-right" style="color: blueviolet;"></i> Next Dataset</button>
+							<button type="button" class="sdb-control-button" onclick="window.parent.rotateSliderMqa();" title="Rotate slider"><i class="fas fa-sync-alt" style="color: brown;"></i> Rotate Slider</button>
+						</span>
+					</div>
+					<center class="centerTableHeader">
+						<div class="sdb-control-text">
+							<strong>Available Data:</strong> N=<span data-bind="text: $root.queryResultLength()"></span>
+							&nbsp;<strong>Query:</strong> <span data-bind="text: $root.populatedOnlyQueryString()"></span>
+						</div>
+						<br>
+						<div>
 							<span data-bind="if: ('matrix'===$root.urlShowParam())">
 								&nbsp;<button type="button" class="sdb-control-button" onclick="location.href='?show=dsc'" title="Switch to DSC Values. (Refreshes page.)"><i class="fas fa-sync-alt" style="color: blue;"></i> Switch to DSC Values</button>
 							</span>
@@ -629,15 +654,11 @@
 							-->
 							&nbsp;<button type="button" class="sdb-control-button" data-bind="attr: { onclick: 'downloadManifest()', title: 'Download TSV List for Available Data' }"><i class="fas fa-download" style="color: purple;"></i> Download List</button>
 							&nbsp;<button type="button" class="sdb-control-button" data-bind="attr: { onclick: 'clearSearch()', title: 'Clear Search' }"><i class="fas fa-trash-alt" style="color: darkslateblue;"></i> Clear Search</button>
-						</span>
-					</div>
-					<center class="centerTableHeader">
-						<div class="sdb-control-text">
-							<strong>Available Data:</strong> N=<span data-bind="text: $root.queryResultLength()"></span>
-							&nbsp;<strong>Query:</strong> <span data-bind="text: $root.populatedOnlyQueryString()"></span>
 						</div>
 					</center>
-					<table class="display compact order-column mdaSmallText" id="resultsTable" style="width:100%"></table>
+					<div class="mqaTableWrapper">
+						<table class="display compact order-column mdaSmallText" id="resultsTable" style="width: 100%; min-width: 1000px"></table>
+					</div>
 				</div>
 			</div>
 		</div>

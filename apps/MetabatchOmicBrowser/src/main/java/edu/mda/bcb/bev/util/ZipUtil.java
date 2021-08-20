@@ -12,7 +12,6 @@
 package edu.mda.bcb.bev.util;
 
 import java.awt.image.BufferedImage;
-import java.awt.image.RenderedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -26,7 +25,6 @@ import javax.imageio.ImageIO;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletResponse;
-import org.apache.commons.codec.binary.Base64OutputStream;
 import org.apache.commons.compress.utils.IOUtils;
 
 /**

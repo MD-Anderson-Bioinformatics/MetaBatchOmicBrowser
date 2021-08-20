@@ -130,7 +130,7 @@ class DiagramControl
 				this.resizeFunction = null;
 				this.removePlotChildren();
 				var diagramType = theNewDiagram.diagram_type;
-				//console.log("diagramType = " + diagramType);
+				console.log("diagramType = '" + diagramType + "'");
 				if ("boxplot" === diagramType)
 				{
 					this.handleNewBoxplot(theDatasetId, theNewDiagram);
@@ -138,6 +138,10 @@ class DiagramControl
 				else if ("cdp" === diagramType)
 				{
 					this.handleNewCdp(theDatasetId, theNewDiagram);
+				}
+				else if ("umap" === diagramType)
+				{
+					this.handleNewUmap(theDatasetId, theNewDiagram);
 				}
 				else if ("DSC" === diagramType)
 				{
@@ -203,11 +207,11 @@ class DiagramControl
 			{
 				passedThis.dataAccess.addImage(theDatasetId, theNewDiagram.diagram_image, passedThis.divDiagramId);
 				passedThis.dataAccess.addImage(theDatasetId, undefined, passedThis.divLegendId);
-				passedThis.resizeUtil = null;
-				// call through globalDiagramControl in order to trigger other gui events
-				// done here, since there is no Util for images
-				globalDiagramControl.resize();
 			}
+			passedThis.resizeUtil = null;
+			// call through globalDiagramControl in order to trigger other gui events
+			// done here, since there is no Util for images
+			globalDiagramControl.resize();
 			//console.log("DiagramControl::handleNewMutbatch getExistance done");
 		});
 	};
@@ -231,11 +235,11 @@ class DiagramControl
 			{
 				passedThis.dataAccess.addImage(theDatasetId, theNewDiagram.diagram_image, passedThis.divDiagramId);
 				passedThis.dataAccess.addImage(theDatasetId, undefined, passedThis.divLegendId);
-				passedThis.resizeUtil = null;
-				// call through globalDiagramControl in order to trigger other gui events
-				// done here, since there is no Util for images
-				globalDiagramControl.resize();
 			}
+			passedThis.resizeUtil = null;
+			// call through globalDiagramControl in order to trigger other gui events
+			// done here, since there is no Util for images
+			globalDiagramControl.resize();
 			//console.log("DiagramControl::handleNewDiscrete getExistance done");
 		});
 	};
@@ -255,6 +259,10 @@ class DiagramControl
 			if ("false"===exists)
 			{
 				passedThis.dataAccess.addText("<br>Due to NAs or other data issues, this analysis was unable to be generated.", passedThis.divDiagramId);
+				passedThis.resizeUtil = null;
+				// call through globalDiagramControl in order to trigger other gui events
+				// done here, since there is no Util for images
+				globalDiagramControl.resize();
 			}
 			else
 			{
@@ -267,6 +275,36 @@ class DiagramControl
 				//this.dataAccess.addImage(theDatasetId, theNewDiagram.legend_image, this.divLegendId);
 			}
 			//console.log("DiagramControl::handleNewBoxplot getExistance done");
+		});
+	};
+	
+	handleNewUmap(theDatasetId, theNewDiagram)
+	{
+		//console.log("DiagramControl::handleNewCdp called");
+		// clear any existing images -- clear calls are syncronous
+		this.dataAccess.addImage(theDatasetId, undefined, this.divDiagramId);
+		this.dataAccess.addImage(theDatasetId, undefined, this.divLegendId);
+		this.resizeUtil = null;
+		// use .then, not .done, cause this is sometimes JQuery, sometimes a Promise
+		var passedThis = this;
+		this.dataAccess.getExistance(theDatasetId, theNewDiagram.diagram_image).then(function (exists)
+		{
+			//console.log("DiagramControl::handleNewCdp getExistance");
+			if ("false"===exists)
+			{
+				passedThis.dataAccess.addText("<br>Due to NAs or other data issues, this analysis was unable to be generated.", passedThis.divDiagramId);
+			}
+			else
+			{
+				// load calls for an image are asyncronous
+				passedThis.dataAccess.addImage(theDatasetId, theNewDiagram.diagram_image, passedThis.divDiagramId);
+				passedThis.dataAccess.addImage(theDatasetId, theNewDiagram.legend_image, passedThis.divLegendId);
+			}
+			passedThis.resizeUtil = null;
+			// call through globalDiagramControl in order to trigger other gui events
+			// done here, since there is no Util for images
+			globalDiagramControl.resize();
+			//console.log("DiagramControl::handleNewCdp getExistance done");
 		});
 	};
 
@@ -291,11 +329,11 @@ class DiagramControl
 				// load calls for an image are asyncronous
 				passedThis.dataAccess.addImage(theDatasetId, theNewDiagram.diagram_image, passedThis.divDiagramId);
 				passedThis.dataAccess.addImage(theDatasetId, theNewDiagram.legend_image, passedThis.divLegendId);
-				passedThis.resizeUtil = null;
-				// call through globalDiagramControl in order to trigger other gui events
-				// done here, since there is no Util for images
-				globalDiagramControl.resize();
 			}
+			passedThis.resizeUtil = null;
+			// call through globalDiagramControl in order to trigger other gui events
+			// done here, since there is no Util for images
+			globalDiagramControl.resize();
 			//console.log("DiagramControl::handleNewCdp getExistance done");
 		});
 	};
@@ -315,6 +353,10 @@ class DiagramControl
 			if ("false"===exists)
 			{
 				passedThis.dataAccess.addText("<br>Due to NAs or other data issues, this analysis was unable to be generated.", passedThis.divDiagramId);
+				passedThis.resizeUtil = null;
+				// call through globalDiagramControl in order to trigger other gui events
+				// done here, since there is no Util for images
+				globalDiagramControl.resize();
 			}
 			else
 			{
@@ -341,6 +383,10 @@ class DiagramControl
 			if ("false"===exists)
 			{
 				passedThis.dataAccess.addText("<br>Due to NAs or other data issues, this analysis was unable to be generated.", passedThis.divDiagramId);
+				passedThis.resizeUtil = null;
+				// call through globalDiagramControl in order to trigger other gui events
+				// done here, since there is no Util for images
+				globalDiagramControl.resize();
 			}
 			else
 			{
@@ -372,6 +418,10 @@ class DiagramControl
 			if ("false"===exists)
 			{
 				passedThis.dataAccess.addText("<br>Due to NAs or other data issues, this analysis was unable to be generated.", passedThis.divDiagramId);
+				passedThis.resizeUtil = null;
+				// call through globalDiagramControl in order to trigger other gui events
+				// done here, since there is no Util for images
+				globalDiagramControl.resize();
 			}
 			else
 			{
@@ -401,6 +451,10 @@ class DiagramControl
 			if ("false"===exists)
 			{
 				passedThis.dataAccess.addText("<br>Due to NAs or other data issues, this analysis was unable to be generated.", passedThis.divDiagramId);
+				passedThis.resizeUtil = null;
+				// call through globalDiagramControl in order to trigger other gui events
+				// done here, since there is no Util for images
+				globalDiagramControl.resize();
 			}
 			else
 			{
@@ -435,8 +489,11 @@ class DiagramControl
 				// load calls for an image are asyncronous
 				passedThis.dataAccess.addImage(theDatasetId, theNewDiagram.diagram_image, passedThis.divDiagramId);
 				passedThis.dataAccess.addImage(theDatasetId, theNewDiagram.legend_image, passedThis.divLegendId);
-				passedThis.resizeUtil = null;
 			}
+			passedThis.resizeUtil = null;
+			// call through globalDiagramControl in order to trigger other gui events
+			// done here, since there is no Util for images
+			globalDiagramControl.resize();
 			//console.log("DiagramControl::handleNewSuperClust getExistance done");
 		});
 	};

@@ -45,8 +45,7 @@ public class urls extends HttpServlet
 	protected void processRequest(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException
 	{
-		response.setContentType("application/json;charset=UTF-8");
-		try (PrintWriter out = response.getWriter())
+		try
 		{
 			this.log("urls: find URLs");
 			BevUrl props = LoadIndexFiles.M_CONFIG_PROPERTIES;
@@ -56,12 +55,22 @@ public class urls extends HttpServlet
 				GsonBuilder builder = new GsonBuilder();
 				builder.setPrettyPrinting();
 				Gson gson = builder.create();
-				out.print(gson.toJson(props));
+				response.setContentType("application/json;charset=UTF-8");
+				try (PrintWriter out = response.getWriter())
+				{
+					out.print(gson.toJson(props));
+				}
 			}
 			else
 			{
 				this.log("urls: no URLs");
 			}
+		}
+		catch (Exception exp)
+		{
+			log("urls::processRequest failed", exp);
+			response.setStatus(400);
+			response.sendError(400);
 		}
 	}
 

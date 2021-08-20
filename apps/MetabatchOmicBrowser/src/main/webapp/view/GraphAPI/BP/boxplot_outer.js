@@ -816,7 +816,6 @@ function BoxPlotOuter(theDiv)
 		var heightTransform = ((mTickSpace) / textHeight);
 		var widthTransform = ( (mXScaleHeight-20) / textWidth);
 		var matrixValue = widthTransform < heightTransform ? widthTransform : heightTransform;
-		console.log("matrixValue = " + matrixValue);
 		mSelectedTickText.attr("dy", 0)
 				.attr("y", 0)
 				// This works with magic numbers. I'm not sure why 5.0 works to line up the values, but it does. The -10 is to drop below the border for the label area.
@@ -954,7 +953,7 @@ function BoxPlotOuter(theDiv)
 				.attr("height", mBoxplotPixels.mViewHeight)
 				.each(function (theData, theIndex)
 				{
-					//console.log("mBoxplotBoxList theIndex = " + theIndex);
+					//console.log("mBoxplotBoxList");
 					//d3.select(this).attr("x", (theIndex * boxWidth));
 					d3.select(this).attr("transform", "translate(" + (theIndex * boxWidth) + ", 0 )");
 				})

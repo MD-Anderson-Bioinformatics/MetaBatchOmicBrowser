@@ -47,12 +47,12 @@ public class dszipdata extends HttpServlet
 	protected void processRequest(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException
 	{
-		this.log("dsblob: get ds zip");
-		String id = request.getParameter("id");
-		Indexes myIndexes = LoadIndexFiles.M_BEV_DIA_INDEXES;
-		File zipPath = myIndexes.getDataPath(id);
 		try
 		{
+			this.log("dsblob: get ds zip");
+			String id = request.getParameter("id");
+			Indexes myIndexes = LoadIndexFiles.M_BEV_DIA_INDEXES;
+			File zipPath = myIndexes.getDataPath(id);
 			if (null==zipPath)
 			{
 				throw new Exception("Requested file not found");
@@ -74,8 +74,8 @@ public class dszipdata extends HttpServlet
 		catch (Exception exp)
 		{
 			log("dszip::processRequest failed", exp);
-			response.setStatus(500);
-			response.sendError(500, exp.getMessage());
+			response.setStatus(400);
+			response.sendError(400);
 		}
 	}
 

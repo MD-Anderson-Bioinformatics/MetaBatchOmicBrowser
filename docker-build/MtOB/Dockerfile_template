@@ -1,4 +1,4 @@
-FROM centos:centos8
+FROM almalinux:8
 
 # reminder, use {} around environmental variables, otherwise docker uses it as a literal
 
@@ -41,6 +41,8 @@ RUN curl -jksSL -o /tmp/apache-tomcat.tar.gz http://archive.apache.org/dist/tomc
     rm -rf ${TOMCAT_HOME}/webapps/docs && \
     rm -rf ${TOMCAT_HOME}/webapps/ROOT && \
     rm -rf ${TOMCAT_HOME}/webapps/examples && \
+    rm -rf ${TOMCAT_HOME}/webapps/manager && \
+    rm -rf ${TOMCAT_HOME}/webapps/host-manager && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* && \
     chown -R bcbuser:bcbuser ${TOMCAT_HOME} && \
     ln -s /opt/apache-tomcat-${TOMCAT_VERSION} ${TOMCAT_HOME} && \
@@ -51,6 +53,7 @@ RUN curl -jksSL -o /tmp/apache-tomcat.tar.gz http://archive.apache.org/dist/tomc
 # copy server.xml to start compression - may need to be merged with above later
 # also formats output for LOGREPORT
 COPY installations/server.xml ${CATALINA_HOME}/conf/server.xml
+COPY installations/web.xml ${CATALINA_HOME}/conf/web.xml
 RUN chown -R bcbuser:bcbuser ${CATALINA_HOME}/conf && \
     chmod -R u+rwx ${CATALINA_HOME}/conf
 

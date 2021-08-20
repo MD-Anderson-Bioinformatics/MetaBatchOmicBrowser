@@ -8,6 +8,7 @@ function onDragColumnAB(event)
 	if ((0!==event.clientX)&&(0!==event.clientY))
 	{
 		const vw = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+		//console.log("onDragColumnAB vw = " + vw);
 		let loc = event.clientX;
 		// 30 as decent padding. Right side needs an extra 100 to prevent overscroll.
 		if ((loc>30)&&(loc+130<vw))
@@ -15,12 +16,12 @@ function onDragColumnAB(event)
 			let newVwPortionForA = (loc/vw)*100; // proportion from 0 to current drag location for column A
 			let colA = getComputedStyle(document.documentElement).getPropertyValue('--column-A-width');
 			let colB = getComputedStyle(document.documentElement).getPropertyValue('--column-B-width');
-			colA = Number(colA.substring(0, colA.length - 2));
-			colB = Number(colB.substring(0, colB.length - 2));
+			colA = Number(colA.substring(0, colA.length - 1));
+			colB = Number(colB.substring(0, colB.length - 1));
 			let aDelta = newVwPortionForA - colA;
 			let bDelta = - aDelta;
-			colA = (colA + aDelta) + "vw";
-			colB = (colB + bDelta) + "vw";
+			colA = (colA + aDelta) + "%";
+			colB = (colB + bDelta) + "%";
 			document.documentElement.style.setProperty('--column-A-width', colA);
 			document.documentElement.style.setProperty('--column-B-width', colB);
 			// remove messy text selection
@@ -38,6 +39,7 @@ function onDragColumnBC(event)
 	if ((0!==event.clientX)&&(0!==event.clientY))
 	{
 		const vw = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+		//console.log("onDragColumnBC vw = " + vw);
 		let loc = event.clientX;
 		// 30 as decent padding. Right side needs an extra 100 to prevent overscroll.
 		if ((loc>130)&&(loc+130<vw))
@@ -45,12 +47,12 @@ function onDragColumnBC(event)
 			let newVwPortionForC = ((vw-loc)/vw)*100; // proportion from (vw - current drag location) for column C
 			let colB = getComputedStyle(document.documentElement).getPropertyValue('--column-B-width');
 			let colC = getComputedStyle(document.documentElement).getPropertyValue('--column-C-width');
-			colC = Number(colC.substring(0, colC.length - 2));
-			colB = Number(colB.substring(0, colB.length - 2));
+			colC = Number(colC.substring(0, colC.length - 1));
+			colB = Number(colB.substring(0, colB.length - 1));
 			let cDelta = newVwPortionForC - colC;
 			let bDelta = - cDelta;
-			colC = (colC + cDelta) + "vw";
-			colB = (colB + bDelta) + "vw";
+			colC = (colC + cDelta) + "%";
+			colB = (colB + bDelta) + "%";
 			document.documentElement.style.setProperty('--column-B-width', colB);
 			document.documentElement.style.setProperty('--column-C-width', colC);
 			// remove messy text selection
@@ -62,8 +64,8 @@ function onDragColumnBC(event)
 
 function onDragRowAB(event)
 {
-	//console.log("onDragRowAB Type=" + event.type + " clientX=" + event.clientX);
 	//console.log(event);
+	//console.log("onDragRowAB Type=" + event.type + " clientX=" + event.clientX);
 	// not sure about why I need this check, but last drag event has zeros for these values
 	if ((0!==event.clientX)&&(0!==event.clientY))
 	{
@@ -75,12 +77,18 @@ function onDragRowAB(event)
 			let newVwPortionForB = ((vh-loc)/vh)*100; // proportion from (vh - current drag location) for row B
 			let rowA = getComputedStyle(document.documentElement).getPropertyValue('--row-A-height');
 			let rowB = getComputedStyle(document.documentElement).getPropertyValue('--row-B-height');
-			rowA = Number(rowA.substring(0, rowA.length - 2));
-			rowB = Number(rowB.substring(0, rowB.length - 2));
+			//console.log("onDragRowAB rowA1=" + rowA);
+			//console.log("onDragRowAB rowB1=" + rowB);
+			rowA = Number(rowA.substring(0, rowA.length - 1));
+			rowB = Number(rowB.substring(0, rowB.length - 1));
+			//console.log("onDragRowAB rowA2=" + rowA);
+			//console.log("onDragRowAB rowB2=" + rowB);
 			let bDelta = newVwPortionForB - rowB;
 			let aDelta = - bDelta;
-			rowA = (rowA + aDelta) + "vh";
-			rowB = (rowB + bDelta) + "vh";
+			rowA = (rowA + aDelta) + "%";
+			rowB = (rowB + bDelta) + "%";
+			//console.log("onDragRowAB rowA3=" + rowA);
+			//console.log("onDragRowAB rowB3=" + rowB);
 			document.documentElement.style.setProperty('--row-A-height', rowA);
 			document.documentElement.style.setProperty('--row-B-height', rowB);
 			// remove messy text selection
@@ -160,15 +168,23 @@ function onMouseUpRowAB(theEvent)
 
 function onMouseDownRowAB(theEvent)
 {
+	//console.log("onMouseDownRowAB 1");
 	document.body.style.cursor = "ns-resize";
+	//console.log("onMouseDownRowAB 2");
 	document.getElementById("BEV_Diagram").classList.add("no-pointer-events");
+	//console.log("onMouseDownRowAB 3");
 	var iframe = document.getElementById('ngchmIframe');
+	//console.log("onMouseDownRowAB 4");
 	if (notUN(iframe))
 	{
+		//console.log("onMouseDownRowAB 5");
 		iframe.classList.add("no-pointer-events");
 	}
+	//console.log("onMouseDownRowAB 6");
 	document.addEventListener("mousemove", onDragRowAB);
+	//console.log("onMouseDownRowAB 7");
 	document.addEventListener("mouseup", onMouseUpRowAB);
+	//console.log("onMouseDownRowAB 8");
 }
 
 var globalOn_DB = false;
@@ -190,11 +206,11 @@ function hideDataBrowser()
 	globalColumnBWidth_DB = colB;
 	globalColumnCWidth_DB = colC;
 	// set values
-	colA = Number(colA.substring(0, colA.length - 2));
-	colB = Number(colB.substring(0, colB.length - 2));
+	colA = Number(colA.substring(0, colA.length - 1));
+	colB = Number(colB.substring(0, colB.length - 1));
 	document.documentElement.style.setProperty('--dragger-AB-size', "0px");
 	document.documentElement.style.setProperty('--column-A-width', "0px");
-	document.documentElement.style.setProperty('--column-B-width', (colA + colB) + "vw");
+	document.documentElement.style.setProperty('--column-B-width', (colA + colB) + "%");
 	// toggle the hide-databrowser class
 	toggleClass(['id-a-b-drag-bar', 'BEV_DataBrowser', 'BEV_DataBrowserbutton'], 'hide-databrowser');
 	globalOn_DB = true;
@@ -206,12 +222,12 @@ function displayDataBrowser()
 	let colA = getComputedStyle(document.documentElement).getPropertyValue('--column-A-width');
 	let colB = getComputedStyle(document.documentElement).getPropertyValue('--column-B-width');
 	let colC = getComputedStyle(document.documentElement).getPropertyValue('--column-C-width');
-	colA = Number(colA.substring(0, colA.length - 2));
-	colB = Number(colB.substring(0, colB.length - 2));
-	colC = Number(colC.substring(0, colC.length - 2));
+	colA = Number(colA.substring(0, colA.length - 1));
+	colB = Number(colB.substring(0, colB.length - 1));
+	colC = Number(colC.substring(0, colC.length - 1));
 	//console.log("displayDataBrowser a=" + colA + " b=" + colB + " c=" + colC);
 	// calculate new size for column B, to support other stuff changing
-	let oldA = Number(globalColumnAWidth_DB.substring(0, globalColumnAWidth_DB.length - 2));;
+	let oldA = Number(globalColumnAWidth_DB.substring(0, globalColumnAWidth_DB.length - 1));;
 	let newColA = oldA;
 	let newColB = 100 - oldA - colC;
 	if (newColB < 10)
@@ -222,8 +238,8 @@ function displayDataBrowser()
 	//console.log("displayDataBrowser newA=" + newColA + " newB=" + newColB);
 	// reset values
 	document.documentElement.style.setProperty('--dragger-AB-size', globalDragABWidth_DB);
-	document.documentElement.style.setProperty('--column-A-width', newColA + "vw");
-	document.documentElement.style.setProperty('--column-B-width', newColB + "vw");
+	document.documentElement.style.setProperty('--column-A-width', newColA + "%");
+	document.documentElement.style.setProperty('--column-B-width', newColB + "%");
 	// toggle the hide-databrowser class
 	toggleClass(['id-a-b-drag-bar', 'BEV_DataBrowser', 'BEV_DataBrowserbutton'], 'hide-databrowser');
 	globalOn_DB = false;
@@ -248,10 +264,10 @@ function hideLegPaneColumn()
 	globalColumnBWidth_LP = colB;
 	globalColumnCWidth_LP = colC;
 	// set values
-	colB = Number(colB.substring(0, colB.length - 2));
-	colC = Number(colC.substring(0, colC.length - 2));
+	colB = Number(colB.substring(0, colB.length - 1));
+	colC = Number(colC.substring(0, colC.length - 1));
 	document.documentElement.style.setProperty('--dragger-BC-size', "0px");
-	document.documentElement.style.setProperty('--column-B-width', (colB + colC) + "vw");
+	document.documentElement.style.setProperty('--column-B-width', (colB + colC) + "%");
 	document.documentElement.style.setProperty('--column-C-width', "0px");
 	// toggle the hide-databrowser class
 	toggleClass(['id-b-c-drag-bar', 'BEV_LegPane', 'BEV_LegPaneButton'], 'hide-legpane');
@@ -264,12 +280,12 @@ function displayLegPaneColumn()
 	let colA = getComputedStyle(document.documentElement).getPropertyValue('--column-A-width');
 	let colB = getComputedStyle(document.documentElement).getPropertyValue('--column-B-width');
 	let colC = getComputedStyle(document.documentElement).getPropertyValue('--column-C-width');
-	colA = Number(colA.substring(0, colA.length - 2));
-	colB = Number(colB.substring(0, colB.length - 2));
-	colC = Number(colC.substring(0, colC.length - 2));
+	colA = Number(colA.substring(0, colA.length - 1));
+	colB = Number(colB.substring(0, colB.length - 1));
+	colC = Number(colC.substring(0, colC.length - 1));
 	//console.log("displayLegPaneColumn a=" + colA + " b=" + colB + " c=" + colC);
 	// calculate new size for column C, to support other stuff changing
-	let oldC = Number(globalColumnCWidth_LP.substring(0, globalColumnCWidth_LP.length - 2));
+	let oldC = Number(globalColumnCWidth_LP.substring(0, globalColumnCWidth_LP.length - 1));
 	let newColC = oldC;
 	let newColB = 100 - newColC - colA;
 	if (newColB < 10)
@@ -281,8 +297,8 @@ function displayLegPaneColumn()
 	// calculate new size for column B, in case 
 	// reset values
 	document.documentElement.style.setProperty('--dragger-BC-size', globalDragBCWidth_LP);
-	document.documentElement.style.setProperty('--column-B-width', newColB + "vw");
-	document.documentElement.style.setProperty('--column-C-width', newColC + "vw");
+	document.documentElement.style.setProperty('--column-B-width', newColB + "%");
+	document.documentElement.style.setProperty('--column-C-width', newColC + "%");
 	// toggle the hide-databrowser class
 	toggleClass(['id-b-c-drag-bar', 'BEV_LegPane', 'BEV_LegPaneButton'], 'hide-legpane');
 	globalOn_LP = false;
@@ -294,6 +310,7 @@ var globalOn_Auto_LP = false;
 function bodyResize()
 {
 	const vw = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+	//console.log("bodyResize vw = " + vw);
 	//const vh = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
 	if ((false===globalOn_Auto_DB)&&(false===globalOn_DB)&&(vw<800))
 	{

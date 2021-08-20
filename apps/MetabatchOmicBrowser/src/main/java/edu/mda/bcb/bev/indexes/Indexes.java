@@ -117,21 +117,24 @@ public class Indexes
 		catch(Exception ignore)
 		{
 			// ignore errors, and keep original string
+			retStr = theString;
 		}
 		return retStr;
 	}
 	
 	synchronized public void loadIndex(File theIndexFile, String theIndexSource,
 			TreeMap<String, String> theBaseToCategory, TreeMap<String, String> theBaseToPlatform, TreeMap<String, String> theBaseToDetails,
-			TreeMap<String, String> theFilterSources, TreeMap<String, String> theFilterDerivations) throws IOException, Exception
+			TreeMap<String, String> theFilterSources, TreeMap<String, String> theFilterDerivations, ServletContext theSC) throws IOException, Exception
 	{
 		ArrayList<String> headersRqrd = getHeaders();
 		ArrayList<String> headersOptn = getHeadersOptional();
 		TreeSet<Dataset> datasets = new TreeSet<>();
 		try (BufferedReader br = java.nio.file.Files.newBufferedReader(theIndexFile.toPath(), Charset.availableCharsets().get("UTF-8")))
 		{
+			long counter = 0;
 			ArrayList<String> headersIndex = null;
 			String line = br.readLine();
+			counter+=1;
 			while (null!=line)
 			{
 				if (null==headersIndex)
@@ -155,6 +158,7 @@ public class Indexes
 				}
 				else
 				{
+					//theSC.log("Indexes::loadFromFiles processing line " + counter);
 					String [] splitted = line.split("\t", -1);
 					String lineIndex = (populateValue(splitted, headersIndex, "Variant") + " " + 
 										populateValue(splitted, headersIndex, "Category") + " " + 
@@ -166,6 +170,7 @@ public class Indexes
 					String lvl2 = populateValue(splitted, headersIndex, "Lvl2");
 					// required values
 					String newId = populateId(splitted, headersIndex, theIndexSource, "ID", "PathData", "PathResults", algo, lvl1, lvl2);
+					//theSC.log("Indexes::loadFromFiles newId " + newId);
 					ArrayList<String> files = populateSplittedMap(newId, splitted, headersIndex, "Files", mFileToIDs, "\\|");
 					String source = populateMap(newId, splitted, headersIndex, "Source", mSourceToIDs, null, null, theFilterSources);
 					String variant = populateMap(newId, splitted, headersIndex, "Variant", mVariantToIDs, null, null, theFilterDerivations);
@@ -179,11 +184,19 @@ public class Indexes
 					String version = populateMap(newId, splitted, headersIndex, "Version", mVersionToIDs, null, null, null);
 					// optional values
 					String overallDSC_orig = populateValue(splitted, headersIndex, "Overall-DSC");
-					overallDSC_orig = roundToThreeDigits(overallDSC_orig);
 					Double overallDSC_dbl = null;
-					if (null!=overallDSC_orig)
+					if ("NaN".equalsIgnoreCase(overallDSC_orig))
 					{
-						overallDSC_dbl = Double.parseDouble(overallDSC_orig);
+						overallDSC_dbl = null;
+					}
+					else
+					{
+						overallDSC_orig = roundToThreeDigits(overallDSC_orig);
+						//theSC.log("Indexes::loadFromFiles overallDSC_orig " + overallDSC_orig);
+						if (null!=overallDSC_orig)
+						{
+							overallDSC_dbl = Double.parseDouble(overallDSC_orig);
+						}
 					}
 					String overallDSCpvalue_orig = populateValue(splitted, headersIndex, "Overall-DSC-pvalue");
 					if ("5e-04".equals(overallDSCpvalue_orig))
@@ -228,6 +241,7 @@ public class Indexes
 					}
 				}
 				line = br.readLine();
+				counter+=1;
 			}
 		}
 		// copy datasets to lists
@@ -804,7 +818,7 @@ public class Indexes
 				{
 					myIndexes.mIsDSC = true;
 				}
-				myIndexes.loadIndex(ind, source, theBaseToCategory, theBaseToPlatform, theBaseToDetails, theFilterSources, theFilterDerivations);
+				myIndexes.loadIndex(ind, source, theBaseToCategory, theBaseToPlatform, theBaseToDetails, theFilterSources, theFilterDerivations, theSC);
 				if (null!=theSC)
 				{
 					theSC.log("Indexes::loadFromFiles loaded " + ind.getAbsolutePath());
@@ -957,13 +971,28 @@ public class Indexes
 		return idList;
 	}
 	
-	protected TreeSet<Dataset> getIdsToDatasets(TreeSet<String> theDataSetIds, TreeMap<String, Dataset> theIdToDataset)
+	protected TreeSet<Dataset> getIdsToDatasets(TreeSet<String> theDataSetIds, TreeMap<String, Dataset> theIdToDataset, ServletContext theSC)
 	{
 		TreeSet<Dataset> dss = new TreeSet<>();
 		for (String id : theDataSetIds)
 		{
 			Dataset ds = theIdToDataset.get(id);
-			dss.add(ds);
+			if (null!=ds)
+			{
+				// skip empty line
+				dss.add(ds);
+			}
+			else
+			{
+				if (null!=theSC)
+				{
+					theSC.log("Indexes::getIdsToDatasets No match for " + id + ", which is data only. This is OK.");
+				}
+				else
+				{
+					System.out.println("Indexes::getIdsToDatasets No match for " + id + ", which is data only. This is OK.");
+				}
+			}
 		}
 		return dss;
 	}
@@ -977,7 +1006,7 @@ public class Indexes
 	}
 	
 	protected void combineQueryResults(TreeSet<String> theIds, Result theResult, 
-			TreeSet<String> theSkip, TreeSet<String> theNewIds, TreeMap<String, Dataset> theIdToDataset)
+			TreeSet<String> theSkip, TreeSet<String> theNewIds, TreeMap<String, Dataset> theIdToDataset, ServletContext theSC)
 	{
 		// theIds is never empty. It starts with all possible values
 		if (!theNewIds.isEmpty())
@@ -985,7 +1014,7 @@ public class Indexes
 			theIds.retainAll(theNewIds);
 			// for each set of keys (other than the skip set) narrow based on this search
 			// use theNewIds, since we want this populated based on one query option only at a time
-			TreeSet<Dataset> datasets = getIdsToDatasets(theNewIds, theIdToDataset);
+			TreeSet<Dataset> datasets = getIdsToDatasets(theNewIds, theIdToDataset, theSC);
 			//
 			TreeSet<String> columnValues = new TreeSet<>();
 			for (Dataset ds : datasets) { columnValues.add(ds.mAlgorithm); };
@@ -1029,7 +1058,7 @@ public class Indexes
 		}
 	}
 	
-	synchronized public Result query(Query theQuery)
+	synchronized public Result query(Query theQuery, ServletContext theSC)
 	{
 		Result result = new Result();
 		result.init(this);
@@ -1044,21 +1073,21 @@ public class Indexes
 		{
 			dataSetIds.addAll(mNewestIds);
 		}
-		combineQueryResults(dataSetIds, result, result.mOptions.mFiles, internalQuery(theQuery.mFiles, this.mFileToIDs), this.mIdToDataset);
-		combineQueryResults(dataSetIds, result, result.mOptions.mSource, internalQuery(theQuery.mSources, this.mSourceToIDs), this.mIdToDataset);
-		combineQueryResults(dataSetIds, result, result.mOptions.mVariant, internalQuery(theQuery.mVariants, this.mVariantToIDs), this.mIdToDataset);
-		combineQueryResults(dataSetIds, result, result.mOptions.mProject, internalQuery(theQuery.mProjects, this.mProjectToIDs), this.mIdToDataset);
-		combineQueryResults(dataSetIds, result, result.mOptions.mSubproject, internalQuery(theQuery.mSubprojects, this.mSubprojectToIDs), this.mIdToDataset);
-		combineQueryResults(dataSetIds, result, result.mOptions.mCategory, internalQuery(theQuery.mCategories, this.mCategoryToIDs), this.mIdToDataset);
-		combineQueryResults(dataSetIds, result, result.mOptions.mPlatform, internalQuery(theQuery.mPlatforms, this.mPlatformToIDs), this.mIdToDataset);
-		combineQueryResults(dataSetIds, result, result.mOptions.mData, internalQuery(theQuery.mData, this.mDatatypeToIDs), this.mIdToDataset);
-		combineQueryResults(dataSetIds, result, result.mOptions.mAlgorithm, internalQuery(theQuery.mAlgorithms, this.mAlgorithmToIDs), this.mIdToDataset);
-		combineQueryResults(dataSetIds, result, result.mOptions.mDetail, internalQuery(theQuery.mDetails, this.mDetailToIDs), this.mIdToDataset);
-		combineQueryResults(dataSetIds, result, result.mOptions.mVersion, internalQuery(theQuery.mVersions, this.mVersionToIDs), this.mIdToDataset);
+		combineQueryResults(dataSetIds, result, result.mOptions.mFiles, internalQuery(theQuery.mFiles, this.mFileToIDs), this.mIdToDataset, theSC);
+		combineQueryResults(dataSetIds, result, result.mOptions.mSource, internalQuery(theQuery.mSources, this.mSourceToIDs), this.mIdToDataset, theSC);
+		combineQueryResults(dataSetIds, result, result.mOptions.mVariant, internalQuery(theQuery.mVariants, this.mVariantToIDs), this.mIdToDataset, theSC);
+		combineQueryResults(dataSetIds, result, result.mOptions.mProject, internalQuery(theQuery.mProjects, this.mProjectToIDs), this.mIdToDataset, theSC);
+		combineQueryResults(dataSetIds, result, result.mOptions.mSubproject, internalQuery(theQuery.mSubprojects, this.mSubprojectToIDs), this.mIdToDataset, theSC);
+		combineQueryResults(dataSetIds, result, result.mOptions.mCategory, internalQuery(theQuery.mCategories, this.mCategoryToIDs), this.mIdToDataset, theSC);
+		combineQueryResults(dataSetIds, result, result.mOptions.mPlatform, internalQuery(theQuery.mPlatforms, this.mPlatformToIDs), this.mIdToDataset, theSC);
+		combineQueryResults(dataSetIds, result, result.mOptions.mData, internalQuery(theQuery.mData, this.mDatatypeToIDs), this.mIdToDataset, theSC);
+		combineQueryResults(dataSetIds, result, result.mOptions.mAlgorithm, internalQuery(theQuery.mAlgorithms, this.mAlgorithmToIDs), this.mIdToDataset, theSC);
+		combineQueryResults(dataSetIds, result, result.mOptions.mDetail, internalQuery(theQuery.mDetails, this.mDetailToIDs), this.mIdToDataset, theSC);
+		combineQueryResults(dataSetIds, result, result.mOptions.mVersion, internalQuery(theQuery.mVersions, this.mVersionToIDs), this.mIdToDataset, theSC);
 		// optional
 		if (true==this.mIsDSC)
 		{
-			combineQueryResults(dataSetIds, result, result.mOptions.mOverallDSCpvalue, internalQuery(theQuery.mOverallDSCpvalue, this.mOverallDSCpvalueToIDs), this.mIdToDataset);
+			combineQueryResults(dataSetIds, result, result.mOptions.mOverallDSCpvalue, internalQuery(theQuery.mOverallDSCpvalue, this.mOverallDSCpvalueToIDs), this.mIdToDataset, theSC);
 			// for overall DSC min and max, use ids =, since it can actually remove all available datasets from consideration
 			dataSetIds = internalQueryOverallDsc(dataSetIds, theQuery.mOverallDSCmin, theQuery.mOverallDSCmax);
 		}

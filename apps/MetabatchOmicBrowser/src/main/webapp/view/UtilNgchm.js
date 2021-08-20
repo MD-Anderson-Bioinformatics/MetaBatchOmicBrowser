@@ -29,11 +29,11 @@ class UtilNgchm
 
 	showNgcmDatapoint(e) 
 	{
-		//console.log("showNgcmDatapoint");
-		//console.log(e);
+		console.log("showNgcmDatapoint");
+		console.log(e);
 		if (!e.data)
 		{
-			//console.log ('Map details message not valid');
+			console.log('Map details message not valid');
 			return;
 		}
 		else if(e.data.msg !== "ShowCovarDetail")
@@ -67,6 +67,82 @@ class UtilNgchm
 			legend.appendChild(legendTable);
 		}
 	}
+
+	plotNGCHMhtml(theTextData, theNgchm)
+	{
+		var self = this;
+		var ngchm = document.createElement('iframe');
+		// NOTE: assumes only one ngchm iframe
+		ngchm.setAttribute("id","ngchmIframe");
+		ngchm.style = "height:100%; width:100%; border-style:none; ";
+		// Make visible and append to DOM
+		ngchm.classList.remove("ngchmHidden");
+		ngchm.classList.add("ngchmVisible");
+		ngchm.classList.add("plotChild");
+		theNgchm.setAttribute("srcdoc", theTextData);
+		var plotDiv = document.getElementById(self.divDiagramId);
+		plotDiv.appendChild(theNgchm);
+	}
+	
+	plotNGCHMngchm(theDatasetId, theNgchmFile)
+	{
+		var self = this;
+		// 'http://localhost:8080/MQA/dsblob?text=%2FSupervisedClustering%2FBatches%2FBatchId_ngchm.ngchm&id=bev-gdc-b23f7958311814b0b696c2251c5b08c0'
+		var myUrl = window.location.origin + (window.location.pathname).replace("view/", "") + "/dsblob?text=" + encodeURIComponent(theNgchmFile) + "&id=" + theDatasetId;
+
+		var plotDiv = document.getElementById(self.divDiagramId);
+		var ngchm = document.createElement('div');
+		// NOTE: assumes only one ngchm iframe
+		ngchm.setAttribute("id","ngchmIframeDiv");
+		ngchm.style = "height:100%; width:100%; border-style:none; ";
+		// Make visible and append to DOM
+		ngchm.classList.remove("ngchmHidden");
+		ngchm.classList.add("ngchmVisible");
+		ngchm.classList.add("plotChild");
+		plotDiv.appendChild(ngchm);
+
+		var mscript = document.createElement('script');
+		mscript.setAttribute("type", "module");
+		mscript.innerHTML = "embedNGCHM(\"" + ngchm.getAttribute("id") + "\", 'url', \"" + myUrl +
+				"\", { widgetPath: 'lib/ngchmWidget-min.js', style: 'height:99%; width:100%; border-style: none;' });";
+		mscript.classList.add("plotChild");
+		plotDiv.appendChild(mscript);
+
+		var firstIframe = document.querySelector("#ngchmIframeDiv > iframe:first-of-type");
+		if (notUN(firstIframe))
+		{
+			var nonce = "N";
+			var datapaneId = self.divDatapaneId;
+			firstIframe.onload = function() 
+			{
+			 	console.log("firstIframe.onload");
+			 	// https://stackoverflow.com/questions/62087163/iframe-onload-event-when-content-is-set-from-srcdoc
+			 	// do a timer until contentDocument or contentWindow.document are populated
+			 	// messages still do not work...
+			 	var timer = setInterval(function()
+			 	{
+			 		console.log("firstIframe.onload interval");
+			 		let iframeDoc = firstIframe.contentDocument || firstIframe.contentWindow.document;
+			 		if (null!==iframeDoc)
+			 		{
+			 			console.log("firstIframe.onload not null");
+			 			console.log(iframeDoc);
+			 			iframeDoc.addEventListener('message', 
+			 				function(theEvent)
+			 				{
+			 					console.log("firstIframe.onload message event for iframe");
+			 					self.showNgcmDatapoint(theEvent);
+			 				}, 
+			 				false);
+			 			console.log('firstIframe.onload Sending message to ngchm');
+			 			console.log(datapaneId);
+			 			firstIframe.contentWindow.postMessage ({ nonce: nonce, override: 'ShowMapDetail', ngchm_id: datapaneId }, '*');
+						clearInterval(timer);
+					}
+				}, 1000);
+			};
+		}
+	}
 	
 	newNgchm()
 	{
@@ -77,56 +153,27 @@ class UtilNgchm
 			//console.log("newNgchm self");
 			//console.log(self);
 			// "ngchm": "/NGCHM/ShipDate_ngchm.ngchm"
-			var ngchmFile = this.newDiagram.ngchm;
-			var ngchm = document.createElement('iframe');
-			// NOTE: assumes only one ngchm iframe
-			ngchm.setAttribute("id","ngchmIframe");
-			ngchm.style = "height:100%; width:100%; border-style:none; ";
-			// Make visible and append to DOM
-			ngchm.classList.remove("ngchmHidden");
-			ngchm.classList.add("ngchmVisible");
-			ngchm.classList.add("plotChild");
-			globalDataAccess.getDataFile(this.datasetId, ngchmFile).then(function (theTextData)
+			var ngchmFileHtml = self.newDiagram.ngchm;
+			var ngchmFileNgchm = ngchmFileHtml.replace(".html", "");
+			this.dataAccess.getExistance(self.datasetId, ngchmFileNgchm).then(function (exists)
 			{
-				if (""===theTextData)
+				if ("false"===exists)
 				{
-					theTextData = "<html><body><strong>No NGCHM HTML file available. Download the MBatch Archive and use the .ngchm file with the standalone NGCHM viewer.</strong></body></html>";
+					globalDataAccess.getDataFile(self.datasetId, ngchmFileHtml).then(function (theTextData)
+					{
+						if (""===theTextData)
+						{
+							theTextData = "<html><body><strong>No NGCHM available.</strong></body></html>";
+						} 
+						self.plotNGCHMhtml(theTextData);
+					});
 				}
-				ngchm.setAttribute("srcdoc", theTextData);
-				var plotDiv = document.getElementById(self.divDiagramId);
-				plotDiv.appendChild(ngchm);
-				// messages do not work in this version, so comment this out
-				// var nonce = "N";
-				// var datapaneId = self.divDatapaneId;
-				//ngchm.onload = function() 
-				//{
-				// 	//console.log("ngchm.onload");
-				// 	// https://stackoverflow.com/questions/62087163/iframe-onload-event-when-content-is-set-from-srcdoc
-				// 	// do a timer until contentDocument or contentWindow.document are populated
-				// 	// messages still do not work...
-				// 	var timer = setInterval(function()
-				// 	{
-				// 		//console.log("ngchm.onload interval");
-				// 		let iframeDoc = ngchm.contentDocument || ngchm.contentWindow.document;
-				// 		if (null!==iframeDoc)
-				// 		{
-				// 			//console.log("iframeDoc not null");
-				// 			//console.log(iframeDoc);
-				// 			iframeDoc.addEventListener('message', 
-				// 				function(theEvent)
-				// 				{
-				// 					//console.log("message event for iframe");
-				// 					self.showNgcmDatapoint(theEvent);
-				// 				}, 
-				// 				false);
-				// 			//console.log ('Sending message to ngchm');
-				// 			ngchm.contentWindow.postMessage ({ nonce: nonce, override: 'ShowMapDetail', ngchm_id: datapaneId }, '*');
+				else
+				{
+					self.plotNGCHMngchm(self.datasetId, ngchmFileNgchm);
+				}
 				$("body").removeClass("wait");
 				self.finishedCallback();
-				// 			clearInterval(timer);
-				// 		}
-				// 	}, 1000);
-				//};
 			});
 		}
 		catch(theExp)

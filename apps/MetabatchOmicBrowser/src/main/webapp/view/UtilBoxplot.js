@@ -30,6 +30,7 @@ class UtilBoxplot
 		var batchFile = self.indexKO().mbatch.batchdata;
 		// "entry_label": "ShipDate", -- batch type being viewed
 		var batchType = self.newDiagram.entry_label;
+		// batchType decodeURIComponent("%c2%b1")
 		// "box_annotations": "/BoxPlot/AllSample-Data/BoxPlot_AllSample-Data_Annotations-ShipDate.tsv",
 		var annotationFile = self.newDiagram.box_annotations;
 		// "box_data": "/BoxPlot/AllSample-Data/BoxPlot_AllSample-Data_BoxData-ShipDate.tsv",

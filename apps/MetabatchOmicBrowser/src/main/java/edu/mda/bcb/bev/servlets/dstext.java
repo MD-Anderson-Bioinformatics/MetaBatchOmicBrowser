@@ -45,29 +45,29 @@ public class dstext extends HttpServlet
 	protected void processRequest(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException
 	{
-		this.log("dstext: get json index");
-		String id = request.getParameter("id");
-		String text = request.getParameter("text");
-		if (text.startsWith("/"))
-		{
-			text = text.substring(1);
-		}
-		this.log("dstext: id = " + id);
-		this.log("dstext: text = " + text);
-		Indexes myIndexes = LoadIndexFiles.M_BEV_DIA_INDEXES;
-		File zipPath = myIndexes.getResultsPath(id);
-		this.log("dstext: zipPath = " + zipPath.getAbsolutePath());
-		this.log("dstext: call streamFile");
 		try
 		{
+			this.log("dstext: get json index");
+			String id = request.getParameter("id");
+			String text = request.getParameter("text");
+			if (text.startsWith("/"))
+			{
+				text = text.substring(1);
+			}
+			this.log("dstext: id = " + id);
+			this.log("dstext: text = " + text);
+			Indexes myIndexes = LoadIndexFiles.M_BEV_DIA_INDEXES;
+			File zipPath = myIndexes.getResultsPath(id);
+			this.log("dstext: zipPath = " + zipPath.getAbsolutePath());
+			this.log("dstext: call streamFile");
 			ZipUtil.streamFile(zipPath.getAbsolutePath(), text, response, this, "application/text;charset=UTF-8");
 			this.log("dstext: true after streamFile");
 		}
 		catch(Exception exp)
 		{
 			log("dstext::processRequest failed", exp);
-			response.setStatus(500);
-			response.sendError(500, exp.getMessage());
+			response.setStatus(400);
+			response.sendError(400);
 		}
 	}
 

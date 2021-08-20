@@ -110,7 +110,15 @@ function  splitStringInTwo (s)
 {
 	var mid = Math.round (s.length / 2);
 	var nextSpace = s.indexOf (' ', mid);
+	if (-1===nextSpace)
+	{
+		nextSpace = s.indexOf ('/', mid);
+	}
 	var prevSpace = s.lastIndexOf (' ', mid);
+	if (-1===prevSpace)
+	{
+		prevSpace = s.lastIndexOf ('/', mid);
+	}
 	var	breakLoc;
 
 	if (mid - prevSpace < nextSpace - mid)		// closer to prev?
@@ -126,7 +134,15 @@ function  splitStringInThree (s)
 {
 	var twothirds = Math.round (s.length / 3) * 2;
 	var nextSpace = s.indexOf (' ', twothirds);
+	if (-1===nextSpace)
+	{
+		nextSpace = s.indexOf ('/', twothirds);
+	}
 	var prevSpace = s.lastIndexOf (' ', twothirds);
+	if (-1===nextSpace)
+	{
+		prevSpace = s.lastIndexOf ('/', twothirds);
+	}
 	var	breakLoc;
 
 	if (twothirds - prevSpace < nextSpace - twothirds)		// closer to prev?
@@ -205,7 +221,7 @@ function  breakStringForWrap (s, width, el)
 				if (testDims[0] <= width)
 					return splits;				// split to 4 lines
 				else
-					return null;				// still would not fit
+					return splits;				// still would not fit
 			}
 			else
 				return splits;					// split to 3 lines
