@@ -9,11 +9,11 @@
 	--body-margin: 4px;
 	--header-height: 36px;
 	--grid-gap: 0px;
-	--dragger-size: 10px;
-	--row-A-height: 60vh;
-	--row-B-height: 40vh;	
-	--col-A-width: 60vw;
-	--col-B-width: 40vw;	
+	--dragger-size: 12px;
+	--row-A-height: 65vh;
+	--row-B-height: 35vh;	
+	--col-A-width: 65vw;
+	--col-B-width: 35vw;	
 }
 
 *{ font-family: Arial,sans-serif; }
@@ -61,6 +61,24 @@ body.wait, body.wait *
 	cursor: wait !important;
 }
 
+.mdaMinTable
+{
+	padding: 0px 0px 0px 0px !important;
+	border: 0px !important;
+	border-collapse: collapse;
+	border-spacing: 0px !important;
+	border-image-width: 0;
+}
+
+.mdaMinTable td
+{
+	padding: 0px 0px 0px 0px !important;
+	border: 0px !important;
+	border-collapse: collapse;
+	border-spacing: 0px !important;
+	border-image-width: 0;
+}
+
 .mdaRounded
 {
 	border: 1px solid black;
@@ -90,7 +108,6 @@ body.wait, body.wait *
 
 .mdaServiceHeaderLogo
 {
-	padding-top: 2px;
 	padding-left: 2px;
 	margin: auto;
 	height: calc(var(--header-height) - 4px);
@@ -195,9 +212,8 @@ body.wait, body.wait *
 
 .buttons:disabled
 {
-	background: #afafaf;
-    background: -webkit-linear-gradient(#afafaf, #6b6b6b);
-    background: linear-gradient(#afafaf, #6b6b6b);
+	background-color: lightgray;
+	border-color: darkslategray;
 }
 
 .spinner 
@@ -251,18 +267,17 @@ body.wait, body.wait *
     display: grid;
     grid-gap: var(--grid-gap);
     grid-template-columns: 1fr;
+	/* take dragger and header size from A, so hiding B works */
     grid-template-rows: 
 		calc(	var(--row-A-height) - 
 				var(--body-margin) - 
 				var(--grid-gap) - 
-				(0.5 * var(--dragger-size)) - 
-				(0.5 * var(--header-height)) )
+				var(--dragger-size) - 
+				var(--header-height) )
 		var(	--dragger-size) 
 		calc(	var(--row-B-height) - 
 				var(--body-margin) - 
-				var(--grid-gap) - 
-				(0.5 * var(--dragger-size)) - 
-				(0.5 * var(--header-height)) );
+				var(--grid-gap) );
 }
 
 .mqaViewDivVertical
@@ -281,6 +296,32 @@ body.wait, body.wait *
 	grid-column: 1 / span 1;
 	grid-row: 2 / span 1;
 	background-color: #B97A57;
+    display: flex;
+    align-items: center;
+    justify-content: left;
+}
+
+.mdaSliderButtons
+{
+	font-size: 9px;
+	background-color: beige;
+	color: black !important;
+	border-radius: 3px;
+	border-width: 1px;
+	border-color: #757575;
+	padding: 0px;
+	padding-left: 2px;
+	padding-right: 2px;
+	margin: 0px;
+	white-space: nowrap;
+	cursor: pointer;
+	will-change: transform;
+}
+
+.mdaSliderButtons:disabled
+{
+	background-color: lightgray;
+	border-color: darkslategray;
 }
 
 .mqaQueryDivVertical
@@ -311,16 +352,17 @@ body.wait, body.wait *
 	background-color: tomato;
     display: grid;
     grid-gap: var(--grid-gap);
+	/* take dragger size from B, so hiding A works */
     grid-template-columns:
 		calc(	var(--col-A-width) - 
 				var(--body-margin) - 
-				var(--grid-gap) - 
-				(0.5 * var(--dragger-size)) )
+				var(--grid-gap) )
 		var(	--dragger-size) 
 		calc(	var(--col-B-width) - 
 				var(--body-margin) - 
+				var(--body-margin) - 
 				var(--grid-gap) - 
-				(0.5 * var(--dragger-size)) );
+				var(--dragger-size) );
     grid-template-rows:  1fr;
 }
 
@@ -340,6 +382,17 @@ body.wait, body.wait *
 	grid-column: 2 / span 1;
 	grid-row: 1 / span 1;
 	background-color: #B97A57;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+}
+
+.mqaQuerySBDHorizontal
+{
+	transform: rotate(90deg) translateX(-54%);
+	/* workaround to fix blurry text */
+	/* https://stackoverflow.com/questions/20326220/blurry-text-on-transformrotate-in-chrome */
+	will-change: transform;
 }
 
 .mqaViewDivHorizontal

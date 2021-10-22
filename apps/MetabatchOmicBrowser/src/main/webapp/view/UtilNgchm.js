@@ -1,5 +1,75 @@
 /* global globalDataAccess, globalDiagramControl */
 
+
+	function newEmbedNgchm(theNgchmId, theUrl)
+	{
+		// This uses the functionality added by Chris to ngchbEmbed-min.js
+		//console.log("newEmbedNgchm");
+		embedNGCHM(theNgchmId, 'url', theUrl,
+		{
+			widgetPath: 'lib/ngchmWidget-min.js', 
+			style: 'height:100%; width:100%; border-style: none;', 
+			docStyle: 'height: calc(100vh - 16px); width: calc(100vw - 16px);', 
+			embedStyle: 'display: flex; flex-direction: column; background-color: white; height: 100%; width:100%; border: 0px; padding: 0px;',
+			onload: function()
+				{
+					//console.log("params onload");
+					var firstIframe = document.querySelector("#ngchmIframeDiv > iframe:first-of-type");
+					//console.log(firstIframe);
+					// New from Bradley
+					var nonce = "N";
+					//console.log(firstIframe.contentWindow);
+					firstIframe.contentWindow.postMessage ({ nonce: nonce, override: 'ShowMapDetail' });
+					// Workaround apparent bug in NGCHM.  NGCHM content not sized properly until resized:
+					setTimeout(() => firstIframe.contentWindow.dispatchEvent(new Event('resize')), 2000);
+					// End New from Bradley
+				}
+		});
+	}
+	
+	function ngchmMessagingSetup(theNgchmId, theUrl)
+	{
+		embedNGCHM(theNgchmId, 'url', theUrl,
+		{
+			widgetPath: 'lib/ngchmWidget-min.js', 
+			style: 'height:100%; width:100%; border-style: none;', 
+			docStyle: 'height: calc(100vh - 16px); width: calc(100vw - 16px);', 
+			embedStyle: 'display: flex; flex-direction: column; background-color: white; height: 100%; width:100%; border: 0px; padding: 0px;'
+		});
+		//console.log("waiting for ngchmIframeDiv > iframe:first-of-type to exist");
+		var firstIframe = document.querySelector("#ngchmIframeDiv > iframe:first-of-type");
+		if (notUN(firstIframe))
+		{
+			//console.log("firstIframe valid");
+			firstIframe.onload = function()
+			{
+				var nonce = "N";
+				//console.log("onload triggered");
+				let iframeDoc = firstIframe.contentDocument || firstIframe.contentWindow.document;
+				if (null!==iframeDoc)
+				{
+					console.log("iframeDoc valid");
+				}
+				else
+				{
+					console.log("iframeDoc is null/undefined");
+				}
+				//console.log("onload called");
+				// OLD firstIframe.contentWindow.postMessage ({ nonce: nonce, override: 'ShowMapDetail', ngchm_id: datapaneId }, '*');
+				// New from Bradley
+				firstIframe.contentWindow.postMessage ({ nonce: nonce, override: 'ShowMapDetail' });
+				// Workaround apparent bug in NGCHM.  NGCHM content not sized properly until resized:
+				setTimeout(() => firstIframe.contentWindow.dispatchEvent(new Event('resize')), 2000);
+				// End New from Bradley
+			};
+		}
+		else
+		{
+			console.log("firstIframe is null/undefined");
+			return false;
+		}
+	}
+	
 class UtilNgchm
 {
 	constructor(theDataAccess, theDiagramId, theLegendId, theDatapaneId, theNewDiagram, theIndexKO, theDatasetId,
@@ -29,8 +99,8 @@ class UtilNgchm
 
 	showNgcmDatapoint(e) 
 	{
-		console.log("showNgcmDatapoint");
-		console.log(e);
+		//console.log("showNgcmDatapoint");
+		//console.log(e);
 		if (!e.data)
 		{
 			console.log('Map details message not valid');
@@ -38,6 +108,7 @@ class UtilNgchm
 		}
 		else if(e.data.msg !== "ShowCovarDetail")
 		{
+			//console.log('ShowCovarDetail');
 			var	struct = [ ["Value:", e.data.data.value], ['Row:', e.data.data.rowLabel], ['Column:', e.data.data.colLabel] ];
 			var covariates = e.data.data.colCovariates;
 			for (var x in covariates)
@@ -47,24 +118,21 @@ class UtilNgchm
 				struct[indx][0] = covariates[x].name+":";
 				struct[indx][1] = covariates[x].value;
 			}
-			var dataNode = document.getElementById(e.data.id);
-			//console.log("showNgcmDatapoint this");
-			//console.log(this);
-			//console.log("showNgcmDatapoint this.makeDataPointLogFunction");
-			//console.log(this.makeDataPointLogFunction);
+			var dataNode = document.getElementById(this.divDatapaneId);
 			this.makeDataPointLogFunction(struct, dataNode);
 		}
 		else
 		{
+			//console.log('legend ' + e.data.msg);
 			var legendTable = document.createElement('table');
 			legendTable.classList.add("plotChild");
-			legendTable.innerHTML = e.data.data.split('class="chmTblRow"').join('class="chmTblRow-legend"').split('class="color-box"').join('class="color-box color-box-legend"');
-			var legend = document.getElementById(e.data.id).parentElement.parentElement.parentElement.getElementsByClassName('legendTop')[0].getElementsByClassName('flexInteriorWrapper')[0];
-			if (legend.hasChildNodes())
+			legendTable.innerHTML = e.data.data;
+			var legendDisplayContent = document.getElementById(this.divLegendId);
+			if (legendDisplayContent.hasChildNodes())
 			{
-				legend.removeChild(legend.firstElementChild);
+				legendDisplayContent.removeChild(legendDisplayContent.firstElementChild);
 			}
-			legend.appendChild(legendTable);
+			legendDisplayContent.appendChild(legendTable);
 		}
 	}
 
@@ -83,7 +151,7 @@ class UtilNgchm
 		var plotDiv = document.getElementById(self.divDiagramId);
 		plotDiv.appendChild(theNgchm);
 	}
-	
+
 	plotNGCHMngchm(theDatasetId, theNgchmFile)
 	{
 		var self = this;
@@ -100,48 +168,26 @@ class UtilNgchm
 		ngchm.classList.add("ngchmVisible");
 		ngchm.classList.add("plotChild");
 		plotDiv.appendChild(ngchm);
+		
+		window.addEventListener('message', 
+			function(theEvent)
+			{
+				//console.log("firstIframe.onload message event for iframe");
+				self.showNgcmDatapoint(theEvent);
+			}, 
+			false);
 
 		var mscript = document.createElement('script');
 		mscript.setAttribute("type", "module");
-		mscript.innerHTML = "embedNGCHM(\"" + ngchm.getAttribute("id") + "\", 'url', \"" + myUrl +
-				"\", { widgetPath: 'lib/ngchmWidget-min.js', style: 'height:99%; width:100%; border-style: none;' });";
+		// old setup without onload parameter
+		//mscript.innerHTML = ngchmMessagingSetup.toString() + 
+		//		" ngchmMessagingSetup(\"" + ngchm.getAttribute("id") + "\", \"" + myUrl + "\");";
+		// This uses the functionality added by Chris to ngchbEmbed-min.js
+		mscript.innerHTML = 
+				newEmbedNgchm.toString() + 
+				" newEmbedNgchm(\"" + ngchm.getAttribute("id") + "\", \"" + myUrl + "\"); ";
 		mscript.classList.add("plotChild");
 		plotDiv.appendChild(mscript);
-
-		var firstIframe = document.querySelector("#ngchmIframeDiv > iframe:first-of-type");
-		if (notUN(firstIframe))
-		{
-			var nonce = "N";
-			var datapaneId = self.divDatapaneId;
-			firstIframe.onload = function() 
-			{
-			 	console.log("firstIframe.onload");
-			 	// https://stackoverflow.com/questions/62087163/iframe-onload-event-when-content-is-set-from-srcdoc
-			 	// do a timer until contentDocument or contentWindow.document are populated
-			 	// messages still do not work...
-			 	var timer = setInterval(function()
-			 	{
-			 		console.log("firstIframe.onload interval");
-			 		let iframeDoc = firstIframe.contentDocument || firstIframe.contentWindow.document;
-			 		if (null!==iframeDoc)
-			 		{
-			 			console.log("firstIframe.onload not null");
-			 			console.log(iframeDoc);
-			 			iframeDoc.addEventListener('message', 
-			 				function(theEvent)
-			 				{
-			 					console.log("firstIframe.onload message event for iframe");
-			 					self.showNgcmDatapoint(theEvent);
-			 				}, 
-			 				false);
-			 			console.log('firstIframe.onload Sending message to ngchm');
-			 			console.log(datapaneId);
-			 			firstIframe.contentWindow.postMessage ({ nonce: nonce, override: 'ShowMapDetail', ngchm_id: datapaneId }, '*');
-						clearInterval(timer);
-					}
-				}, 1000);
-			};
-		}
 	}
 	
 	newNgchm()

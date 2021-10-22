@@ -1,4 +1,4 @@
-/* global Papa */
+/* global Papa, globalDiagramControl */
 
 class UtilBoxplot
 {

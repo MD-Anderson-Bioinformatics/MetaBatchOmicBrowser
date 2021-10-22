@@ -1,5 +1,5 @@
 
-/* global globalDataAccess, appview, globalDiagramControl, Promise */
+/* global globalDataAccess, appview, globalDiagramControl, Promise, ko */
 
 ////////////////////////////////////////////////////////////////
 //// GUI utility function to disable input during long running processes
@@ -7,13 +7,26 @@
 
 disableInput = function()
 {
-	$(":input, a, button").prop("disabled",true);
+	if (notUN(window.frameElement))
+	{
+		window.parent.disableInput();
+	}
+	else
+	{
+		$(":input, a, button, tbody tr").prop("disabled",true);
+	}
 };
 
 enableInput = function()
 {
-	//console.log("BEVAppView::enable input");
-	$(":input, a, button").prop("disabled",false);
+	if (notUN(window.frameElement))
+	{
+		window.parent.enableInput();
+	}
+	else
+	{
+		$(":input, a, button, tbody tr").prop("disabled",false);
+	}
 };
 
 ////////////////////////////////////////////////////////////////
@@ -143,6 +156,20 @@ function BEVAppView()
 	self.jsonIndex = ko.observable(undefined);
 	self.jsonIndex.subscribe(function(theNewValue)
 	{
+		// index changed, so make sure Group-Mean is first option for Boxplot
+		// simplistic fix -- sort backwards
+		theNewValue.mbatch.dropdown_entries.forEach (function (theEntry, theIndex, theArray)
+		{
+			if ("Boxplot"===theEntry.entry_label)
+			{
+				theEntry.dropdown_entries.sort(function(theA, theB)
+				{
+					return theA.entry_label === theB.entry_label ? 0 : (theA.entry_label > theB.entry_label) ? -1 : 1;  
+				});
+				
+			}
+		});
+		// Alert notice if needed
 		let notice = theNewValue.notice;
 		if (notUN(notice))
 		{
@@ -340,7 +367,7 @@ function BEVAppView()
 				if (true===requestedJson.hideDB)
 				{
 					//console.log("hide DB");
-					hideDataBrowser();
+					hidePlotPicker();
 					globalDiagramControl.resize();
 				}
 				//console.log("requestedJson.hideLP=" + requestedJson.hideLP);
@@ -361,6 +388,9 @@ function BEVAppView()
 		{
 			if (notUN(window.parent.setCurrentViewDiagramMqa))
 			{
+				//console.log("BEVAppView setCurrentViewDiagramMqa");
+				//console.log(self.requestedId());
+				//console.log(self.requestedDscid());
 				window.parent.setCurrentViewDiagramMqa(self.requestedId(), self.requestedDscid());
 			}
 			else

@@ -11,7 +11,13 @@
 				gaScript.setAttribute('src', `https://www.googletagmanager.com/gtag/js?id=UA-33425717-2`);
 
 				var gaScript2 = document.createElement('script');
-				gaScript2.innerText = `window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag(\'js\', new Date());gtag(\'config\', \'UA-33425717-2\');`;
+				gaScript2.innerText = `window.dataLayer = window.dataLayer || [];` + 
+										`function gtag(){dataLayer.push(arguments);}` +
+										// https://developers.google.com/tag-platform/devguides/consent
+										//`gtag(\'consent\', \'default\', { \'analytics_storage\': \'denied\', \'ad_storage\': \'denied\' });` +
+										//`dataLayer.push({ \'event\': \'default_consent\' });` + 
+										`gtag(\'js\', new Date());` +
+										`gtag(\'config\', \'UA-33425717-2\');`;
 
 				document.documentElement.firstChild.appendChild(gaScript);
 				document.documentElement.firstChild.appendChild(gaScript2);
@@ -46,6 +52,7 @@
 		<link href="GraphAPI/BP/boxplot_internal_styles.css?v=BEA_VERSION_TIMESTAMP" rel="stylesheet" type="text/css">
 		<link href="GraphAPI/BP/boxplot_styles.css?v=BEA_VERSION_TIMESTAMP" rel="stylesheet" type="text/css">
 		<link href="GraphAPI/BP/scrollbar_styles.css?v=BEA_VERSION_TIMESTAMP" rel="stylesheet" type="text/css">
+		<!-- link href="GraphAPI/SP/bea_scatterplot.css?v=BEA_VERSION_TIMESTAMP"  -->
 		<!-- **** JavaScript Entries **** -->
 		<!-- all tag attributes (src, type, charset) are required for proper generation of standalone file BEV_AppGenerator.java -->
 		<script src="lib/ngchmEmbed-min.js?v=BEA_VERSION_TIMESTAMP" type="text/Javascript" charset="utf-8"></script>
@@ -64,6 +71,7 @@
 		<script src="GraphAPI/HC/hierclust-plot.js?v=BEA_VERSION_TIMESTAMP" type="text/javascript" charset="utf-8"></script>
 		<script src="GraphAPI/HC/matchColors.js?v=BEA_VERSION_TIMESTAMP" type="text/javascript" charset="utf-8"></script>
 		<script src="GraphAPI/DSC/bea_dsc.js?v=BEA_VERSION_TIMESTAMP" type="text/javascript" charset="utf-8"></script>
+		<!-- script src="GraphAPI/SP/bea_scatterplot.js?v=BEA_VERSION_TIMESTAMP" ></script -->
 		<script src="GraphAPI/plot-lib-utils.js?v=BEA_VERSION_TIMESTAMP" type="text/javascript" charset="utf-8"></script>
 		<script src="lib/queue.v1.min.js?v=BEA_VERSION_TIMESTAMP" type="text/javascript" charset="utf-8"></script>
 		<script src="lib/jquery-3.5.0.min.js?v=BEA_VERSION_TIMESTAMP" type="text/javascript" charset="utf-8"></script>
@@ -76,6 +84,7 @@
 		<script src="UtilHierClust.js?v=BEA_VERSION_TIMESTAMP" type="text/javascript" charset="utf-8"></script>
 		<script src="UtilDsc.js?v=BEA_VERSION_TIMESTAMP" type="text/javascript" charset="utf-8"></script>
 		<script src="UtilNgchm.js?v=BEA_VERSION_TIMESTAMP" type="text/javascript" charset="utf-8"></script>
+		<script src="UtilScatterplot.js?v=BEA_VERSION_TIMESTAMP" ></script>
 		<script src="DiagramControl.js?v=BEA_VERSION_TIMESTAMP" type="text/javascript" charset="utf-8"></script>
 		<script src="lib/DataTables/datatables.min.js?v=BEA_VERSION_TIMESTAMP" type="text/javascript" charset="utf-8"></script>
 		<script src="bev_resize.js?v=BEA_VERSION_TIMESTAMP" type="text/javascript" charset="utf-8"></script>
@@ -110,7 +119,7 @@
 				//console.log(appview.algorithmOptions());
 				// other setup
 				$( "#dbtabs" ).tabs();
-				$( '#databrowserFileInput' ).on("change", function(theEvent)
+				$( '#plotpickerFileInput' ).on("change", function(theEvent)
 				{
 					//console.log("event call");
 					processZipSelectEvent(theEvent);
@@ -165,22 +174,22 @@
 	</head>
 	<body id="viewMdaBody" class="body-wrapper" onresize="bodyResize();" style="display: none;" data-bind="visible: $root.makeGuiVisible()">
 		<div class="div-wrapper" id="id-div-wrapper">
-			<div class="div-data-browser" id="BEV_DataBrowser">
-				<div class="div-data-browser-title">
-					<span style="font-weight: normal; font-size: smaller;">Data Browser</span>
+			<div class="div-plot-picker" id="BEV_PlotPicker">
+				<div class="div-plot-picker-title">
+					<span style="font-weight: normal; font-size: smaller;">Plot Picker</span>
 					<button type="button" span style="float: right;" class="bev-control-button" 
-							data-bind="click: function () { hideDataBrowser(); globalDiagramControl.resize(); return false; }">
+							data-bind="click: function () { hidePlotPicker(); globalDiagramControl.resize(); return false; }">
 						<i class="fas fa-minus-square"></i> Hide
 					</button>
 				</div>
-				<div class="div-databrowser-file" style="display: none;" data-bind="visible: $root.protocol() === 'file:'">
-					<input id="databrowserFileInput" type="file" name="databrowserFileInput" />
+				<div class="div-plotpicker-file" style="display: none;" data-bind="visible: $root.protocol() === 'file:'">
+					<input id="plotpickerFileInput" type="file" name="plotpickerFileInput" />
 				</div>
-				<div class="div-data-browser-content">
+				<div class="div-plot-picker-content">
 					<div id="dbtabs">
-						<ul class="dataBrowserTabText">
-							<li class="dataBrowserTabText"><a class="dataBrowserTabText" href="#dbtab-1">Analysis Results</a></li>
-							<li class="dataBrowserTabText"><a class="dataBrowserTabText" href="#dbtab-2">Dataset Details</a></li>
+						<ul class="plotPickerTabText">
+							<li class="plotPickerTabText"><a class="plotPickerTabText" href="#dbtab-1">Analysis Results</a></li>
+							<li class="plotPickerTabText"><a class="plotPickerTabText" href="#dbtab-2">Dataset Details</a></li>
 						</ul>
 						<table class="mdaCompactTable" id="dbtab-1">
 							<tbody>
@@ -238,15 +247,15 @@
 			<div class="div-diagram-viewer" id="BEV_Diagram">
 				<div class="div-diagram-viewer-title">
 					<span>
-						<span class="bevTitleText">&nbsp;&nbsp;MetaBatch Omic Browser Visualizer&nbsp;<span style="font-size: 60%">BEA_VERSION_TIMESTAMP</span></span>
+						<span class="bevTitleText">&nbsp;&nbsp;MetaBatch Omic Browser Visualizer&nbsp;<span style="font-size: 60%">vBEA_VERSION_TIMESTAMP</span></span>
 					</span>
 					<span style="display: inline-block; margin-left: auto;"> <!-- moves to right -->
 						<span style="font-weight: normal; font-size: smaller;">Data Viewer</span>
 						<span class="showDVButtons">
 							&nbsp;
-							<button type="button" class="bevQfButton" id="BEV_DataBrowserbutton" 
-									data-bind="click: function () { displayDataBrowser(); globalDiagramControl.resize(); return false; }">
-								<i class="fas fa-plus-square"></i> Data Browser
+							<button type="button" class="bevQfButton" id="BEV_PlotPickerbutton" 
+									data-bind="click: function () { displayPlotPicker(); globalDiagramControl.resize(); return false; }">
+								<i class="fas fa-plus-square"></i> Plot Picker
 							</button>
 							&nbsp;
 							<button type="button" class="bevLpButton" id="BEV_LegPaneButton"

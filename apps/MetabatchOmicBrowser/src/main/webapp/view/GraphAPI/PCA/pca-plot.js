@@ -6,6 +6,8 @@
  * Depends on d3 and jQuery ...
  */
 
+/* global d3 */
+
 //PcaPlot = {version: "0.2"};
 /*---
 // Older style api:
@@ -23,20 +25,33 @@ PcaPlot.uniqueSuffix = 1;
 // node: where to display (divs)
 // Legend is optional - pass null to skip
 
-function PcaPlot (model, node, legendNode, params) {
+notUN = function(theValue)
+{
+	return ((undefined!==theValue)&&(null!==theValue));
+};
+
+function PcaPlot (model, node, legendNode, params)
+{
 
 	// Temporary scaffolding, get data out of model
 	var pcaValues = model.getPcaValues(),
 		batchInfo = model.getBatchInfo(),
-		pcaAnnotations = model.getPcaAnnotations();
+		pcaAnnotations = model.getPcaAnnotations(),
+		pointIdField = model.getPointId();
 	// ### await all !
+
+
+	//console.log("pcaValues");
+	//console.log(pcaValues);
+	//console.log("batchInfo");
+	//console.log(batchInfo);
+	//console.log("pause");
 
 	// More scaffolding, put args into their old var names
 	var plotTitle = params.plotTitle,
 		plotAnnotation = params.plotAnnotation,
 		groupKey = params.groupKey,					// data grouping
 		oneToManyGroup = params.oneToManyGroup,
-		includeCentroids = params.includeCentroids,
 		xDimension = params.xDimension,
 		yDimension = params.yDimension,
 		showDetailFunc = params.showDetailFunc,
@@ -67,23 +82,25 @@ function PcaPlot (model, node, legendNode, params) {
 							"plotHeight" : 450,
 							"bottomAxisHeight" : 30,
 							"bottomAnnotation" : 10,
-
 							"leftAxisWidth" : 20,
 							"plotWidth" : 450,
 							"rightAxisWidth" : 180
-						},
+						};
 
-		installedOptions = {
+	var installedOptions = {
 			"useUnicodeMinus" : false,
+			"includeCentroids" : params.includeCentroids,
+			"useFilledShapesForPoints": (true===params.useFilledShapesForPoints)?true:false,
+			"hiliteColor": params.hiliteColor,
 			"hiliteBatches" : true,
 			"hiliteOverLines" : false,
 			"showTooltip" : false,
 			"autoAdjustTitleHeight" : true,
 			"formatString" : ".3f",
 			"hoverDelay" : 500,
-			'baseUri': '//bioinformatics.mdanderson.org/main/TCGABatchEffects:Overview#'
+			'baseUri': '//bioinformatics.mdanderson.org/main/TCGABatchEffects:Overview#',
+			'pointSize' : params.pointSize
 		},
-
 		fixedFormatter = d3.format (".3f");
 
 	var	x,
@@ -102,12 +119,21 @@ function PcaPlot (model, node, legendNode, params) {
 		centroidLayer,
 		vAxisPanel,
 		hAxisPanel,
-		extraInfoPanel,
+		extraInfoPanel = null,
 		batchOMeter = null;
 
 	var	detailShown = false,
 		hilitedBatch = null;
 
+	// used to move space from batchOMeter to main SVG if meter not used
+	var extraInfoWidth = 150;
+
+	if (!notUN(plotAnnotation))
+	{
+		//console.log("enlarge plotWidth");
+		plotGeometry.plotWidth = plotGeometry.plotWidth + extraInfoWidth;
+		//console.log("enlarge plotWidth plotGeometry.plotWidth=" + plotGeometry.plotWidth);
+	}
 
 	// ###
 	// This construct won't actually solve anything because the promise is never
@@ -118,14 +144,20 @@ function PcaPlot (model, node, legendNode, params) {
 	    makePcaPlot(pcaValues, batchInfo, pcaAnnotations);
 	});
 	---*/
-
+	
 	makePcaPlot(pcaValues, batchInfo, pcaAnnotations);
 
-	function makePcaPlot (pcaValues, batchInfo, pcaAnnotations) {
+	function makePcaPlot (pcaValues, batchInfo, pcaAnnotations)
+	{
+		//console.log("makePcaPlot");
+		//console.log(pcaValues);
 		/*
 		 * (1 / 3) : Process pcaValues
 		 * */
-		if (pcaValues[0]["Id"] === "FVE") {
+		var fieldId = pointIdField;
+		//if (pcaValues[0]["Id"] === "FVE")
+		if (pcaValues[0][fieldId] === "FVE")
+		{
 			fractionalVariances = pcaValues[0];
 			pcaValues = pcaValues.slice(1);
 		}
@@ -133,10 +165,15 @@ function PcaPlot (model, node, legendNode, params) {
 		// plotDataFields will be of the PCA fields. Ex. ["PC1", "PC2", "PC3", "PC4"]
 		plotDataFields = [];
 		// plotDataFields = pcaValues[0].getKeys();		// ???
-		for (var fld in pcaValues[0])					// this gets names of all fields/columns
+		for (var fld in pcaValues[0])
+		{
+			// this gets names of all fields/columns
 			plotDataFields.push (fld);
+		}
 
 		plotDataFields = plotDataFields.slice (1);
+		//console.log("plotDataFields");
+		//console.log(plotDataFields);
 
 		// var batches = [];
 
@@ -144,10 +181,13 @@ function PcaPlot (model, node, legendNode, params) {
 		// Ex: TCGA-OR-A5J1-01A-11R-A29S-07 : {Id: "TCGA-OR-A5J1-01A-11R-A29S-07", PC1: 39.3876761150013, PC2: 22.8192889903597, PC3: -22.7407924468845, PC4: 48.8058154505145} 
 		var sampleBuilder = {};		// simply used as a Dictionary of sample ids
 
-		pcaValues.forEach (function (elem, ix, array) {
-			sampleBuilder[elem.Id] = elem;
+		pcaValues.forEach (function (elem, ix, array)
+		{
+			//sampleBuilder[elem.Id] = elem;
+			sampleBuilder[elem[pointIdField]] = elem;
 
-			plotDataFields.forEach (function (fld) {
+			plotDataFields.forEach (function (fld)
+			{
 				elem[fld] = +(elem[fld]);
 			});
 		});
@@ -167,19 +207,23 @@ function PcaPlot (model, node, legendNode, params) {
 
 			var	idField = auxDataFields[0];			// we presume the first field is the sample id
 
-			batchInfo.forEach (function (elem, ix, array) {
+			batchInfo.forEach (function (elem, ix, array)
+			{
 				var pointid = elem[idField];
 				var sample = sampleBuilder[pointid];
-				if (sample == null){
-					//console.log ("Sample " + pointid + " was not in PCA data.");							
-				}
-				else {
-					for (var i = 0 ; i < auxDataFields.length ; i++) {
+				if (notUN(sample))
+				{
+					for (var i = 0 ; i < auxDataFields.length ; i++) 
+					{
 						var key = auxDataFields[i];
 						sample[key] = elem[key];
 					}
 				}
-				});
+				else
+				{
+					//console.log ("Sample " + pointid + " was not in PCA data.");							
+				}
+			});
 		}
 
 		/*
@@ -189,22 +233,32 @@ function PcaPlot (model, node, legendNode, params) {
 				.key (function (d) { return d.Type; })			// Type = Run|Diagram|Component
 				.key (function (d) { return d.SubType; });		// SubType really only important for Component
 
-		var nestedRows = nest.map (pcaAnnotations, d3.map);
+		if (notUN(pcaAnnotations))
+		{
+			var nestedRows = nest.map (pcaAnnotations, d3.map);
 
-		versionString = nestedRows.get("Run").get("-")["0"]["Value"]	// rows with Type = Run
-		diagramAnnotations = nestedRows.get("Diagram").get("-");  		// rows with Type = Diagram
-		performAnnotationSubstitution (diagramAnnotations);
-		componentAnnotations = nestedRows.get("Component");			// rows with Type = Component
-
+			versionString = nestedRows.get("Run").get("-")["0"]["Value"];	// rows with Type = Run
+			diagramAnnotations = nestedRows.get("Diagram").get("-");  		// rows with Type = Diagram
+			performAnnotationSubstitution (diagramAnnotations);
+			componentAnnotations = nestedRows.get("Component");			// rows with Type = Component
+		}
+		//console.log("groupKey");
+		//console.log(groupKey);
+		//console.log("oneToManyGroup");
+		//console.log(oneToManyGroup);
 		batchData = makeGroups (groupKey, oneToManyGroup);
+		//console.log("makeGroups -> batchData");
+		//console.log(batchData);
 		drawnBatchData = batchData.slice(0);
 
 		/*
 		 * (4 / 3 ???) : Now that the data is organized, make the plot
 		 * */
 		makePlot();
-		if (legendNode != undefined && legendNode != null)
+		if (notUN(legendNode))
+		{
 			_makeLegend (legendNode);
+		}
 	}
 
 
@@ -213,20 +267,38 @@ function PcaPlot (model, node, legendNode, params) {
 		var batchBuilder = {};		// simply used as a Dictionary of batch ids
 		var batches = [];
 
-		for (var id in samples) {
-
+		//console.log("batchGroups samples");
+		//console.log(samples);
+		for (var id in samples)
+		{
+			//console.log("id");
+			//console.log(id);
 			var sample = samples[id];
+			//console.log("sample");
+			//console.log(sample);
 			var batchId = sample[batchKey];
+			//console.log("batchKey");
+			//console.log(batchKey);
+			//console.log("batchId");
+			//console.log(batchId);
 
-			if (oneToManyGroup != null && batchId != oneToManyGroup) batchId = "Others";
+			if (notUN(oneToManyGroup))
+			{
+				if (batchId !== oneToManyGroup)
+				{
+					batchId = "Others";
+				}
+			};
 
 			var batch = batchBuilder[batchId];
-			if (batch == undefined) {
+			if (notUN(batch))
+			{
+				batch.points.push (sample);
+			}
+			else 
+			{
 				batch = {batchID: batchId, centroid: null, points: [sample]};
 				batchBuilder[batchId] = batch;
-			}
-			else {
-				batch.points.push (sample);
 			}
 			sample.batch = batch;
 		}
@@ -247,13 +319,16 @@ function PcaPlot (model, node, legendNode, params) {
 			return centroids;
 		}
 
-		for (var i in batchBuilder) {
+		for (var i in batchBuilder)
+		{
 			var batch = batchBuilder[i];
 			batch.centroid = computeCentroids (batch.points, plotDataFields);
-			batch.symbol = d3.svg.symbol().type(symbolRange(i))();
+			batch.symbol = d3.svg.symbol().size(installedOptions.pointSize).type(symbolRange(i))();
 			batch.color = color(i);
 			batches.push (batch);
 		}
+		//console.log("batch and color");
+		//console.log(batches);
 
 			// Sort by number of points in batch so larger batches get drawn first (behind).
 		batches.sort (function (a, b) { return (b.points.length - a.points.length); });
@@ -274,18 +349,20 @@ function PcaPlot (model, node, legendNode, params) {
 			var key = elem["Annotation"];
 
 			substitutions.forEach (function (sub) {
-				if (elem["Annotation"].indexOf (sub[0]) == 0)
+				if (elem["Annotation"].indexOf (sub[0]) === 0)
 					elem["Annotation"] = sub[1] + elem["Annotation"].substring (sub[0].length);
 			});
 		}
 	}
 
 
-	function makePlot () {
+	function makePlot ()
+	{
 
 		findDomains();
 
 		// X and Y axis
+		//console.log("makePlot plotGeometry.plotWidth=" + plotGeometry.plotWidth);
 		x = d3.scale.linear().range([0, plotGeometry.plotWidth]).domain(xDomain).nice();
 		y = d3.scale.linear().range([plotGeometry.plotHeight, 0]).domain(yDomain).nice();
 		// drag x-axis and y-axis logic
@@ -365,30 +442,31 @@ function PcaPlot (model, node, legendNode, params) {
 						.style("pointer-events", "all");
 		overlayLayer = plotPanel.append("svg:svg")
 						.attr("class", "PlotPanel")
-						.style("pointer-events", "none")
+						.style("pointer-events", "none");
 
 		centroidLayer = plotPanel.append("svg:svg")
 							.attr("class", "PlotPanel")
 							.style("pointer-events", "all");
 
+		if (notUN(pcaAnnotations))
+		{
+			extraInfoPanel = svg.append('svg:foreignObject')
+								.attr('class', 'extra-info-panel')
+								.attr('width', extraInfoWidth)
+								.attr('height', 200);
+								//.attr('requiredExtensions', 'http://www.w3.org/1999/xhtml');
+			extraInfoPanel = extraInfoPanel.append('xhtml:body')
+								.attr('xmlns', 'http://www.w3.org/1999/xhtml')
+								//.style('display', 'block');
+								.style('margin', '0px');
 
-		extraInfoPanel = svg.append('svg:foreignObject')
-							.attr('class', 'extra-info-panel')
-							.attr('width', 150)
-							.attr('height', 200);
-							//.attr('requiredExtensions', 'http://www.w3.org/1999/xhtml');
-		extraInfoPanel = extraInfoPanel.append('xhtml:body')
-							.attr('xmlns', 'http://www.w3.org/1999/xhtml')
-							//.style('display', 'block');
-							.style('margin', '0px');
+			extraInfoPanel = extraInfoPanel.append('div');
 
-		extraInfoPanel = extraInfoPanel.append('div')
-
-		extraInfoPanel.append('ul').attr('class', 'c1').style('margin-top', '0px');
-		//extraInfoPanel.append('hr');	// this fails since it won't have a '/hr'
-		extraInfoPanel.append('ul').attr('class', 'c2');//.style('margin', '0px');
-		extraInfoPanel.append('ul').attr('class', 'c3');//.style('margin', '0px');
-
+			extraInfoPanel.append('ul').attr('class', 'c1').style('margin-top', '0px');
+			//extraInfoPanel.append('hr');	// this fails since it won't have a '/hr'
+			extraInfoPanel.append('ul').attr('class', 'c2');//.style('margin', '0px');
+			extraInfoPanel.append('ul').attr('class', 'c3');//.style('margin', '0px');
+		}
 			// Title
 		var titlePanel = svg.append("svg:svg")
 					.attr("class", "titlePanel");
@@ -399,10 +477,13 @@ function PcaPlot (model, node, legendNode, params) {
 
 /*--- Move // Plot border from here to above  4/2/18 ---*/
 
-		batchOMeter = riskGradient ({parent: svg.node(), x: 490, y: 20})();
-		var temp = diagramAnnotations[0];							// ### kludgy
-		if (temp['Annotation'] == 'DSC') temp = temp['Value'];		// ### else?
-		batchOMeter.val(+(temp));
+		if (notUN(diagramAnnotations))
+		{
+			batchOMeter = riskGradient ({parent: svg.node(), x: 490, y: 20})();
+			var temp = diagramAnnotations[0];							// ### kludgy
+			if (temp['Annotation'] === 'DSC') temp = temp['Value'];		// ### else?
+			batchOMeter.val(+(temp));
+		}
 
 		// Just for demo !  Add a resize box...
 /*---
@@ -420,6 +501,7 @@ function PcaPlot (model, node, legendNode, params) {
 ---*/
 
 		redrawExtraInfo();		// ensure "extraInfo" panel is populated before resize  - kludge?
+		//console.log("call _resizePlot plotGeometry.plotWidth=" + plotGeometry.plotWidth);
 		_resizePlot (plotGeometry.plotWidth, plotGeometry.plotHeight);
 
 		attachScaleDragHandlers();	// attach the mousemove and mouseup to the body in case one wonders off the axis line
@@ -437,7 +519,7 @@ function PcaPlot (model, node, legendNode, params) {
 				xaxis1 = downscalex.domain()[0],
 				xaxis2 = downscalex.domain()[1],
 				xextent = xaxis2 - xaxis1;
-			  if (rupx != 0) {
+			  if (rupx !== 0) {
 				  var changex, new_domain;
 				  changex = downx / rupx;
 				  new_domain = [xaxis1, xaxis1 + (xextent * changex)];
@@ -452,7 +534,7 @@ function PcaPlot (model, node, legendNode, params) {
 				yaxis1 = downscaley.domain()[1],
 				yaxis2 = downscaley.domain()[0],
 				yextent = yaxis2 - yaxis1;
-			  if (rupy != 0) {
+			  if (rupy !== 0) {
 				  var changey, new_domain;
 				  changey = downy / rupy;
 				  new_domain = [yaxis1 + (yextent * changey), yaxis1];
@@ -486,7 +568,7 @@ function PcaPlot (model, node, legendNode, params) {
 
 	function handleKey (ev) {
 		//console.log ("keyIdentifier = " + d3.event.keyIdentifier + "   this: " + this);
-		if (detailShown && d3.event.keyIdentifier == 'U+0043') {
+		if (detailShown && d3.event.keyIdentifier === 'U+0043') {
 			selectCallbackFunc();
 		}
 	}
@@ -496,17 +578,17 @@ function PcaPlot (model, node, legendNode, params) {
 
 		function tx (d) { return "translate(" + x(d) + ",0)"; }
 		function ty (d) { return "translate(0," + y(d) + ")"; }
-		function stroke (d) { return d != 0 ? "#ccc" : "#666"; };
+		function stroke (d) { return d !== 0 ? "#ccc" : "#666"; };
 
 		if (d3.event && d3.event.transform && isNaN(downx) && isNaN(downy)) d3.event.transform(x, y);
 
 		function cleanMinus (str) {
-			if ((! installedOptions["useUnicodeMinus"]) && str.indexOf ("\u2212") == 0)
+			if ((! installedOptions["useUnicodeMinus"]) && str.indexOf ("\u2212") === 0)
 				str = '-' + str.substr(1);
 
 			// check for silly "-0" misformat (d3 bug?)
-			if (str[0] == '-' || str[0] == '\u2212') {
-				var re = /^0\.*0*$/
+			if (str[0] === '-' || str[0] === '\u2212') {
+				var re = /^0\.*0*$/;
 				if (re.test (str.substr(1))) { str = str.substr(1); }
 			}
 
@@ -617,65 +699,87 @@ function PcaPlot (model, node, legendNode, params) {
 
 	function redrawExtraInfo () {
 
-		function resetBoundList (sel, data, makeLink) {
-			// this remove & replace is inefficient, but doesn't happen often
-			var x = sel.selectAll('li').remove();
-			x = sel.selectAll('li').data(data);
+		function resetBoundList (sel, data, makeLink)
+		{
+			if (notUN(data))
+			{
+				// this remove & replace is inefficient, but doesn't happen often
+				var x = sel.selectAll('li').remove();
+				x = sel.selectAll('li').data(data);
 
-			x.enter().append('li')
-				.each (function (d, id) {
-					var sel = d3.select(this);
-					sel.append(makeLink ? 'a':'span').attr('class', 'annot-label');
-					sel.append('span').attr('class', 'annot-val');
-				});
+				x.enter().append('li')
+					.each (function (d, id) {
+						var sel = d3.select(this);
+						sel.append(makeLink ? 'a':'span').attr('class', 'annot-label');
+						sel.append('span').attr('class', 'annot-val');
+					});
 
-			x.selectAll('.annot-label')
-				.text(function (d) { return d[0]; })
-				.attr('href', function (d) {
-						return d[2] ? installedOptions.baseUri + d[2] : '#';
-					})
-				.attr('target', '_blank');
-			x.selectAll('.annot-val').text(function (d) { return d[1]; });
+				x.selectAll('.annot-label')
+					.text(function (d) { return d[0]; })
+					.attr('href', function (d) {
+							return d[2] ? installedOptions.baseUri + d[2] : '#';
+						})
+					.attr('target', '_blank');
+				x.selectAll('.annot-val').text(function (d) { return d[1]; });
+			}
 		}
 
-		resetBoundList (extraInfoPanel.select('.c1'), _getDiagramAnnotations(), true);
-		resetBoundList (extraInfoPanel.select('.c2'), _getComponentAnnotations().slice(0), true);
+		if (notUN(extraInfoPanel))
+		{
+			resetBoundList (extraInfoPanel.select('.c1'), _getDiagramAnnotations(), true);
+			resetBoundList (extraInfoPanel.select('.c2'), _getComponentAnnotations().slice(0), true);
+		}
 
-		var formatter = d3.format (".1f")
-		var lineArray = [["FVE: " , formatter((+fractionalVariances[xDimension] + +fractionalVariances[yDimension]) * 100) + " %"]];
-		if (versionString != null)
+		if (notUN(fractionalVariances))
+		{
+			var formatter = d3.format (".1f");
+			var lineArray = [["FVE: " , formatter((+fractionalVariances[xDimension] + +fractionalVariances[yDimension]) * 100) + " %"]];
+		}
+		if (notUN(versionString))
+		{
 			lineArray.push (["MBatch v. ", versionString]);
+		}
 
-		resetBoundList (extraInfoPanel.select('.c3'), lineArray, false);
+		if (notUN(extraInfoPanel))
+		{
+			resetBoundList (extraInfoPanel.select('.c3'), lineArray, false);
+		}
 	}
 
 
-	function redrawData () {
-
+	function redrawData ()
+	{
+		//console.log("redrawData");
+		//console.log(installedOptions);
+		
 		function ffx (val) { return fixedFormatter(x(val)); }
 		function ffy (val) { return fixedFormatter(y(val)); }
 
-		function drawScatter (layer) {
+		function drawScatter (layer)
+		{
 
-			var isHiliteLayer = (layer == overlayLayer);
+			var isHiliteLayer = (layer === overlayLayer);
 
 			function getBatchColor (d) {	// d is a "batch"
-				return isHiliteLayer ? "red" : d.color;
-				//return (hilitedBatch == null || d != hilitedBatch) ? d.color : "red";
+				return isHiliteLayer ? installedOptions.hiliteColor : d.color;
+				//return isHiliteLayer ? "red" : d.color;
+				//return (hilitedBatch === null || d !== hilitedBatch) ? d.color : "red";
 			}
 			function getBatchStroke (d) {	// d is a "batch"
 				return isHiliteLayer ? 2 : 1;
-				//return (hilitedBatch == null || d != hilitedBatch) ? 1 : 2;
+				//return (hilitedBatch === null || d !== hilitedBatch) ? 1 : 2;
 			}
 			function hiliteVisible (d) {
-				return ((!isHiliteLayer) || (hilitedBatch != null && d == hilitedBatch)) ? "visible" : "hidden";
+				return ((!isHiliteLayer) || (hilitedBatch !== null && d === hilitedBatch)) ? "visible" : "hidden";
 			}
 
+			//console.log("drawnBatchData");
+			//console.log(drawnBatchData);
 			var batches = layer.selectAll("g.batch")
 				.data(drawnBatchData);
 			batches.enter().append("svg:g")
-					.attr("class", function () { return isHiliteLayer ? "batch-hilite hiliter batch" : "batch" })
-					.attr("visibility", function () { return isHiliteLayer ? "hidden" : "visible"});	// ???
+					.attr("class", function () { return isHiliteLayer ? "batch-hilite hiliter batch" : "batch"; })
+					.attr("visibility", function () { return isHiliteLayer ? "hidden" : "visible"; });	// ???
 
 			batches
 				.attr("id", function (d) { return d.batchID; })
@@ -686,13 +790,15 @@ function PcaPlot (model, node, legendNode, params) {
 
 			batches.exit().remove();
 
-			if (includeCentroids) {
+			//console.log("redrawData installedOptions.includeCentroids 1 = " + installedOptions.includeCentroids);
+			if (installedOptions.includeCentroids) {
 
+				//console.log("redrawData installedOptions.includeCentroids 1 inside if");
 				var lines = batches.selectAll ("line.ptline")
 							.data (getLines);
 
 				lines.enter().append("svg:line")
-					.attr("class", function () { return isHiliteLayer ? "hiliter ptline" : "ptline" })
+					.attr("class", function () { return isHiliteLayer ? "hiliter ptline" : "ptline"; })
 					.on("mouseover", lineMouseover);
 
 				lines
@@ -702,20 +808,38 @@ function PcaPlot (model, node, legendNode, params) {
 					.attr("y2", function (d) { return ffy(d.y2); });
 
 				lines.exit().remove();
+			} else {
+				//console.log("redrawData installedOptions.includeCentroids 1 else");
+				var lines = batches.selectAll ("line.ptline")
+							.data(getLines);
+				lines.remove();
 			}
 
 			var points = batches.selectAll ("path.dot")
 				.data(function (d) { return d.points; });
 
 			points.enter().append("svg:path")
-				.attr("class", function () { return isHiliteLayer ? "hiliter dot" : "dot" })
+				.attr("class", function () { return isHiliteLayer ? "hiliter dot" : "dot"; })
 				.on("mouseover", memberMouseover)
 				.on("mouseout", commonMouseout);
 
+			//	.attr("id", function (d) { return "" + d.batch.batchID + "-" + d.Id; })
+			//console.log("installedOptions.useFilledShapesForPoints");
+			//console.log(installedOptions.useFilledShapesForPoints);
 			points
-				.attr("id", function (d) { return "" + d.batch.batchID + "-" + d.Id; })
+				.attr("id", function (d) { return "" + d.batch.batchID + "-" + d[pointIdField]; })
 				.attr("transform", function(d) { return "translate(" + ffx(d[xDimension]) + "," + ffy(d[yDimension]) + ")"; })
-				.attr("d", function (d) { return d.batch.symbol; });
+				.attr("d", function (d) { return d.batch.symbol; })
+				.style("fill", function (d) 
+				{
+					if (true===installedOptions.useFilledShapesForPoints)
+					{
+						return d.batch.color;
+					} 
+					else
+					{
+						return "none";
+					}});
 
 			points.exit().remove();
 
@@ -724,18 +848,24 @@ function PcaPlot (model, node, legendNode, params) {
 			// if (includeCentroids) {}
 		}
 
+		//console.log("batchLayer");
+		//console.log(batchLayer);
 		drawScatter (batchLayer);
 		drawScatter (overlayLayer);
 
-		if (includeCentroids) {
 
+		//console.log("redrawData installedOptions.includeCentroids 2 = " + installedOptions.includeCentroids);
+		if (installedOptions.includeCentroids) {
+			//console.log("redrawData installedOptions.includeCentroids 2 inside if");
 			function getCentroidColor (d) {	// d is a "batch"
 				//return isHiliteLayer ? "black" : d.color;
-				return (hilitedBatch == null || d != hilitedBatch) ? d.color : "black";
+				return (hilitedBatch === null || d !== hilitedBatch) ? d.color : "black";
 			}
 
 			var centroids = centroidLayer.selectAll("path.centroid")
 									.data(drawnBatchData);
+			//console.log("centroids");
+			//console.log(centroids);
 
 			centroids.enter().append("svg:path")
 					.attr("class", "centroid")
@@ -752,7 +882,7 @@ function PcaPlot (model, node, legendNode, params) {
 
 			centroids.exit().remove();
 
-			if (groupKey == "ShipDate") {
+			if (groupKey === "ShipDate") {
 
 				var trendlines = getTrendLines (batchData);
 
@@ -771,6 +901,21 @@ function PcaPlot (model, node, legendNode, params) {
 					.attr("y1", function (d) { return ffy(d.y1); })
 					.attr("y2", function (d) { return ffy(d.y2); });
 				lines.exit().remove();
+			}
+		}
+		else
+		{
+			//console.log("redrawData installedOptions.includeCentroids 2 else");
+			var centroids = centroidLayer.selectAll("path.centroid")
+								.data(drawnBatchData);
+			centroids.remove();
+			if (groupKey === "ShipDate") {
+
+				var trendlines = getTrendLines (batchData);
+
+				var lines = centroidLayer.selectAll ("line.trendline")
+							.data (trendlines);
+				lines.remove();
 			}
 		}
 	}
@@ -797,7 +942,7 @@ function PcaPlot (model, node, legendNode, params) {
 		var lastb = null;
 		trendBatches.forEach (function (b, ix) {
 
-			if (lastb != null) {
+			if (lastb !== null) {
 				var entry = {x1: lastb.centroid[xDimension], x2: b.centroid[xDimension], y1: lastb.centroid[yDimension], y2: b.centroid[yDimension]};
 				//entry.color = Math.round ((1 - (ix / trendBatches.length)) * 0xffffff);
 				//console.log ("Color[" + ix + "] = " + entry.color);
@@ -869,9 +1014,13 @@ function PcaPlot (model, node, legendNode, params) {
 		findAndHiliteLegend (d.batch);
 
 		if (installedOptions["showTooltip"])
-			showMyPopup (d.Id, d[xDimension], d[yDimension]);
+		{
+			//showMyPopup (d.Id, d[xDimension], d[yDimension]);
+			showMyPopup (d[pointIdField], d[xDimension], d[yDimension]);
+		}
 
-		var	struct = [ ["Sample:", d.Id], [groupKey + ":", d.batch.batchID] ];
+		//var	struct = [ ["Sample:", d.Id], [groupKey + ":", d.batch.batchID] ];
+		var	struct = [ ["Sample:", d[pointIdField]], [groupKey + ":", d.batch.batchID] ];
 
 /*
 		plotDataFields.forEach (function (fld) {
@@ -885,7 +1034,7 @@ function PcaPlot (model, node, legendNode, params) {
 
 		for (var i = 0 ; i < auxDataFields.length ; i++) {
 			var key = auxDataFields[i];
-			if (key != "Sample") {
+			if (key !== "Sample") {
 				var data = d[key];
 				struct.push ([key + ":", data]);
 			}
@@ -963,10 +1112,10 @@ function PcaPlot (model, node, legendNode, params) {
 		---*/
 		
 		overlayLayer.selectAll ("g.batch").each (function (d, i) {
-				if (d == targetBatch) {d3.select(this).style ("visibility", "visible");}
+				if (d === targetBatch) {d3.select(this).style ("visibility", "visible");}
 			});
 		centroidLayer.selectAll ("path.centroid").each (function (d, i) {
-				if (d == targetBatch) {d3.select(this).style("fill", "black");}
+				if (d === targetBatch) {d3.select(this).style("fill", "black");}
 			});
 	}
 
@@ -981,7 +1130,7 @@ function PcaPlot (model, node, legendNode, params) {
 
 	function findAndHiliteBatch (targetBatch) {
 		//overlayLayer.selectAll ("g.batch").each (function (d, i) {
-		//		if (d == targetBatch) showHiliteOverlay (d);
+		//		if (d === targetBatch) showHiliteOverlay (d);
 		//	});
 		// OR, more simply:
 		showHiliteOverlay (targetBatch);
@@ -1040,7 +1189,7 @@ function PcaPlot (model, node, legendNode, params) {
 
 	function _makeLegend (div) {
 
-		var callerSuppliedDiv = (div != undefined && div != null);
+		var callerSuppliedDiv = notUN(div);
 
 			// Copy batch array so we can sort by batch ID
 		var legendBatches = batchData.slice(0);		// copy before sort
@@ -1110,11 +1259,14 @@ function PcaPlot (model, node, legendNode, params) {
 
 
 	function findAndHiliteLegend (targetBatch) {
-		if (legendNode == null) return;
+		if (!notUN(legendNode))
+		{
+			return;
+		}
 
 		var legend = d3.select (legendNode);
 		legend.selectAll ("g.legenditem").each (function (d, i) {
-				if (d == targetBatch) {
+				if (d === targetBatch) {
 					legend.selectAll("rect.legendhilite").remove();
 
 					var theNode = d3.select(this).node();
@@ -1137,7 +1289,10 @@ function PcaPlot (model, node, legendNode, params) {
 
 
 	function legendMouseover (d, i) {
-		if (legendNode == null) return;
+		if (!notUN(legendNode))
+		{
+			return;
+		}
 
 		d3.select(legendNode).selectAll("rect.legendhilite").remove();
 		killHiliteOverlay();
@@ -1172,14 +1327,14 @@ function PcaPlot (model, node, legendNode, params) {
 	{
 		xDomain[0] = d3.min (batchData, function(batch) { return d3.min (batch.points, function(pt) {return pt[xDimension];}); });
 		xDomain[1] = d3.max (batchData, function(batch) { return d3.max (batch.points, function(pt) {return pt[xDimension];}); });
-		if (xDomain[0] == xDomain[1]) {
+		if (xDomain[0] === xDomain[1]) {
 			xDomain[0] -= 5;
 			xDomain[1] += 5;
 		}
 
 		yDomain[0] = d3.min (batchData, function(batch) { return d3.min (batch.points, function(pt) {return pt[yDimension];}); });
 		yDomain[1] = d3.max (batchData, function(batch) { return d3.max (batch.points, function(pt) {return pt[yDimension];}); });
-		if (yDomain[0] == yDomain[1]) {
+		if (yDomain[0] === yDomain[1]) {
 			yDomain[0] -= 5;
 			yDomain[1] += 5;
 		}
@@ -1198,6 +1353,7 @@ var lastPixelRatio = null;
 		//console.log ("_resizePlot (" + wNew + ", " + hNew + ")");
 
 		plotGeometry.plotWidth = +(wNew);
+		//console.log("_resizePlot plotGeometry.plotWidth=" + plotGeometry.plotWidth);
 		plotGeometry.plotHeight = +(hNew);
 
 		var titlePanel = svg.select("svg.titlePanel");
@@ -1206,11 +1362,13 @@ var lastPixelRatio = null;
 		var	titleArray = breakStringForWrap (plotTitle, plotGeometry.plotWidth, titleElem.node());
 		var lineHeight = getRealLineHeight (titleElem.node());
 
-		if (installedOptions["autoAdjustTitleHeight"] && titleArray !== null) {
+		if (installedOptions["autoAdjustTitleHeight"] && titleArray !== null)
+		{
 			plotGeometry.titleHeight = lineHeight * titleArray.length + 3;	// ???
 		}
 
 		// X and Y axis
+		//console.log("_resizePlot for range plotGeometry.plotWidth=" + plotGeometry.plotWidth);
 		x.range([0, plotGeometry.plotWidth]);
 		y.range([plotGeometry.plotHeight, 0]);
 
@@ -1307,40 +1465,46 @@ var lastPixelRatio = null;
 				.attr("dy", function (d) { return d[0] * lineHeight; });
 		titleSpans.exit().remove();
 
-		var extraBBox = extraInfoPanel.node().getBoundingClientRect();
+		var extraBBox = null;
+		if (notUN(extraInfoPanel))
+		{
+			extraBBox = extraInfoPanel.node().getBoundingClientRect();
 
-		// This is here due to inconsistency between Firefox and Chrome browsers, and
-		// disagreement over boundingClientRect when zoomed
-		if (lastHeight && lastPixelRatio) {
-			if (window.devicePixelRatio != lastPixelRatio && 
-				Math.abs(extraBBox.height - lastHeight) > 1.0) {
-				//console.log ('*** Should need fix! ***');
-				extraBBox.height = extraBBox.height / window.devicePixelRatio;
+			// This is here due to inconsistency between Firefox and Chrome browsers, and
+			// disagreement over boundingClientRect when zoomed
+			if (lastHeight && lastPixelRatio) {
+				if (window.devicePixelRatio !== lastPixelRatio && 
+					Math.abs(extraBBox.height - lastHeight) > 1.0) {
+					//console.log ('*** Should need fix! ***');
+					extraBBox.height = extraBBox.height / window.devicePixelRatio;
+				}
 			}
+			lastHeight = extraBBox.height;
+			lastPixelRatio = window.devicePixelRatio;
+
+			d3.select(extraInfoPanel.node().parentNode)
+				.attr('width', extraBBox.width)
+				.attr('height', extraBBox.height);
+
+			var foreignObj = d3.select(extraInfoPanel.node().parentNode.parentNode);
+			foreignObj
+				// leave 1 pixel on left
+				.attr("x", plotGeometry.leftAxisWidth + plotGeometry.plotWidth + 1)
+				// and anchor at bottom
+				.attr("y", plotGeometry.plotHeight + plotGeometry.titleHeight - extraBBox.height)
+				.attr('width', extraBBox.width)
+				.attr('height', extraBBox.height);
 		}
-		lastHeight = extraBBox.height;
-		lastPixelRatio = window.devicePixelRatio;
 
-		d3.select(extraInfoPanel.node().parentNode)
-			.attr('width', extraBBox.width)
-			.attr('height', extraBBox.height);
-
-		var foreignObj = d3.select(extraInfoPanel.node().parentNode.parentNode);
-		foreignObj
-			// leave 1 pixel on left
-			.attr("x", plotGeometry.leftAxisWidth + plotGeometry.plotWidth + 1)
-			// and anchor at bottom
-			.attr("y", plotGeometry.plotHeight + plotGeometry.titleHeight - extraBBox.height)
-			.attr('width', extraBBox.width)
-			.attr('height', extraBBox.height);
-
-		var bomWidth = extraBBox.width - 10;	// was extraBBox.width - 0;
-		if (bomWidth > 170) bomWidth = 170;
-		batchOMeter
-			.x(plotGeometry.leftAxisWidth + plotGeometry.plotWidth + 6)
-			.resize(bomWidth,
-					plotGeometry.plotHeight + plotGeometry.titleHeight - 20 - extraBBox.height);
-
+		if (notUN(batchOMeter))
+		{
+			var bomWidth = extraBBox.width - 10;	// was extraBBox.width - 0;
+			if (bomWidth > 170) bomWidth = 170;
+			batchOMeter
+				.x(plotGeometry.leftAxisWidth + plotGeometry.plotWidth + 6)
+				.resize(bomWidth,
+						plotGeometry.plotHeight + plotGeometry.titleHeight - 20 - extraBBox.height);
+		}
 		redraw ();
 	}
 
@@ -1379,51 +1543,58 @@ var lastPixelRatio = null;
 	}
 
 
-	function _getComponentAnnotations () {
-		var compString = xDimension + "," + yDimension;
+	function _getComponentAnnotations ()
+	{
 		var result = [];
-		var anchor;
+		if (notUN(componentAnnotations))
+		{
+			var compString = xDimension + "," + yDimension;
+			var anchor;
 
-		var elems = componentAnnotations.get(compString);
-		if (elems != null) {
-			performAnnotationSubstitution (elems);
+			var elems = componentAnnotations.get(compString);
+			if (notUN(elems))
+			{
+				performAnnotationSubstitution (elems);
 
-			elems.forEach (function (elem, ix) {
-				var key = elem["Annotation"];
-				var data = elem["Value"];
-				if (key.indexOf ("pvalue") == -1)
-				{
-					data = fixedFormatter (+data);
-					if (key.startsWith('DSC')) anchor = 'DSCcomp';
-					else if (key.startsWith('Dw')) anchor = 'DwComp';
-					else if (key.startsWith('Db')) anchor = 'DbComp';
-				} else {
-					anchor = 'pvalueComp';
-				}
-				result.push ([key + ":", data, anchor]);
-			});
+				elems.forEach (function (elem, ix) {
+					var key = elem["Annotation"];
+					var data = elem["Value"];
+					if (key.indexOf ("pvalue") === -1)
+					{
+						data = fixedFormatter (+data);
+						if (key.startsWith('DSC')) anchor = 'DSCcomp';
+						else if (key.startsWith('Dw')) anchor = 'DwComp';
+						else if (key.startsWith('Db')) anchor = 'DbComp';
+					} else {
+						anchor = 'pvalueComp';
+					}
+					result.push ([key + ":", data, anchor]);
+				});
+			}
 		}
-
 		return result;
 	}
 
 
-	function _getDiagramAnnotations () {
+	function _getDiagramAnnotations ()
+	{
 		var result = [];
-		var	anchor;
+		if (notUN(diagramAnnotations))
+		{
+			var	anchor;
 
-		for (var ix = 0 ; ix < diagramAnnotations.length ; ix++) {
-			var elem = diagramAnnotations[ix];
-			var key = elem["Annotation"];
-			var data = elem["Value"];
-			anchor = 'pvalue';
-			if (key.indexOf ("pvalue") == -1) {
-				data = fixedFormatter (+data);
-				anchor = key;
+			for (var ix = 0 ; ix < diagramAnnotations.length ; ix++) {
+				var elem = diagramAnnotations[ix];
+				var key = elem["Annotation"];
+				var data = elem["Value"];
+				anchor = 'pvalue';
+				if (key.indexOf ("pvalue") === -1) {
+					data = fixedFormatter (+data);
+					anchor = key;
+				}
+				result.push ([key + ":", data, anchor]);
 			}
-			result.push ([key + ":", data, anchor]);
 		}
-
 		return result;
 	}
 
@@ -1436,30 +1607,33 @@ var lastPixelRatio = null;
 	function _plotOptions (newOptions) {
 		var	result;
 
-		if (newOptions == null)
+		if (!notUN(newOptions))
 			result = {};
 		else {
 			result = newOptions;
 
 			// check for need to redraw ###
 			for (var fld in installedOptions)
-				if (newOptions[fld] != undefined)
+				if (newOptions[fld] !== undefined)
 					installedOptions[fld] = newOptions[fld];
 
-			if (newOptions["formatString"] != undefined)
+			if (newOptions["formatString"] !== undefined)
 				fixedFormatter = d3.format (installedOptions["formatString"]);
 		}
 
 		for (var fld in installedOptions)
+		{
+			//console.log("fld=" + fld);
 			result[fld] = installedOptions[fld];
-
+		}
+		
 		return (result);
 	}
 
 		// Next 2 functions could go in a utilities module
 	function findCSS (cssName) {
 		var sheets = window.document.styleSheets;
-		for (cur in sheets) {
+		for (var cur in sheets) {
 			if (sheets.hasOwnProperty(cur)) {
 				if (sheets[cur].href.endsWith(cssName)) {
 					return sheets[cur];
@@ -1474,7 +1648,7 @@ var lastPixelRatio = null;
 		var	sheet = findCSS (cssName);
 		if (sheet !== null) {
 			var rulesList = sheet.rules;	// a CSSRuleList
-			for (ruleKey in rulesList) {
+			for (var ruleKey in rulesList) {
 				if (rulesList.hasOwnProperty(ruleKey)) {
 					var rule = rulesList[ruleKey].cssText;
 					result += rule + '\n';
@@ -1528,19 +1702,28 @@ var lastPixelRatio = null;
 		{
 			thePdfObject.text(theRow[0] + " " + theRow[1]);
 		});
-		var formatter = d3.format (".1f");
-		var lineArray = [["FVE: " , formatter((+fractionalVariances[xDimension] + +fractionalVariances[yDimension]) * 100) + " %"]];
-		lineArray.push (["MBatch v. ", versionString]);
-		lineArray.forEach(function(theRow)
+		if (notUN(fractionalVariances))
 		{
-			thePdfObject.text(theRow[0] + " " + theRow[1]);
-		});
+			var formatter = d3.format (".1f");
+			var lineArray = [["FVE: " , formatter((+fractionalVariances[xDimension] + +fractionalVariances[yDimension]) * 100) + " %"]];
+		}
+		if (notUN(versionString))
+		{
+			lineArray.push (["MBatch v. ", versionString]);
+		}
+		if (notUN(lineArray))
+		{
+			lineArray.forEach(function(theRow)
+			{
+				thePdfObject.text(theRow[0] + " " + theRow[1]);
+			});
+		}
 		return thePdfObject;
 	}
 	
 	function _getLegendSVGContent () {
 		// should check that svg is actually in parent ? ###
-		if(legendNode != null) {
+		if(legendNode !== null) {
 			return _makeHeader() + legendNode.innerHTML + _makeFooter();	
 		}else{
 			return "";
@@ -1563,6 +1746,7 @@ var lastPixelRatio = null;
 //	return plot;
 	
 	// TODO: fix hack: not sure what plot(){} is for above
+	this.redrawPlot = redraw;
 	this.resizePlot = _resizePlot;
 	this.resetScale = _resetScale;
 	this.getGraphVariables = _getGraphVariables;
@@ -1580,16 +1764,34 @@ var lastPixelRatio = null;
 }  // function PcaPlot
 
 
-PcaPlot.BasicModel = function (pcaValues, batchInfo, annotations) {
-
+PcaPlot.BasicModel = function (pcaValues, batchInfo, annotations, thePointIdColumn)
+{
+	// what does this line do?
 	function model () {}
-		// copy these instead of returning direct refs? ###
-	model.getPcaValues = function () { return pcaValues; }
-	model.getBatchInfo = function () { return batchInfo; }
-	model.getPcaAnnotations = function () { return annotations; }
-
+	// copy these instead of returning direct refs? ###
+	model.getPcaValues = function () { return pcaValues; };
+	model.getBatchInfo = function () { return batchInfo; };
+	model.getPcaAnnotations = function () { return annotations; };
+	model.getPointId = function () { return thePointIdColumn; };
 	return model;
-}
+};
+
+PcaPlot.UMAPModel = function (pcaValues, batchInfo, theOldType, theBatchType, thePointIdColumn)
+{
+	// what does this line do?
+	function model () {}
+	// copy these instead of returning direct refs? ###
+	batchInfo.forEach((theElement, theIndex) =>
+	{
+		theElement[theBatchType] = theElement[theOldType];
+		delete theElement[theOldType];
+	});
+	model.getPcaValues = function () { return pcaValues; };
+	model.getBatchInfo = function () { return batchInfo; };
+	model.getPcaAnnotations = function () { return null; };
+	model.getPointId = function () { return thePointIdColumn; };
+	return model;
+};
 
 
 PcaPlot.DefaultParams = function () {
@@ -1599,9 +1801,12 @@ PcaPlot.DefaultParams = function () {
 		groupKey : 'BatchId',
 		oneToManyGroup : null,
 		includeCentroids : true,
+		useFilledShapesForPoints: false,
+		hiliteColor: "red",
 		xDimension : 'PC1',
 		yDimension : 'PC2',
 		showDetailFunc : null,
-		selectCallbackFunc : null
+		selectCallbackFunc : null,
+		pointSize: 64
 	};
-}
+};

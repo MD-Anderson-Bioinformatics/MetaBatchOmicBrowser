@@ -202,9 +202,7 @@ public class Dataset implements Comparable<Dataset>
 	private ArrayList<String> headers()
 	{
 		ArrayList<String> list = new ArrayList<>();
-		list.add("Data Download");
-		list.add("Results Download");
-		list.add("View Results");
+		list.add("Actions");
 		list.add("ID");
 		list.add("Files");
 		list.add("Source");
@@ -228,8 +226,8 @@ public class Dataset implements Comparable<Dataset>
 			theList.add("Algo");
 			theList.add("Lvl1");
 			theList.add("Lvl2");
-			theList.add("Overall DSC pvalue");
-			theList.add("Overall DSC");
+			theList.add("DSC pvalue");
+			theList.add("DSC");
 		}
 	}
 	
@@ -262,17 +260,9 @@ public class Dataset implements Comparable<Dataset>
 		{
 			res = ", \"visible\": false";
 		}
-		else if ("Data Download".equals(theCol))
+		else if ("Actions".equals(theCol))
 		{
-			res = ", \"render\": \"downloadDataUrl\"";
-		}
-		else if ("Results Download".equals(theCol))
-		{
-			res = ", \"render\": \"downloadResultsUrl\"";
-		}
-		else if ("View Results".equals(theCol))
-		{
-			res = ", \"render\": \"viewResults\"";
+			res = ", \"render\": \"tableActionOptions\"";
 		}
 		return res;
 	}
@@ -383,9 +373,7 @@ public class Dataset implements Comparable<Dataset>
 			viewResultsUrl = "";
 		}
 		ArrayList<String> list = new ArrayList<>();
-		list.add(downloadDataUrl);
-		list.add(downloadResultsUrl);
-		list.add(viewResultsUrl);
+		list.add(downloadDataUrl + " | " + downloadResultsUrl + " | " + viewResultsUrl);
 		list.add(mID);
 		list.add(getFilesAsString());
 		list.add(mSource);

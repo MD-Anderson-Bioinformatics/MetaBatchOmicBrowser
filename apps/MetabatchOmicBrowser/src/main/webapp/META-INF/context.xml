@@ -1,2 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Context path="/MQA"/>
+<Context path="/MOB">
+  <Manager pathname="" saveOnRestart="false"/>
+</Context>

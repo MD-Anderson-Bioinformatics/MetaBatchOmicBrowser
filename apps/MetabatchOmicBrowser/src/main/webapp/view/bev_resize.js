@@ -193,7 +193,7 @@ var globalColumnAWidth_DB = 0;
 var globalColumnBWidth_DB = 0;
 var globalColumnCWidth_DB = 0;
 
-function hideDataBrowser()
+function hidePlotPicker()
 {
 	// get current widths
 	let drgAB = getComputedStyle(document.documentElement).getPropertyValue('--dragger-AB-size');
@@ -211,12 +211,12 @@ function hideDataBrowser()
 	document.documentElement.style.setProperty('--dragger-AB-size', "0px");
 	document.documentElement.style.setProperty('--column-A-width', "0px");
 	document.documentElement.style.setProperty('--column-B-width', (colA + colB) + "%");
-	// toggle the hide-databrowser class
-	toggleClass(['id-a-b-drag-bar', 'BEV_DataBrowser', 'BEV_DataBrowserbutton'], 'hide-databrowser');
+	// toggle the hide-plotpicker class
+	toggleClass(['id-a-b-drag-bar', 'BEV_PlotPicker', 'BEV_PlotPickerbutton'], 'hide-plotpicker');
 	globalOn_DB = true;
 }
 
-function displayDataBrowser()
+function displayPlotPicker()
 {
 	// get current values
 	let colA = getComputedStyle(document.documentElement).getPropertyValue('--column-A-width');
@@ -225,7 +225,7 @@ function displayDataBrowser()
 	colA = Number(colA.substring(0, colA.length - 1));
 	colB = Number(colB.substring(0, colB.length - 1));
 	colC = Number(colC.substring(0, colC.length - 1));
-	//console.log("displayDataBrowser a=" + colA + " b=" + colB + " c=" + colC);
+	//console.log("displayPlotPicker a=" + colA + " b=" + colB + " c=" + colC);
 	// calculate new size for column B, to support other stuff changing
 	let oldA = Number(globalColumnAWidth_DB.substring(0, globalColumnAWidth_DB.length - 1));;
 	let newColA = oldA;
@@ -235,13 +235,13 @@ function displayDataBrowser()
 		newColA = (100 - colC) / 2;
 		newColB = (100 - colC) / 2;
 	}
-	//console.log("displayDataBrowser newA=" + newColA + " newB=" + newColB);
+	//console.log("displayPlotPicker newA=" + newColA + " newB=" + newColB);
 	// reset values
 	document.documentElement.style.setProperty('--dragger-AB-size', globalDragABWidth_DB);
 	document.documentElement.style.setProperty('--column-A-width', newColA + "%");
 	document.documentElement.style.setProperty('--column-B-width', newColB + "%");
-	// toggle the hide-databrowser class
-	toggleClass(['id-a-b-drag-bar', 'BEV_DataBrowser', 'BEV_DataBrowserbutton'], 'hide-databrowser');
+	// toggle the hide-plotpicker class
+	toggleClass(['id-a-b-drag-bar', 'BEV_PlotPicker', 'BEV_PlotPickerbutton'], 'hide-plotpicker');
 	globalOn_DB = false;
 }
 
@@ -269,7 +269,7 @@ function hideLegPaneColumn()
 	document.documentElement.style.setProperty('--dragger-BC-size', "0px");
 	document.documentElement.style.setProperty('--column-B-width', (colB + colC) + "%");
 	document.documentElement.style.setProperty('--column-C-width', "0px");
-	// toggle the hide-databrowser class
+	// toggle the hide-plotpicker class
 	toggleClass(['id-b-c-drag-bar', 'BEV_LegPane', 'BEV_LegPaneButton'], 'hide-legpane');
 	globalOn_LP = true;
 }
@@ -299,7 +299,7 @@ function displayLegPaneColumn()
 	document.documentElement.style.setProperty('--dragger-BC-size', globalDragBCWidth_LP);
 	document.documentElement.style.setProperty('--column-B-width', newColB + "%");
 	document.documentElement.style.setProperty('--column-C-width', newColC + "%");
-	// toggle the hide-databrowser class
+	// toggle the hide-plotpicker class
 	toggleClass(['id-b-c-drag-bar', 'BEV_LegPane', 'BEV_LegPaneButton'], 'hide-legpane');
 	globalOn_LP = false;
 }
@@ -315,7 +315,7 @@ function bodyResize()
 	if ((false===globalOn_Auto_DB)&&(false===globalOn_DB)&&(vw<800))
 	{
 		globalOn_Auto_DB = true;
-		hideDataBrowser();
+		hidePlotPicker();
 	}
 	if ((false===globalOn_Auto_LP)&&(false===globalOn_LP)&&(vw<600))
 	{
@@ -325,7 +325,7 @@ function bodyResize()
 	if ((true===globalOn_Auto_DB)&&(true===globalOn_DB)&&(vw>800))
 	{
 		globalOn_Auto_DB = false;
-		displayDataBrowser();
+		displayPlotPicker();
 	}
 	else if ((true===globalOn_Auto_DB)&&(false===globalOn_DB))
 	{

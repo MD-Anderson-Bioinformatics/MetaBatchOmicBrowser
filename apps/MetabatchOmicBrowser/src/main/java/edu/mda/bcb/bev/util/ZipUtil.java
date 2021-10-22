@@ -14,6 +14,7 @@ package edu.mda.bcb.bev.util;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
@@ -73,6 +74,8 @@ public class ZipUtil
 	
 	static public void streamFile(String theZip, String theFile, HttpServletResponse theResponse, HttpServlet theServlet, String theContentType) throws IOException
 	{
+		//long timeStart = System.currentTimeMillis();
+		//theServlet.log("streamFile start = " + timeStart);
 		if (theFile.startsWith("/"))
 		{
 			theFile = theFile.substring(1);
@@ -83,9 +86,13 @@ public class ZipUtil
 		}
 		theServlet.log("streamFile theZip=" + theZip);
 		theServlet.log("streamFile theFile=" + theFile);
+		//long timeOpen = System.currentTimeMillis();
+		//theServlet.log("streamFile open zip = " + timeOpen);
 		try(ZipFile zf = new ZipFile(new File(theZip)))
 		{
 			Enumeration<? extends ZipEntry> entries = zf.entries();
+			//long timeIterate = System.currentTimeMillis();
+			//theServlet.log("streamFile iterate zip = " + timeIterate);
 			while(entries.hasMoreElements())
 			{
 				ZipEntry entry = entries.nextElement();
@@ -101,13 +108,28 @@ public class ZipUtil
 				if (entryName.equals(theFile))
 				{
 					try(InputStream is = zf.getInputStream(entry))
+					//try(InputStream is = new FileInputStream( new File("/code/development/All_ngchm.ngchm")))
 					{
 						theResponse.setContentType(theContentType);
+						//theResponse.setHeader("Content-Length", Long.toString(entry.getSize()));
+						theResponse.setContentLengthLong(entry.getSize());
+						// supposedly prevents chunking
+						theResponse.setHeader("Connection", "close");
+						theResponse.setHeader("Transfer-Encoding", "gzip");
 						try (ServletOutputStream out = theResponse.getOutputStream())
 						{
+							//long timeCopy1 = System.currentTimeMillis();
+							//theServlet.log("streamFile start copy = " + timeCopy1);
+							//theServlet.log("streamFile start to copy = " + (timeCopy1-timeStart));
 							IOUtils.copy(is, out);
+							//long timeCopy2 = System.currentTimeMillis();
+							//theServlet.log("streamFile finish copy = " + timeCopy2);
+							//theServlet.log("streamFile copy time = " + (timeCopy2-timeCopy1));
 						}
 					}
+					//long timeDone = System.currentTimeMillis();
+					//theServlet.log("streamFile copy done = " + timeDone);
+					//theServlet.log("streamFile total time = " + (timeDone-timeStart));
 					return;
 				}
 			}

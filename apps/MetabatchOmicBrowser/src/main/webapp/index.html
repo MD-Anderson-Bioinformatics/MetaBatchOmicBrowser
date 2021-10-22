@@ -11,7 +11,13 @@
 				gaScript.setAttribute('src', `https://www.googletagmanager.com/gtag/js?id=UA-33425717-1`);
 
 				var gaScript2 = document.createElement('script');
-				gaScript2.innerText = `window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag(\'js\', new Date());gtag(\'config\', \'UA-33425717-1\');`;
+				gaScript2.innerText = `window.dataLayer = window.dataLayer || [];` + 
+										`function gtag(){dataLayer.push(arguments);}` +
+										// https://developers.google.com/tag-platform/devguides/consent
+										//`gtag(\'consent\', \'default\', { \'analytics_storage\': \'denied\', \'ad_storage\': \'denied\' });` +
+										//`dataLayer.push({ \'event\': \'default_consent\' });` + 
+										`gtag(\'js\', new Date());` +
+										`gtag(\'config\', \'UA-33425717-1\');`;
 
 				document.documentElement.firstChild.appendChild(gaScript);
 				document.documentElement.firstChild.appendChild(gaScript2);
@@ -65,18 +71,19 @@
 			{
 				// called from View IFrame
 				// used to set selected dataset in Query IFrame
+				//console.log("Top index setCurrentViewDiagramMqa");
 				document.getElementById('queryIframe').contentWindow.setSelectedDatasetQuery(theId, theDscid);
 				enableInput();
 			}
 			
 			function previousDatasetMqa()
 			{
-				console.log("previousDatasetMqa");
+				//console.log("previousDatasetMqa");
 				disableInput();
 				// called from button on this page
 				// calls query iframe to find previous dataset, which updates the view iframe which calls setCurrentViewDiagramMqa
 				let viewParamsJson = document.getElementById('viewIframe').contentWindow.viewGetUrlParams();
-				console.log(viewParamsJson);
+				//console.log(viewParamsJson);
 				document.getElementById('queryIframe').contentWindow.previousDatasetQuery(viewParamsJson);
 			}
 			
@@ -99,6 +106,36 @@
 				setTimeout(function() {document.getElementById('alrtLegalNotice').style.display = 'none';},3000);
 			}
 			
+			var tmpAheight = "";
+			var tmpBheight = "";
+			var tmpAwidth = "";
+			var tmpBwidth = "";
+			
+			function minimizeSliderMqa()
+			{
+				document.getElementById('mqaSliderRestore').style.display = "inline";
+				document.getElementById('mqaSliderMinimize').style.display = "none";
+				tmpAheight = getComputedStyle(document.documentElement).getPropertyValue('--row-A-height');
+				tmpBheight = getComputedStyle(document.documentElement).getPropertyValue('--row-B-height');
+				document.documentElement.style.setProperty('--row-A-height', "100vh");
+				document.documentElement.style.setProperty('--row-B-height', "0vh");
+				tmpAwidth = getComputedStyle(document.documentElement).getPropertyValue('--col-A-width');
+				tmpBwidth = getComputedStyle(document.documentElement).getPropertyValue('--col-B-width');
+				// This needs 1vw for col A so that dragger bar width matches buttons -- not sure why
+				document.documentElement.style.setProperty('--col-A-width', "1vw");
+				document.documentElement.style.setProperty('--col-B-width', "99vw");
+			}
+			
+			function restoreSliderMqa()
+			{
+				document.getElementById('mqaSliderRestore').style.display = "none";
+				document.getElementById('mqaSliderMinimize').style.display = "inline";
+				document.documentElement.style.setProperty('--row-A-height', tmpAheight);
+				document.documentElement.style.setProperty('--row-B-height', tmpBheight);
+				document.documentElement.style.setProperty('--col-A-width', tmpAwidth);
+				document.documentElement.style.setProperty('--col-B-width', tmpBwidth);
+			}
+			
 			function rotateSliderMqa()
 			{
 				if (document.getElementById('gui-wrapper-div').classList.contains("mqaWrapVertical"))
@@ -113,6 +150,7 @@
 					document.getElementById('view-div').classList.add("mqaViewDivHorizontal");
 					document.getElementById('slider-div').classList.add("mqaSliderDivHorizontal");
 					document.getElementById('query-div').classList.add("mqaQueryDivHorizontal");
+					document.getElementById('mqa-slider-button-div').classList.add("mqaQuerySBDHorizontal");
 					document.getElementById('slider-div').onmousedown=function(event) {onMouseDownColABMQA(event);};
 				}
 				else
@@ -122,6 +160,7 @@
 					document.getElementById('view-div').classList.remove("mqaViewDivHorizontal");
 					document.getElementById('slider-div').classList.remove("mqaSliderDivHorizontal");
 					document.getElementById('query-div').classList.remove("mqaQueryDivHorizontal");
+					document.getElementById('mqa-slider-button-div').classList.remove("mqaQuerySBDHorizontal");
 					//
 					document.getElementById('gui-wrapper-div').classList.add("mqaWrapVertical");
 					document.getElementById('view-div').classList.add("mqaViewDivVertical");
@@ -181,14 +220,15 @@
 						&nbsp;
 						<div class="mdaTitleText">
 							<span class="mdaTitleText">MetaBatch Omic Browser</span>
-							<span style="font-size: 50%">BEA_VERSION_TIMESTAMP</span>
+							<span style="font-size: 50%">vBEA_VERSION_TIMESTAMP</span>
 						</div>
 						&nbsp;
 						<div class="mdaHeaderLinks">
 							<button type="button" class="mdaHeaderButtons" onclick="copyURLString();" title="Copy Bookmark-able URL"><i class="fas fa-globe" style="color: green;"></i> Copy URL</button>
 							<button type="button" class="mdaHeaderButtons" onclick="window.open('QFusage.html', '_blank');" title="Query help and usage documentation. (New Tab.)"><i class="fas fa-question-circle" style="color: black;"></i><i class="fas fa-external-link-alt" style="color: black;"></i> Query Help</button>
 							<button type="button" class="mdaHeaderButtons" onclick="window.open('MBatch_04-99_Statistics.html', '_blank');" title="Simplified explanation of some of the MBatch statistical analyses of batch effects. (New Tab.)"><i class="fas fa-question-circle" style="color: black;"></i><i class="fas fa-external-link-alt" style="color: black;"></i> Statistics</button>
-							<button type="button" class="mdaHeaderButtons" onclick="window.open('GDCConverters.html', '_blank');" title="Explanation of converters from GDC to Standardized Data. (New Tab.)"><i class="fas fa-question-circle" style="color: black;"></i><i class="fas fa-external-link-alt" style="color: black;"></i> Converters</button>
+							<!-- keep formatted like this, so sed can process it -->
+							
 							<button type="button" class="mdaHeaderButtons" onclick="window.open('about.html', '_blank');" title="Help, funding, code, MD Anderson, and other links. (New Tab.)"><i class="fas fa-question-circle" style="color: blue;"></i><i class="fas fa-external-link-alt" style="color: black;"></i> About/Help</button>
 							<button type="button" class="mdaHeaderButtons" onclick="document.getElementById('alrtLegalNotice').style.display = 'block';" title="Display legal Notice"><i class="fas fa-exclamation-circle" style="color: purple;"></i> Legal - Privacy Notice</button>
 						</div>
@@ -199,7 +239,24 @@
 				<div class="mqaViewDivVertical" id="view-div">
 					<iframe class="viewIframeStyles" id="viewIframe" name="viewIframe" data-bind="attr:{src:$root.viewIframeSrc}"></iframe>
 				</div>
-				<div class="mqaSliderDivVertical" id="slider-div" onmousedown="onMouseDownRowABMQA(event);"></div>
+				<div class="mqaSliderDivVertical" id="slider-div" onmousedown="onMouseDownRowABMQA(event);">
+					<table id="mqa-slider-button-div" class="mdaMinTable">
+						<tr>
+							<td>
+								<button id="mqaSliderRotate" type="button" class="mdaSliderButtons" onclick="rotateSliderMqa();" title="Rotate slider"><i class="fas fa-sync-alt" style="color: brown;"></i> Rotate</button>
+							</td>
+							<td>
+								&nbsp;
+							</td>
+							<td>
+								<button id="mqaSliderMinimize" type="button" class="mdaSliderButtons" onclick="minimizeSliderMqa();" title="Minimize Query View"><i class="fas fa-compress-arrows-alt" style="color: sienna;"></i> Minimize</button>
+							</td>
+							<td>
+								<button id="mqaSliderRestore" type="button" class="mdaSliderButtons" style="display: none;" onclick="restoreSliderMqa();" title="Restore Query View"><i class="fas fa-arrows-alt" style="color: sienna;"></i> Restore</button>
+							</td>
+						</tr>
+					</table>
+				</div>
 				<div class="mqaQueryDivVertical" id="query-div">
 					<iframe class="queryIframeStyles" id="queryIframe" name="queryIframe" data-bind="attr:{src:$root.queryIframeSrc}"></iframe>
 				</div>

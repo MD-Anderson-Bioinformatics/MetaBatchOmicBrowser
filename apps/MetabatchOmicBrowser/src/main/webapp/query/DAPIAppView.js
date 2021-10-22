@@ -6,13 +6,26 @@
 
 disableInput = function()
 {
-	$(":input, a, button").prop("disabled",true);
+	if (notUN(window.frameElement))
+	{
+		window.parent.disableInput();
+	}
+	else
+	{
+		$(":input, a, button, tbody tr").prop("disabled",true);
+	}
 };
 
 enableInput = function()
 {
-	//console.log("DAPIAppView::enable input");
-	$(":input, a, button").prop("disabled",false);
+	if (notUN(window.frameElement))
+	{
+		window.parent.enableInput();
+	}
+	else
+	{
+		$(":input, a, button, tbody tr").prop("disabled",false);
+	}
 };
 
 ////////////////////////////////////////////////////////////////
@@ -128,7 +141,7 @@ function AppViewModel()
 	self.optionsVariants = ko.observableArray();
 	self.selectedVariants = ko.observableArray();
 	self.urlVariants = getQueryDefault("mVariants");
-	self.defaultVariants = ["current"];
+	self.defaultVariants = [];
 	self.classVariants = ko.observable("availSelPaddedDiv divSelectedLess");
 
 	////////////////////////////////////////////////////////////////
@@ -173,7 +186,7 @@ function AppViewModel()
 	self.optionsData = ko.observableArray();
 	self.selectedData = ko.observableArray();
 	self.urlData = getQueryDefault("mData");
-	self.defaultData = ["Original-Analyzed"];
+	self.defaultData = [];
 	self.classData = ko.observable("availSelPaddedDiv divSelectedLess");
 
 	////////////////////////////////////////////////////////////////
@@ -474,17 +487,9 @@ function AppViewModel()
 					{
 						var obj = theJson.headers[i];
 						// TODO: is this needed? render is set in Dataset.java
-						if (obj.title==="Data Download")
+						if (obj.title==="Actions")
 						{
-							obj.render = downloadDataUrl;
-						}
-						else if (obj.title==="Results Download")
-						{
-							obj.render = downloadResultsUrl;
-						}
-						else if (obj.title==="View Results")
-						{
-							obj.render = viewResults;
+							obj.render = tableActionOptions;
 						}
 					}
 					// set list of available criterias
@@ -643,34 +648,57 @@ function AppViewModel()
 						//console.log("headers length = " + theJson.headers.length);
 						//console.log(theJson.headers);
 						//{ fixedHeader: { header: true, footer: true } }
+						//console.log(theJson.headers);
 						$('#resultsTable').DataTable(
 						{
-							rowId: (function (x) { return x[3]; }),
+							// NOTE CHANGING ORDER OF HEADERs/DATA will CHANGE INDEX 1
+							rowId: (function (x) { return x[1]; }),
 							destroy: true,
 							data: theJson.data,
 							columns: theJson.headers,
-							order: [[ 8, 'asc' ], [ 1, 'asc' ], [ 2, 'asc' ], [ 3, 'asc' ], 
+							// NOTE CHANGING ORDER OF HEADERs/DATA will CHANGE INDEXES
+							order: [[ 8, 'asc' ], [ 10, 'asc' ], [ 1, 'asc' ], [ 2, 'asc' ], [ 3, 'asc' ], 
 									[ 4, 'asc' ], [ 5, 'asc' ], [ 6, 'asc' ], [ 7, 'asc' ],  
-									[ 9, 'asc' ], [ 10, 'asc' ], [ 11, 'asc' ], [ 12, 'asc' ]],
+									[ 9, 'asc' ]],
 							info:			false,	// hide paging info at bottom of screen
 							deferRender:    true,	// requiref for most other options to work
 							paging:			false,	// no paging, hide page selection at top and bottom
 							scrollCollapse: true,	// if small enough to fix screen, no scroll
-							scrollX:		false,	// don't scroll left-right, does not work because of scrollResize:true
+							scrollX:		true,	// left-right scroll required to keep lined up
 							fixedHeader:	false,	// keep header row on screen set to false, since scroll resize does this too
 							scrollResize:	true,	// resize scroll area to fit screen
-							scrollY:		100		// value is needed, but ignored due to scrollResize:true
+							scrollY:		100,	// value is needed, but ignored due to scrollResize:true
+							lengthChange:	false
 						} );
-						setSelectedDatasetQuery(self.viewedDatasetId(), self.viewedDatasetDscid());
+						$('#resultsTable').on('click', 'tbody tr td:not(:first-child)', function (theEvent)
+						{
+							var rowId = theEvent.currentTarget.parentElement.id;
+							var dataRows = $('#resultsTable').DataTable().rows().data();
+							var matched = null;
+							for (var index=0; (index<dataRows.length)&&(null===matched); index++)
+							{
+								if (rowId===dataRows[index][1])
+								{
+									matched = dataRows[index];
+								}
+							}
+							if (null!==matched)
+							{
+								var splitted = matched[0].split(" | ");
+								if (""!==splitted[2])
+								{
+									window.open(splitted[2], 'viewIframe');
+								}
+							}
+						});
 					}
 					else
 					{
 						//console.log("refresh datatable");
 						$('#resultsTable').DataTable().clear();
 						$('#resultsTable').DataTable().rows.add(theJson.data).draw();
-						setSelectedDatasetQuery(self.viewedDatasetId(), self.viewedDatasetDscid());
-						//$('#resultsTable').DataTable().columns(theJson.headers);
 					}
+					setSelectedDatasetQuery(self.viewedDatasetId(), self.viewedDatasetDscid());
 				},
 				error: function(jqXHR, textStatus, errorThrown)
 				{
@@ -777,28 +805,29 @@ function updateEnteredSelected(theEntered, theSelected, theElementId)
 	}
 }
 
-function downloadDataUrl(data,type,row,meta)
+function tableActionOptions(data,type,row,meta)
 {
-	//console.log("downloadDataUrl=" + data);
-	return (""===data)?"":(
-			'<center><button type="button" class="sdb-control-button" onclick="location.href=\'' + data + '\'" title="Download Data Archive">' +
-			'<i class="fas fa-download" style="color: blue;"> </i> Data</button></center>');
-}
-
-function downloadResultsUrl(data,type,row,meta)
-{
-	//console.log("downloadResultsUrl=" + data);
-	return (""===data)?"":(
-			'<center><button type="button" class="sdb-control-button" onclick="location.href=\'' + data + '\'" title="Download Results Archive">' +
-			'<i class="fas fa-download" style="color: red;"> </i> Results</button></center>');
-}
-
-function viewResults(data,type,row,meta)
-{
-	//console.log("viewResults=" + data);
-	return (""===data)?"":(
-			'<center><button type="button" class="sdb-control-button" onclick="window.open(\'' + data + '\', \'viewIframe\');" title="View Analysis in Viewer">' +
-			'<i class="fas fa-tv" style="color: green;"> </i> View Analysis</button></center>');
+	var retVal = "";
+	if (""!==data)
+	{
+		var splitted = data.split(" | ");
+		if (""!==splitted[2])
+		{
+			retVal += '<button type="button" class="sdb-control-button" onclick="window.open(\'' + splitted[2] + '\', \'viewIframe\');" title="View Analysis in Viewer">' +
+					'<i class="fas fa-tv" style="color: green;"> </i></button>';
+		}
+		if (""!==splitted[0])
+		{
+			retVal += '<button type="button" class="sdb-control-button" onclick="location.href=\'' + splitted[0] + '\'" title="Download Data Archive">' +
+					'<i class="fas fa-download" style="color: blue;"> </i></button>';
+		}
+		if (""!==splitted[1])
+		{
+			retVal += '<button type="button" class="sdb-control-button" onclick="location.href=\'' + splitted[1] + '\'" title="Download Results Archive">' +
+					'<i class="fas fa-download" style="color: red;"> </i></button>';
+		}
+	}
+	return retVal;
 }
 
 function clearSearch()

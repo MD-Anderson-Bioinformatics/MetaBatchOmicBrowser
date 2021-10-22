@@ -163,7 +163,7 @@ function BoxPlotDetailed(theDetailedDiv)
 		//console.log("BoxPlotDetailed::buildData 2 mDataYScaleMin = " + mDataYScaleMin);
 		//console.log("BoxPlotDetailed::buildData 2 mDataYScaleMax = " + mDataYScaleMax);
 		mTitleA = theDetailId;
-		mTitleB = " n=" + theNValue;
+		mTitleB = "point count=" + theNValue;
 		mBoxData = theBaseData;
 		mOutlierData = theOutlierData;
 		mColor = theColor;

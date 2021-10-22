@@ -141,6 +141,12 @@ tr.viewed-dataset-highlight *
 	cursor: pointer;
 }
 
+.sdb-control-button:disabled
+{
+	background-color: lightgray !important;
+	border-color: darkslategray !important;
+}
+
 .qf-control-button
 {
 	font-size: 9px;
@@ -157,6 +163,11 @@ tr.viewed-dataset-highlight *
 	cursor: pointer;
 }
 
+.qf-control-button:disabled
+{
+	background-color: lightgray;
+	border-color: darkslategray;
+}
 
 /* **************************************************** */
 .gridSizesTitle
@@ -500,9 +511,8 @@ input
 
 .buttons:disabled
 {
-	background: #afafaf;
-    background: -webkit-linear-gradient(#afafaf, #6b6b6b);
-    background: linear-gradient(#afafaf, #6b6b6b);
+	background-color: lightgray;
+	border-color: darkslategray;
 }
 
 .buttons .homeButton
@@ -822,4 +832,10 @@ div.modalContent
 .rTableBody 
 {
 	display: table-row-group;
+}
+
+/* datatables make row clickable icon */
+#resultsTable tbody tr
+{
+	cursor: pointer;
 }

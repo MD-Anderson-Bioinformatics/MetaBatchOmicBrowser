@@ -20,13 +20,16 @@
 
 disableInput = function()
 {
-	$(":input, a, button").prop("disabled",true);
+	$(":input, a, button, tbody tr").prop("disabled",true);
+	$("#viewIframe").contents().find(":input, a, button, tbody tr").prop("disabled",true);
+	$("#queryIframe").contents().find(":input, a, button, tbody tr").prop("disabled",true);
 };
 
 enableInput = function()
 {
-	//console.log("MQAAppView::enable input");
-	$(":input, a, button").prop("disabled",false);
+	$(":input, a, button, tbody tr").prop("disabled",false);
+	$("#viewIframe").contents().find(":input, a, button, tbody tr").prop("disabled",false);
+	$("#queryIframe").contents().find(":input, a, button, tbody tr").prop("disabled",false);
 };
 
 /* ************************************************************************** */

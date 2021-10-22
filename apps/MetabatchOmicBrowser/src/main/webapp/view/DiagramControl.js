@@ -278,9 +278,9 @@ class DiagramControl
 		});
 	};
 	
-	handleNewUmap(theDatasetId, theNewDiagram)
+	handleNewUmap_images(theDatasetId, theNewDiagram)
 	{
-		//console.log("DiagramControl::handleNewCdp called");
+		//console.log("DiagramControl::handleNewUmap called");
 		// clear any existing images -- clear calls are syncronous
 		this.dataAccess.addImage(theDatasetId, undefined, this.divDiagramId);
 		this.dataAccess.addImage(theDatasetId, undefined, this.divLegendId);
@@ -304,7 +304,44 @@ class DiagramControl
 			// call through globalDiagramControl in order to trigger other gui events
 			// done here, since there is no Util for images
 			globalDiagramControl.resize();
-			//console.log("DiagramControl::handleNewCdp getExistance done");
+			//console.log("DiagramControl::handleNewUmap getExistance done");
+		});
+	};
+	
+	handleNewUmap(theDatasetId, theNewDiagram)
+	{
+		//console.log("DiagramControl::handleNewUmap called");
+		// clear any existing images -- clear calls are syncronous
+		this.dataAccess.addImage(theDatasetId, undefined, this.divDiagramId);
+		this.dataAccess.addImage(theDatasetId, undefined, this.divLegendId);
+		this.resizeUtil = null;
+		// use .then, not .done, cause this is sometimes JQuery, sometimes a Promise
+		var passedThis = this;
+		this.dataAccess.getExistance(theDatasetId, theNewDiagram.umap_umapdat).then(function (exists)
+		{
+			//console.log("DiagramControl::handleNewUmap getExistance");
+			if ("false"===exists)
+			{
+				passedThis.dataAccess.addText("<br>Due to NAs or other data issues, this analysis was unable to be generated.", passedThis.divDiagramId);
+				passedThis.resizeUtil = null;
+				// call through globalDiagramControl in order to trigger other gui events
+				// done here, since there is no Util for images
+				globalDiagramControl.resize();
+			}
+			else
+			{
+				// load calls for an image are asyncronous
+				//passedThis.dataAccess.addImage(theDatasetId, theNewDiagram.diagram_image, passedThis.divDiagramId);
+				//passedThis.dataAccess.addImage(theDatasetId, theNewDiagram.legend_image, passedThis.divLegendId);
+				var ub = new UtilScatterplot(passedThis.dataAccess, passedThis.divDiagramId, passedThis.divLegendId, passedThis.divDatapaneId, theNewDiagram, passedThis.indexKO, theDatasetId);
+				ub.newScatterplot(passedThis.makeDataPointLog);
+				passedThis.resizeUtil = ub;
+			}
+			//passedThis.resizeUtil = null;
+			// call through globalDiagramControl in order to trigger other gui events
+			// done here, since there is no Util for images
+			//globalDiagramControl.resize();
+			//console.log("DiagramControl::handleNewUmap  getExistance done");
 		});
 	};
 
@@ -500,6 +537,10 @@ class DiagramControl
 	
 	makeDataPointLog(struct, dataNode)
 	{
+		//console.log("makeDataPointLog struct");
+		//console.log(struct);
+		//console.log("makeDataPointLog dataNode");
+		//console.log(dataNode);
 		if (struct.length > 0)
 		{
 			var dataPointText = "<p class='barlabel plotChild dpselect'><b class='barlabelbold'>[" + Date().split("GMT")[0] + "]</b><br>";
@@ -529,123 +570,133 @@ class DiagramControl
 
 	saveAsPdf()
 	{
+		//console.log("saveAsPdf start");
+		disableInput();
 		$("body").addClass("wait");
-		try
+		// inside setTimeout, this changes to something else, so save this
+		var myThis = this;
+		// use timeout to move other code later in thread execution, so disable input can disable the buttons
+		setTimeout(function()
 		{
-			//console.log("saveAsPdf start");
-			let docPdf = new PDFDocument({compress: false});
-			if(notUN(this.resizeUtil))
+			try
 			{
-				// D3 plugin (or DSC)
-				if(notUN(this.resizeUtil.plot.getSVGContent))
+				//console.log("saveAsPdf try");
+				let docPdf = new PDFDocument({compress: false});
+				if(notUN(myThis.resizeUtil))
 				{
-					// getSVGContent
-					let hiddenDiv = document.getElementById('renderSvgForPrinting');
-					hiddenDiv.innerHTML = this.resizeUtil.plot.getSVGContent();
-					SVGtoPDF(docPdf, hiddenDiv.firstChild, 0, 0, {useCSS:true});
-					hiddenDiv.innerHTML = "";
-					// handle plots that also have HTML content (like PCA+)
-					if(notUN(this.resizeUtil.plot.getExtraPdfContent))
+					// D3 plugin (or DSC)
+					if(notUN(myThis.resizeUtil.plot.getSVGContent))
 					{
-						docPdf = this.resizeUtil.plot.getExtraPdfContent(docPdf);
-					}
-					//console.log("typeof(this.resizeUtil.plot)");
-					// TODO: change method to detect hierclustering
-					if (typeof(this.resizeUtil.plot) === "function")
-					{
-						// iterate over batch types
-						// getLegendSVGContent
-						//console.log(this.resizeUtil.plot.getGroupVariables());
-						var batchTypeArray = this.resizeUtil.plot.getGroupVariables();
-						for(var batchTypeIndex in batchTypeArray)
+						// getSVGContent
+						let hiddenDiv = document.getElementById('renderSvgForPrinting');
+						hiddenDiv.innerHTML = myThis.resizeUtil.plot.getSVGContent();
+						SVGtoPDF(docPdf, hiddenDiv.firstChild, 0, 0, {useCSS:true});
+						hiddenDiv.innerHTML = "";
+						// handle plots that also have HTML content (like PCA+)
+						if(notUN(myThis.resizeUtil.plot.getExtraPdfContent))
 						{
-							//console.log("batchTypeIndex = " + batchTypeIndex);
-							var batchType = batchTypeArray[batchTypeIndex];
-							//console.log("batchType");
-							//console.log(batchType);
+							docPdf = myThis.resizeUtil.plot.getExtraPdfContent(docPdf);
+						}
+						//console.log("typeof(myThis.resizeUtil.plot)");
+						// TODO: change method to detect hierclustering
+						if (typeof(myThis.resizeUtil.plot) === "function")
+						{
+							// iterate over batch types
+							// getLegendSVGContent
+							//console.log(myThis.resizeUtil.plot.getGroupVariables());
+							var batchTypeArray = myThis.resizeUtil.plot.getGroupVariables();
+							for(var batchTypeIndex in batchTypeArray)
+							{
+								//console.log("batchTypeIndex = " + batchTypeIndex);
+								var batchType = batchTypeArray[batchTypeIndex];
+								//console.log("batchType");
+								//console.log(batchType);
+								docPdf.addPage();
+								// hierClustPlotSelect
+								//console.log("set batchType");
+								$('#hierClustPlotSelect').val(batchType).change();
+								// changes drop down, does not fire change event, manually update legend 
+								let divEle = document.getElementById("hierClustPlotLegend");
+								divEle.innerHTML = "";
+								myThis.resizeUtil.plot.makeLegend(batchType, divEle);
+								// get SVG text
+								//console.log("get SVG via batchType text");
+								var svgText = myThis.resizeUtil.plot.getLegendSVGContent(batchType);
+								//console.log("got svg text");
+								//console.log(svgText);
+								hiddenDiv.innerHTML = svgText;
+								SVGtoPDF(docPdf, hiddenDiv.firstChild, 0, 0, {useCSS:true});
+								hiddenDiv.innerHTML = "";
+							}
+						}
+						else
+						{
+							// getLegendSVGContent - for things other than hierarchical clustering
+							//console.log("myThis.resizeUtil.plot.getLegendSVGContent() 2");
 							docPdf.addPage();
-							// hierClustPlotSelect
-							//console.log("set batchType");
-							$('#hierClustPlotSelect').val(batchType).change();
-							// changes drop down, does not fire change event, manually update legend 
-							let divEle = document.getElementById("hierClustPlotLegend");
-							divEle.innerHTML = "";
-							this.resizeUtil.plot.makeLegend(batchType, divEle);
-							// get SVG text
-							//console.log("get SVG via batchType text");
-							var svgText = this.resizeUtil.plot.getLegendSVGContent(batchType);
-							//console.log("got svg text");
-							//console.log(svgText);
-							hiddenDiv.innerHTML = svgText;
+							hiddenDiv.innerHTML = myThis.resizeUtil.plot.getLegendSVGContent();
 							SVGtoPDF(docPdf, hiddenDiv.firstChild, 0, 0, {useCSS:true});
 							hiddenDiv.innerHTML = "";
 						}
 					}
-					else
-					{
-						// getLegendSVGContent - for things other than hierarchical clustering
-						//console.log("this.resizeUtil.plot.getLegendSVGContent() 2");
-						docPdf.addPage();
-						hiddenDiv.innerHTML = this.resizeUtil.plot.getLegendSVGContent();
-						SVGtoPDF(docPdf, hiddenDiv.firstChild, 0, 0, {useCSS:true});
-						hiddenDiv.innerHTML = "";
-					}
 				}
-			}
-			else
-			{
-				// PNG files - use buffer cause Base64 fails in Chrome only
-				//const buffer = Buffer.from($('#BEVDisplay_DiagramdynamicImg')[0].src,'base64');
-				var b64strA = String(document.getElementById('BEVDisplay_DiagramdynamicImg').src);
-				docPdf.image(b64strA, 
+				else
 				{
-					fit: [ docPdf.page.width - docPdf.page.margins.left - docPdf.page.margins.right, docPdf.page.height - docPdf.page.margins.top - docPdf.page.margins.bottom ] 
-				});
-				if (notUN(document.getElementById('BEVDisplay_Legend_ContentdynamicImg')))
-				{
-					docPdf.addPage();
-					//const buffer2 = Buffer.from($('#BEVDisplay_Legend_ContentdynamicImg')[0].src,'base64');
-					var b64strB = String(document.getElementById('BEVDisplay_Legend_ContentdynamicImg').src);
-					docPdf.image(b64strB, 
+					// PNG files - use buffer cause Base64 fails in Chrome only
+					//const buffer = Buffer.from($('#BEVDisplay_DiagramdynamicImg')[0].src,'base64');
+					var b64strA = String(document.getElementById('BEVDisplay_DiagramdynamicImg').src);
+					docPdf.image(b64strA, 
 					{
 						fit: [ docPdf.page.width - docPdf.page.margins.left - docPdf.page.margins.right, docPdf.page.height - docPdf.page.margins.top - docPdf.page.margins.bottom ] 
 					});
+					if (notUN(document.getElementById('BEVDisplay_Legend_ContentdynamicImg')))
+					{
+						docPdf.addPage();
+						//const buffer2 = Buffer.from($('#BEVDisplay_Legend_ContentdynamicImg')[0].src,'base64');
+						var b64strB = String(document.getElementById('BEVDisplay_Legend_ContentdynamicImg').src);
+						docPdf.image(b64strB, 
+						{
+							fit: [ docPdf.page.width - docPdf.page.margins.left - docPdf.page.margins.right, docPdf.page.height - docPdf.page.margins.top - docPdf.page.margins.bottom ] 
+						});
+					}
 				}
-			}
-			//console.log("saveAsPdf end");
-			docPdf.end();
-			//console.log("stream pipe");
-			let stream = docPdf.pipe(blobStream());
-			stream.on('finish', function()
-			{
-				//console.log("stream.toBlob");
-				let blob = stream.toBlob('application/pdf');
-				const downloadFile = (blob, fileName) => 
+				//console.log("saveAsPdf end");
+				docPdf.end();
+				//console.log("stream pipe");
+				let stream = docPdf.pipe(blobStream());
+				stream.on('finish', function()
 				{
-					const link = document.createElement('a');
-					// create a blobURI pointing to our Blob
-					link.href = URL.createObjectURL(blob);
-					link.download = fileName;
-					// TODO: look for nicer way to download blob
-					// some browser needs the anchor to be in the doc
-					document.body.append(link);
-					link.click();
-					link.remove();
-					// in case the Blob uses a lot of memory
-					window.addEventListener('focus', e=>URL.revokeObjectURL(link.href), {once:true});
-					$("body").removeClass("wait");
-				};
-				downloadFile(blob, "diagram.pdf");
-				//console.log("saveAsPdf done");
-			});
-		}
-		catch(theExp)
-		{
-			$("body").removeClass("wait");
-			console.log(theExp.message);
-			console.log(theExp.stack);
-			alert(theExp);
-		}
+					//console.log("stream.toBlob");
+					let blob = stream.toBlob('application/pdf');
+					const downloadFile = (blob, fileName) => 
+					{
+						const link = document.createElement('a');
+						// create a blobURI pointing to our Blob
+						link.href = URL.createObjectURL(blob);
+						link.download = fileName;
+						// TODO: look for nicer way to download blob
+						// some browser needs the anchor to be in the doc
+						document.body.append(link);
+						link.click();
+						link.remove();
+						// in case the Blob uses a lot of memory
+						window.addEventListener('focus', e=>URL.revokeObjectURL(link.href), {once:true});
+						$("body").removeClass("wait");
+					};
+					downloadFile(blob, "diagram.pdf");
+					//console.log("saveAsPdf done (enable input)");
+					enableInput();
+				});
+			}
+			catch(theExp)
+			{
+				$("body").removeClass("wait");
+				console.log(theExp.message);
+				console.log(theExp.stack);
+				alert(theExp);
+				enableInput();
+			}
+		}, 0);
 	};
 	
 	//// ///////////////////////////////////////////////////////////////////////

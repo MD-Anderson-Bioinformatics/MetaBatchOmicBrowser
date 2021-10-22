@@ -10,7 +10,13 @@
 				gaScript.setAttribute('src', `https://www.googletagmanager.com/gtag/js?id=UA-33425717-3`);
 
 				var gaScript2 = document.createElement('script');
-				gaScript2.innerText = `window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag(\'js\', new Date());gtag(\'config\', \'UA-33425717-3\');`;
+				gaScript2.innerText = `window.dataLayer = window.dataLayer || [];` + 
+										`function gtag(){dataLayer.push(arguments);}` +
+										// https://developers.google.com/tag-platform/devguides/consent
+										//`gtag(\'consent\', \'default\', { \'analytics_storage\': \'denied\', \'ad_storage\': \'denied\' });` +
+										//`dataLayer.push({ \'event\': \'default_consent\' });` + 
+										`gtag(\'js\', new Date());` +
+										`gtag(\'config\', \'UA-33425717-3\');`;
 
 				document.documentElement.firstChild.appendChild(gaScript);
 				document.documentElement.firstChild.appendChild(gaScript2);
@@ -70,6 +76,19 @@
 			function setSelectedDatasetQuery(theId, theDscid)
 			{
 				//console.log("setSelectedDatasetQuery");
+				if ((undefined===theId) && (undefined===theDscid))
+				{
+					//console.log("setSelectedDatasetQuery no dataset selected, use first");
+					// get first id off query and use it
+					// this does not create the table, it references one created in DAPIAppView.js
+					var dataRows = $('#resultsTable').DataTable().rows().data();
+					// NOTE CHANGING ORDER OF HEADERs/DATA will CHANGE INDEXES
+					var resultsUrl = dataRows[0][0].split(" | ")[2];
+					//console.log(resultsUrl);
+					window.parent.setCurrentViewSrcMqa(resultsUrl);
+					// NOTE CHANGING ORDER OF HEADERs/DATA will CHANGE INDEXES
+					theId = dataRows[0][1];
+				}
 				$("#" + appview.viewedDatasetId()).removeClass( 'viewed-dataset-highlight' );
 				$("#" + appview.viewedDatasetDscid()).removeClass( 'viewed-dataset-highlight' );
 				appview.viewedDatasetId(theId);
@@ -86,7 +105,7 @@
 			
 			function previousDatasetQuery(theParamsJson)
 			{
-				console.log("previousDatasetQuery")
+				//console.log("previousDatasetQuery")
 				// called from button on MQA page
 				// find previous dataset and update view, keeping current diagram settings
 				// find previous dataset
@@ -99,18 +118,18 @@
 				for (var index=dataRows.length-1; (index>=0)&&(null===previousIndex); index--)
 				{
 					// check regular and DSC ID
-					console.log(dataRows[index]);
-					// NOTE CHANGING ORDER OF HEADERs/DATA will CHANGE INDEX 3
-					if ((dataRows[index][3]===currentId)||(dataRows[index][3]===currentDscId))
+					//console.log(dataRows[index]);
+					// NOTE CHANGING ORDER OF HEADERs/DATA will CHANGE INDEX 1
+					if ((dataRows[index][1]===currentId)||(dataRows[index][1]===currentDscId))
 					{
 						if (0===index)
 						{
 							// at first entry
 							previousIndex = -1;
 						}
-						else if (""!==dataRows[index-1][2])
+						else if (""!==dataRows[index-1][0].split(" | ")[2])
 						{
-							// NOTE CHANGING ORDER OF HEADERs/DATA will CHANGE INDEX 2 above
+							// NOTE CHANGING ORDER OF HEADERs/DATA will CHANGE INDEXES above
 							// if previous index has a View Analysis link, use it
 							previousIndex = index-1;
 						}
@@ -127,9 +146,9 @@
 							// no previous index with viewable analysis
 							previousIndex = -1;
 						}
-						else if (""!==dataRows[testIndex][2])
+						else if (""!==dataRows[testIndex][0].split(" | ")[2])
 						{
-							// NOTE CHANGING ORDER OF HEADERs/DATA will CHANGE INDEX 2 above
+							// NOTE CHANGING ORDER OF HEADERs/DATA will CHANGE INDEXES above
 							// if previous index has a View Analysis link, use it
 							previousIndex = testIndex;
 						}
@@ -142,8 +161,8 @@
 				}
 				if (notUN(previousIndex)&&(previousIndex>=0))
 				{
-					var resultsUrl = dataRows[previousIndex][2];
-					// NOTE CHANGING ORDER OF HEADERs/DATA will CHANGE INDEX 2 above
+					var resultsUrl = dataRows[previousIndex][0].split(" | ")[2];
+					// NOTE CHANGING ORDER OF HEADERs/DATA will CHANGE INDEXES above
 					// build URL without alg or lvl1 entries
 					var urlParts = resultsUrl.split('?');
 					var params = new URLSearchParams(urlParts[1]);
@@ -194,17 +213,17 @@
 				for (var index=0; (index<dataRows.length)&&(null===nextIndex); index++)
 				{
 					// check regular and DSC ID
-					// NOTE CHANGING ORDER OF HEADERs/DATA will CHANGE INDEX 3
-					if ((dataRows[index][3]===currentId)||(dataRows[index][3]===currentDscId))
+					// NOTE CHANGING ORDER OF HEADERs/DATA will CHANGE INDEX 1
+					if ((dataRows[index][1]===currentId)||(dataRows[index][1]===currentDscId))
 					{
 						if (index>=dataRows.length-1)
 						{
 							// at last index
 							nextIndex = -1;
 						}
-						else if (""!==dataRows[index+1][2])
+						else if (""!==dataRows[index+1][0].split(" | ")[2])
 						{
-							// NOTE CHANGING ORDER OF HEADERs/DATA will CHANGE INDEX 2 above
+							// NOTE CHANGING ORDER OF HEADERs/DATA will CHANGE INDEXES above
 							// if next index has a View Analysis link, use it
 							nextIndex = index+1;
 						}
@@ -221,9 +240,9 @@
 							// no next index with viewable analysis
 							nextIndex = -1;
 						}
-						else if (""!==dataRows[testIndex][2])
+						else if (""!==dataRows[testIndex][0].split(" | ")[2])
 						{
-							// NOTE CHANGING ORDER OF HEADERs/DATA will CHANGE INDEX 2 above
+							// NOTE CHANGING ORDER OF HEADERs/DATA will CHANGE INDEXES above
 							// if next index has a View Analysis link, use it
 							nextIndex = testIndex;
 						}
@@ -236,8 +255,8 @@
 				}
 				if ((notUN(nextIndex))&&(nextIndex>=0))
 				{
-					// NOTE CHANGING ORDER OF HEADERs/DATA will CHANGE INDEX 2
-					var resultsUrl = dataRows[nextIndex][2];
+					// NOTE CHANGING ORDER OF HEADERs/DATA will CHANGE INDEXES
+					var resultsUrl = dataRows[nextIndex][0].split(" | ")[2];
 					// build URL without alg or lvl1 entries
 					var urlParts = resultsUrl.split('?');
 					var params = new URLSearchParams(urlParts[1]);
@@ -628,11 +647,10 @@
 			<div class="div-result-list">
 				<div class="div-result-list-content">
 					<div class="div-tool-bar">
-						<div class="mdaTitleText">&nbsp;&nbsp;MetaBatch Omic Browser Query&nbsp;<span style="font-size: 60%">BEA_VERSION_TIMESTAMP</span></div>
+						<div class="mdaTitleText">&nbsp;&nbsp;MetaBatch Omic Browser Query&nbsp;<span style="font-size: 60%">vBEA_VERSION_TIMESTAMP</span></div>
 						<span style="margin-left: auto;">
 							<button type="button" class="sdb-control-button" onclick="window.parent.previousDatasetMqa();" title="View previous dataset with results on list"><i class="fas fa-arrow-left" style="color: purple;"></i> Previous Dataset</button>
 							<button type="button" class="sdb-control-button" onclick="window.parent.nextDatasetMqa();" title="View next dataset with results on list"><i class="fas fa-arrow-right" style="color: blueviolet;"></i> Next Dataset</button>
-							<button type="button" class="sdb-control-button" onclick="window.parent.rotateSliderMqa();" title="Rotate slider"><i class="fas fa-sync-alt" style="color: brown;"></i> Rotate Slider</button>
 						</span>
 					</div>
 					<center class="centerTableHeader">
@@ -653,7 +671,7 @@
 							&nbsp;<button type="button" class="sdb-control-button" data-bind="attr: { onclick: 'copyURLString()' , title: 'Copy Bookmark-able URL' }"><i class="fas fa-globe" style="color: green;"></i> Copy URL</button>
 							-->
 							&nbsp;<button type="button" class="sdb-control-button" data-bind="attr: { onclick: 'downloadManifest()', title: 'Download TSV List for Available Data' }"><i class="fas fa-download" style="color: purple;"></i> Download List</button>
-							&nbsp;<button type="button" class="sdb-control-button" data-bind="attr: { onclick: 'clearSearch()', title: 'Clear Search' }"><i class="fas fa-trash-alt" style="color: darkslateblue;"></i> Clear Search</button>
+							&nbsp;<button type="button" class="sdb-control-button" data-bind="attr: { onclick: 'clearSearch()', title: 'Clear Query' }"><i class="fas fa-trash-alt" style="color: darkslateblue;"></i> Clear Query</button>
 						</div>
 					</center>
 					<div class="mqaTableWrapper">

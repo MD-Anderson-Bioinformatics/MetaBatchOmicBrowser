@@ -369,7 +369,6 @@ function BeaBoxplot(theBoxDataFile, theBatchDataFile, theAnnotationDataFile, the
 //		});
 		//console.log("getDetailDataCallback - read " + catDataFile);
 	}
-	;
 
 	function dataReady2(theData)
 	{
@@ -602,9 +601,12 @@ function BeaBoxplot(theBoxDataFile, theBatchDataFile, theAnnotationDataFile, the
 		{
 			if (sheets.hasOwnProperty(cur))
 			{
-				if (sheets[cur].href.endsWith(cssName))
+				if ((undefined !== sheets[cur].href) && (null !== sheets[cur].href))
 				{
-					return sheets[cur];
+					if (sheets[cur].href.endsWith(cssName))
+					{
+						return sheets[cur];
+					}
 				}
 			}
 		}

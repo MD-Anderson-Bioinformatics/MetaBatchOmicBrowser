@@ -62,6 +62,7 @@ public class dszipdata extends HttpServlet
 			{
 				this.log("dstext: dsblob = " + zipPath.getAbsolutePath());
 				response.setHeader("Content-Disposition", "attachment; filename=\"" + zipPath.getName() + "\"");
+				response.setHeader("Content-Length", Long.toString(zipPath.length()));
 				this.log("dsblob: zipPath = " + zipPath);
 				this.log("dszip: call streamFile");
 				try (InputStream stream = new FileInputStream(zipPath))

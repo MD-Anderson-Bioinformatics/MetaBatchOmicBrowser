@@ -1,4 +1,4 @@
-/* global globalDiagramControl */
+/* global globalDiagramControl, Papa, Promise, PcaPlot */
 
 class UtilPca
 {
@@ -131,11 +131,43 @@ class UtilPca
 		var toggleTitle = document.createElement("span");
 		toggleTitle.classList.add("plotChild");
 		toggleTitle.classList.add("controlButtonLabel");
-		toggleTitle.innerText = "Toggle Tooltips";
+		toggleTitle.innerText = "Tooltips";
 		toggleTooltipsButton.appendChild(toggleTitle);
 		theControlDiv.appendChild(toggleTooltipsButton);
 		var utilPcaThis = this;
 		$('#PcaToggleTooltipsButton').on('click', function(event, ui) { utilPcaThis.toggleTooltips(thePcaPlot, iconQuestion); });
+		/////////////////////////////
+		//// add toggle includeCentroids
+		/////////////////////////////
+		var toggleCentroidsButton = document.createElement("span");
+		toggleCentroidsButton.id = "PcaToggleCentroidsButton";
+		toggleCentroidsButton.classList.add("plotChild");
+		toggleCentroidsButton.classList.add("controlButton");
+		// build icon
+		var iconCentroids = document.createElement("span");
+		iconCentroids.classList.add("plotChild");
+		iconCentroids.classList.add("fas");
+		iconCentroids.classList.add("fa-cookie");
+		iconCentroids.classList.add("controlButtonIcon");
+		var val = this.getCentroidsFlag(thePcaPlot);
+		if(true===val)
+		{
+			iconCentroids.style.color = "green";
+		}
+		else
+		{
+			iconCentroids.style.color = "red";
+		}
+		toggleCentroidsButton.appendChild(iconCentroids);
+		// icon label
+		var toggleTitle = document.createElement("span");
+		toggleTitle.classList.add("plotChild");
+		toggleTitle.classList.add("controlButtonLabel");
+		toggleTitle.innerText = "Centroids";
+		toggleCentroidsButton.appendChild(toggleTitle);
+		theControlDiv.appendChild(toggleCentroidsButton);
+		var utilPcaThis = this;
+		$('#PcaToggleCentroidsButton').on('click', function(event, ui) { utilPcaThis.toggleCentroids(thePcaPlot, iconCentroids); });
 		/////////////////////////////
 		//// add Axis dropdowns
 		/////////////////////////////
@@ -186,7 +218,7 @@ class UtilPca
 			var BatchData = values[1];
 			var pcaAnnotations = values[2];
 
-			var model = PcaPlot.BasicModel(pcaValues, BatchData, pcaAnnotations);
+			var model = PcaPlot.BasicModel(pcaValues, BatchData, pcaAnnotations, "Id");
 
 			var params = PcaPlot.DefaultParams();
 			params.plotTitle = title;
@@ -314,6 +346,40 @@ class UtilPca
 				theIcon.style.color = "red";
 			}
 			thePlot.plotOptions(options);
+		}
+	}
+	
+
+	getCentroidsFlag(thePlot)
+	{
+		var result = null;
+		if (thePlot.plotOptions)
+		{
+			var options = thePlot.plotOptions();
+			result = options["includeCentroids"];
+		}
+		return result;
+	}
+	
+	toggleCentroids(thePlot, theIcon)
+	{
+		if (thePlot.plotOptions)
+		{
+			var options = thePlot.plotOptions();
+			options["includeCentroids"] = !options["includeCentroids"];
+			var val = options["includeCentroids"];
+			if(true===val)
+			{
+				theIcon.style.color = "green";
+			}
+			else
+			{
+				theIcon.style.color = "red";
+			}
+			console.log("toggleCentroids plotOptions");
+			thePlot.plotOptions(options);
+			console.log(thePlot);
+			thePlot.redrawPlot();
 		}
 	}
 }

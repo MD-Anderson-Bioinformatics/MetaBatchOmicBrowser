@@ -29,7 +29,6 @@ path.dot {
 }
 
 path.centroid {
-  /*fill:*/
   stroke-width: 1.5px;
   stroke: black;
 }
