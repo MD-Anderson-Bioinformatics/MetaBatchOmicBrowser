@@ -1,4 +1,4 @@
-// Copyright (c) 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021 University of Texas MD Anderson Cancer Center
+// Copyright (c) 2011-2022 University of Texas MD Anderson Cancer Center
 //
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 2 of the License, or (at your option) any later version.
 //
@@ -11,8 +11,8 @@
 
 package edu.mda.bcb.bev.servlets;
 
-import edu.mda.bcb.bev.indexes.Indexes;
 import edu.mda.bcb.bev.startup.LoadIndexFiles;
+import edu.mda.bcb.bev.util.ScanCheck;
 import edu.mda.bcb.bev.util.ZipUtil;
 import java.io.File;
 import java.io.IOException;
@@ -47,14 +47,19 @@ public class dsimage extends HttpServlet
 	{
 		try
 		{
+			ScanCheck.checkForSecurity(request);
 			this.log("dsimage: get json index");
 			String id = request.getParameter("id");
+			ScanCheck.checkForMetaCharacters(id);
 			String image = request.getParameter("image");
-			image = image.substring(1);
+			ScanCheck.checkForMetaCharacters(image);
 			this.log("dsimage: id = " + id);
-			this.log("dsimage: image = " + image);
-			Indexes myIndexes = LoadIndexFiles.M_BEV_DIA_INDEXES;
-			File zipPath = myIndexes.getResultsPath(id);
+			this.log("dsimage: pre-trim image = " + image);
+			// this cuts off slash at from. May also be handled in add image
+			// also causes error when no image (like for CDP legend) doesn't exist
+			image = image.substring(1);
+			this.log("dsimage: post-trim image = " + image);
+			File zipPath = LoadIndexFiles.M_PATH_LOOKUP.getResultsPath(id);
 			this.log("dsimage: zipPath = " + zipPath.getAbsolutePath());
 			this.log("dsimage: call streamImageB64");
 			ZipUtil.streamImageB64(zipPath.getAbsolutePath(), image, response, this, "application/Base64;charset=UTF-8");

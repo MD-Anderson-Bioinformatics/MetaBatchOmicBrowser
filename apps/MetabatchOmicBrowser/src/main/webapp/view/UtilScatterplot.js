@@ -124,17 +124,16 @@ class UtilScatterplot
 		var batchType = self.newDiagram.entry_label;
 		var plotFile = self.newDiagram.umap_umapdat;
 		// title from index
-		var title = self.indexKO().mbatch.mbatch_run
-					+ "/" + self.indexKO().source
-					+ "/" + self.indexKO().variant
+		var title = self.indexKO().source
+					+ "/" + self.indexKO().program
 					+ "/" + self.indexKO().project
-					+ "/" + self.indexKO().subProject
 					+ "/" + self.indexKO().category
 					+ "/" + self.indexKO().platform
 					+ "/" + self.indexKO().data
-					+ "/" + self.indexKO().algorithm
 					+ ((""!==self.indexKO().details)?("/" + this.indexKO().details):"")
-					+ "/" + self.indexKO().mbatch.dataset_type;
+					+ ((""!==self.indexKO().data_version)?("/" + this.indexKO().data_version):"")
+					+ ((""!==self.indexKO().test_version)?("/" + this.indexKO().test_version):"")
+					+ "/" + batchType;
 		var [plotDiv, controlDiv, legendDiv] = self.addDivs(document.getElementById(self.divDiagramId), document.getElementById(self.divLegendId));
 
 		var self = this;
@@ -208,7 +207,7 @@ class UtilScatterplot
 
 	dimensions(theDiagramDiv)
 	{
-		// TODO: fix hack: magic numbers - not sure why need to reduce size
+		// TODO:BEV: fix hack: magic numbers - not sure why need to reduce size
 		var bbox = theDiagramDiv.getBoundingClientRect();
 		return [
 			(0.95 * bbox.width) - 15, // start width

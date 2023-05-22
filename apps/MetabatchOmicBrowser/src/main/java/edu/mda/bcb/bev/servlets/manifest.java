@@ -1,4 +1,4 @@
-// Copyright (c) 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021 University of Texas MD Anderson Cancer Center
+// Copyright (c) 2011-2022 University of Texas MD Anderson Cancer Center
 //
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 2 of the License, or (at your option) any later version.
 //
@@ -13,15 +13,16 @@ package edu.mda.bcb.bev.servlets;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import edu.mda.bcb.bev.indexes.DscEntry;
 import edu.mda.bcb.bev.indexes.Indexes;
-import edu.mda.bcb.bev.query.Dataset;
-import edu.mda.bcb.bev.query.Query;
-import edu.mda.bcb.bev.query.Result;
-import edu.mda.bcb.bev.startup.LoadIndexFiles;
+import edu.mda.bcb.bev.indexes.KwdEntry;
+import edu.mda.bcb.bev.indexes.ResultEntry;
+import edu.mda.bcb.bev.util.ScanCheck;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.TreeSet;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -53,48 +54,98 @@ public class manifest extends HttpServlet
 	{
 		try
 		{
+			ScanCheck.checkForSecurity(request);
 			response.setContentType("application/text;charset=UTF-8");
 			Calendar calendar = Calendar.getInstance();
 			SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy_MM_dd_HHmm");
 			response.setHeader("Content-Disposition", "attachment; filename=\"manifest-" + dateFormat.format(calendar.getTime()) + ".tsv\"");
 			String json = request.getParameter("search");
-			String baseUrl = request.getParameter("baseURL");
 			GsonBuilder builder = new GsonBuilder();
 			builder.setPrettyPrinting();
 			Gson gson = builder.create();
-			this.log("baseUrl=" + baseUrl);
-			this.log("manifest=" + json);
-			Query queryInst = gson.fromJson(json, Query.class);
+			if (null==json)
+			{
+				json = "{}";
+			}
+			gson.fromJson(json, Object.class);
+			// this.log("manifest=" + json);
+			String show = request.getParameter("show");
+			ScanCheck.checkForMetaCharacters(show);
 			try (PrintWriter out = response.getWriter())
 			{
-				Indexes myIndexes = null;
-				String show = request.getParameter("show");
-				if ("dsc".equals(show))
+				boolean gotResults = false;
+				// ADV-FILTER handle show=advanced
+				if ("advanced".equals(show))
 				{
-					myIndexes = LoadIndexFiles.M_BEV_DSC_INDEXES;
-				}
-				else
-				{
-					myIndexes = LoadIndexFiles.M_BEV_DIA_INDEXES;
-				}
-				if (null!=myIndexes)
-				{
-					Result resp = queryInst.process(myIndexes, this.getServletContext());
-					if (resp.mDatasets.size()>0)
+					boolean isAdvanced = true;
+					TreeSet<ResultEntry> filtered = query.getFilteredAdvanced(json);
+					if (filtered.size()>0)
 					{
-						String mqaURL = baseUrl;
-						out.println(resp.mDatasets.first().getHeaders());
-						for (Dataset ds : resp.mDatasets)
+						out.println(filtered.first().getHeaders(isAdvanced));
+						for (ResultEntry re : filtered)
 						{
-							out.println(ds.toString(mqaURL, json));
+							out.println(re.toString(null, json, isAdvanced));
 						}
 					}
 					else
 					{
-						out.println("");
+						out.println("No entries");
 					}
 				}
 				else
+				{
+					boolean isAdvanced = false;
+					Indexes myIndexes = null;
+					if ("dsc".equals(show))
+					{
+						TreeSet<DscEntry> filtered = query.getFilteredDsc(json);
+						if (filtered.size()>0)
+						{
+							out.println(filtered.first().getHeaders(isAdvanced));
+							for (DscEntry re : filtered)
+							{
+								out.println(re.toString(null, json, isAdvanced));
+							}
+						}
+						else
+						{
+							out.println("No entries");
+						}
+					}
+					else if ("kwd".equals(show))
+					{
+						TreeSet<KwdEntry> filtered = query.getFilteredKwd(json);
+						if (filtered.size()>0)
+						{
+							out.println(filtered.first().getHeaders(isAdvanced));
+							for (KwdEntry re : filtered)
+							{
+								out.println(re.toString(null, json, isAdvanced));
+							}
+						}
+						else
+						{
+							out.println("No entries");
+						}
+					}
+					else 
+					{
+						TreeSet<ResultEntry> filtered = query.getFilteredData(json);
+						if (filtered.size()>0)
+						{
+							out.println(filtered.first().getHeaders(isAdvanced));
+							for (ResultEntry re : filtered)
+							{
+								out.println(re.toString(null, json, isAdvanced));
+							}
+						}
+						else
+						{
+							out.println("No entries");
+						}
+					}
+				}
+				if (false==gotResults)
 				{
 					this.log("query - no indexes yet");
 				}

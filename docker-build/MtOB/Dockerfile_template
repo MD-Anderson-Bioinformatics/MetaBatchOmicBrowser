@@ -10,43 +10,80 @@ LABEL edu.mda.bcb.name="MBatch Omics Browser" \
       edu.mda.bcb.mob.stop="<STOP_SCRIPT>" \
       edu.mda.bcb.mob.upcheck="<UPCHECK_SCRIPT>"
 
-# Use Java 8, still supported, and all the tools depend on it -- simplifies other installs and maintenance
-RUN dnf -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm && \
-    dnf -y install java-1.8.0-openjdk java-1.8.0-openjdk-devel java-1.8.0-openjdk-headless && \
-    update-alternatives --install /usr/bin/java java /usr/lib/jvm/java-1.8.0-openjdk-1.8.0.265.b01-0.el8_2.x86_64/jre/bin/java 1 && \
-    update-alternatives --install /usr/bin/javac javac /usr/lib/jvm/java-1.8.0-openjdk-1.8.0.265.b01-0.el8_2.x86_64/bin/javac 1 && \
-    update-alternatives --install /usr/bin/jar jar /usr/lib/jvm/java-1.8.0-openjdk-1.8.0.265.b01-0.el8_2.x86_64/bin/jar 1 && \
-    update-alternatives --install /usr/bin/javah javah /usr/lib/jvm/java-1.8.0-openjdk-1.8.0.265.b01-0.el8_2.x86_64/bin/javah 1 && \
-    echo "export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.265.b01-0.el8_2.x86_64" >> /etc/profile.d/java.sh && \
-    yum update -y && \
-    yum clean all
+####
+#### this dockerfile's user
+####
 
 # create and setup bcbuser
 # also, set permissions and ownerships on internal docker directories
-RUN useradd -l -s /bin/bash -d /home/bcbuser -u <USERID> bcbuser && \
-    chown -R bcbuser:bcbuser /home/bcbuser
+# set home to 777 so vignettes build with weird mkdir .texlive2018
+# bcbuser:bcbgroup are used for tomcat setup
+RUN groupadd -g <GROUPID> bcbgroup && \
+    useradd -l -s /bin/bash -d /home/bcbuser -u <USERID> -g <GROUPID> bcbuser && \
+    chown -R bcbuser:bcbgroup /home/bcbuser && \
+    chmod -R 777 /home/bcbuser
+
+####
+#### generic setup for OS
+####
+
+# set timezone to prevent R time warnings
+RUN ln -snf /usr/share/zoneinfo/US/Central /etc/localtime && echo "US/Central" > /etc/timezone
+ENV TZ=US/Central
+
+####
+#### Install/Setup Java 17 with variables
+####
+
+RUN dnf -y install java-17-openjdk java-17-openjdk-devel java-17-openjdk-headless && \
+    update-alternatives --install /usr/bin/java java /usr/lib/jvm/java-17-openjdk/bin/java 1 && \
+    update-alternatives --install /usr/bin/javac javac /usr/lib/jvm/java-17-openjdk/bin/javac 1 && \
+    update-alternatives --set java /usr/lib/jvm/java-17-openjdk/bin/java && \
+    update-alternatives --set javac /usr/lib/jvm/java-17-openjdk/bin/javac && \
+    yum update -y && \
+    yum clean all
+
+# adding these variables fixes issue where registering Java with R (keeps getting "lost")
+ENV JAR=/usr/lib/jvm/java-17-openjdk/bin/jar 
+ENV JAVAH=/usr/lib/jvm/java-17-openjdk/bin/javac 
+ENV JAVA_LIBS="-L/usr/lib/jvm/java-17-openjdk/lib/server -ljvm" 
+ENV JAVA_CPPFLAGS="-I/usr/lib/jvm/java-17-openjdk/include -I/usr/lib/jvm/java-17-openjdk/include/linux" 
+ENV JAVA_LD_LIBRARY_PATH=/usr/lib/jvm/java-17-openjdk/lib/server
+ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk/
+ENV PATH=/usr/lib/jvm/java-17-openjdk/bin:$PATH
+ENV JAVA=/usr/lib/jvm/java-17-openjdk/bin/java
+ENV JAVAC=/usr/lib/jvm/java-17-openjdk/bin/javac
+ENV JAVAH=/usr/lib/jvm/java-17-openjdk/bin/javac
+ENV JAR=/usr/lib/jvm/java-17-openjdk/bin/jar
+ENV LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/lib/jvm/java-17-openjdk/lib/server
+
+####
+#### Install/Setup Tomcat
+####
 
 # install Tomcat 9, set to run as bcbuser
-
 ENV TOMCAT_MAJOR=9 \
-    TOMCAT_VERSION=9.0.39 \
+    TOMCAT_VERSION=9.0.74 \
     TOMCAT_HOME=/opt/tomcat \
     CATALINA_HOME=/opt/tomcat \
     CATALINA_OUT=/dev/null
 
-RUN curl -jksSL -o /tmp/apache-tomcat.tar.gz http://archive.apache.org/dist/tomcat/tomcat-${TOMCAT_MAJOR}/v${TOMCAT_VERSION}/bin/apache-tomcat-${TOMCAT_VERSION}.tar.gz && \
+RUN curl -jksSL -o /tmp/apache-tomcat.tar.gz https://dlcdn.apache.org/tomcat/tomcat-${TOMCAT_MAJOR}/v${TOMCAT_VERSION}/bin/apache-tomcat-${TOMCAT_VERSION}.tar.gz && \
     gunzip /tmp/apache-tomcat.tar.gz && \
     tar -C /opt -xf /tmp/apache-tomcat.tar && \
     mv /opt/apache-tomcat-${TOMCAT_VERSION} ${TOMCAT_HOME} && \
     rm -rf ${TOMCAT_HOME}/webapps/docs && \
     rm -rf ${TOMCAT_HOME}/webapps/ROOT && \
     rm -rf ${TOMCAT_HOME}/webapps/examples && \
-    rm -rf ${TOMCAT_HOME}/webapps/manager && \
-    rm -rf ${TOMCAT_HOME}/webapps/host-manager && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* && \
-    chown -R bcbuser:bcbuser ${TOMCAT_HOME} && \
+    rm -rf /opt/tomcat/webapps/manager && \
+    chown -R bcbuser:bcbgroup ${TOMCAT_HOME} && \
     ln -s /opt/apache-tomcat-${TOMCAT_VERSION} ${TOMCAT_HOME} && \
     yum clean all
+
+####
+#### Customize Tomcat and install WebApp WAR
+####
 
 # copy installs
 # COPY is always done as root!!!!
@@ -54,15 +91,19 @@ RUN curl -jksSL -o /tmp/apache-tomcat.tar.gz http://archive.apache.org/dist/tomc
 # also formats output for LOGREPORT
 COPY installations/server.xml ${CATALINA_HOME}/conf/server.xml
 COPY installations/web.xml ${CATALINA_HOME}/conf/web.xml
-RUN chown -R bcbuser:bcbuser ${CATALINA_HOME}/conf && \
+RUN chown -R bcbuser:bcbgroup ${CATALINA_HOME}/conf && \
     chmod -R u+rwx ${CATALINA_HOME}/conf
 
 # copy installs
 # COPY is always done as root!!!!
 # destination is dir/ not dir/. because docker insists on being different
 COPY installations/*.war ${CATALINA_HOME}/webapps/
-RUN chown -R bcbuser:bcbuser ${CATALINA_HOME}/webapps && \
+RUN chown -R bcbuser:bcbgroup ${CATALINA_HOME}/webapps && \
     chmod -R u+rwx ${CATALINA_HOME}/webapps
+
+####
+#### End of build steps
+####
 
 # switch from root to bcbuser user
 USER bcbuser

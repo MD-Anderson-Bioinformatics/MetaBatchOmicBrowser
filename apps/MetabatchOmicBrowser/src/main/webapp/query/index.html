@@ -1,58 +1,107 @@
 <!DOCTYPE html>
 <html>
-	<head>
+    <head>
 		<!-- Global site tag (gtag.js) - Google Analytics -->
 		<script type="text/javascript">
-			function loadGoogleAnalytics()
+			/* Google Analytics start */
+			// based on https://rankmath.com/blog/google-analytics-gdpr/
+			const cyrb53 = function (str, seed = 0)
 			{
-				var gaScript = document.createElement('script');
-				gaScript.setAttribute('async', 'true');
-				gaScript.setAttribute('src', `https://www.googletagmanager.com/gtag/js?id=UA-33425717-3`);
-
-				var gaScript2 = document.createElement('script');
-				gaScript2.innerText = `window.dataLayer = window.dataLayer || [];` + 
-										`function gtag(){dataLayer.push(arguments);}` +
-										// https://developers.google.com/tag-platform/devguides/consent
-										//`gtag(\'consent\', \'default\', { \'analytics_storage\': \'denied\', \'ad_storage\': \'denied\' });` +
-										//`dataLayer.push({ \'event\': \'default_consent\' });` + 
-										`gtag(\'js\', new Date());` +
-										`gtag(\'config\', \'UA-33425717-3\');`;
-
-				document.documentElement.firstChild.appendChild(gaScript);
-				document.documentElement.firstChild.appendChild(gaScript2);
+				let h1 = 0xdeadbeef ^ seed,
+						h2 = 0x41c6ce57 ^ seed;
+				for (let i = 0, ch; i < str.length; i++)
+				{
+					ch = str.charCodeAt(i);
+					h1 = Math.imul(h1 ^ ch, 2654435761);
+					h2 = Math.imul(h2 ^ ch, 1597334677);
+				}
+				h1 = Math.imul(h1 ^ h1 >>> 16, 2246822507) ^ Math.imul(h2 ^ h2 >>> 13, 3266489909);
+				h2 = Math.imul(h2 ^ h2 >>> 16, 2246822507) ^ Math.imul(h1 ^ h1 >>> 13, 3266489909);
+				return 4294967296 * (2097151 & h2) + (h1 >>> 0);
 			};
-			loadGoogleAnalytics();
+
+			const getNavigatorId = function ()
+			{
+				let notAvailable = "unknown";
+				let ua = navigator.userAgent || notAvailable;
+				let lang = window.navigator.language || window.navigator.userLanguage || window.navigator.browserLanguage || window.navigator.systemLanguage || not_available;
+				let colors = window.screen.colorDepth || notAvailable;
+				let memKey = window.navigator.deviceMemory || notAvailable;
+				let pixels = window.devicePixelRatio || notAvailable;
+				let res = [window.screen.width, window.screen.height].sort().reverse().join("x");
+				return ua + ";" + lang + ";" + colors + ";" + memKey + ";" + pixels + ";" + res;
+			};
+
+			let validityInterval = Math.round(new Date() / 1000 / 3600 / 24 / 7);
+			let clientIDSource = window.location.host + ";" + getNavigatorId() + ";" + validityInterval;
+
+			window.clientIDHashed = cyrb53(clientIDSource).toString(16);
+			(function (i, s, o, g, r, a, m)
+			{
+				i['GoogleAnalyticsObject'] = r;
+				i[r] = i[r] || function ()
+				{
+					(i[r].q = i[r].q || []).push(arguments)
+				}, i[r].l = 1 * new Date();
+				a = s.createElement(o),
+						m = s.getElementsByTagName(o)[0];
+				a.async = 1;
+				a.src = g;
+				m.parentNode.insertBefore(a, m)
+			})(window, document, 'script', '//www.google-analytics.com/analytics.js', 'ga');
+			ga('create', 'UA-33425717-1',
+					{
+						'storage': 'none',
+						'clientId': clientIDHashed
+					});
+			ga('set', 'anonymizeIp', true);
+			ga('send', 'pageview');
+			/* Google Analytics end */
+
+			function sendGAEvent(theEvent, theCategory, theLabel)
+			{
+				/* Google Analytics start */
+				ga('send',
+						{
+							hitType: 'event',
+							eventCategory: theEvent,
+							eventAction: theCategory,
+							eventLabel: theLabel
+						});
+				/* Google Analytics end */
+			}
+			;
 		</script>
 		<title>MetaBatch Omic Browser Query</title>
 		<meta charset="UTF-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
-		
+
 		<!-- **** icons **** -->
 		<link href="fa5/css/all.css?v=BEA_VERSION_TIMESTAMP" rel="stylesheet" type="text/css">
-		
+
 		<link href="tippy.css?v=BEA_VERSION_TIMESTAMP" rel="stylesheet" type="text/css">
-		<link href="jquery-ui-1.12.1/jquery-ui.min.css?v=BEA_VERSION_TIMESTAMP" rel="stylesheet" type="text/css">
+		<link href="jquery-ui-1.13.2/jquery-ui.min.css?v=BEA_VERSION_TIMESTAMP" rel="stylesheet" type="text/css">
 		<link href="sel2-4.0.13/select2.min.css?v=BEA_VERSION_TIMESTAMP" rel="stylesheet" type="text/css">
 		<link href="DataTables/datatables.min.css?v=BEA_VERSION_TIMESTAMP" rel="stylesheet" type="text/css">
 		<link href="dapi.css?v=BEA_VERSION_TIMESTAMP" rel="stylesheet" type="text/css">
-		
+
 		<script src="knockout-3.5.1.js?v=BEA_VERSION_TIMESTAMP" type="text/javascript" charset="utf-8"></script>
 		<script src="jquery-3.5.0.min.js?v=BEA_VERSION_TIMESTAMP" type="text/javascript" charset="utf-8"></script>
-		<script src="jquery-ui-1.12.1/jquery-ui.min.js?v=BEA_VERSION_TIMESTAMP" type="text/javascript" charset="utf-8"></script>
+		<script src="jquery-ui-1.13.2/jquery-ui.min.js?v=BEA_VERSION_TIMESTAMP" type="text/javascript" charset="utf-8"></script>
 		<script src="sel2-4.0.13/select2.full.min.js?v=BEA_VERSION_TIMESTAMP" type="text/javascript" charset="utf-8"></script>
 		<script src="DataTables/datatables.min.js?v=BEA_VERSION_TIMESTAMP" type="text/javascript" charset="utf-8"></script>
 		<!-- https://datatables.net/blog/2017-12-31 -->
 		<script src="DataTables/dataTables.scrollResize.min.js?v=BEA_VERSION_TIMESTAMP" type="text/javascript" charset="utf-8"></script>
 		<script src="DAPIAppView.js?v=BEA_VERSION_TIMESTAMP" type="text/javascript" charset="utf-8"></script>
 		<script type="text/javascript" src="tippy.js?v=BEA_VERSION_TIMESTAMP"></script>
-		
+
 		<script type="text/javascript">
 			/* global ko */
-		
+
 			//console.log("query js loading");
 			// this makes sure that nothing gets called until page and required JS files are loaded
 			var appview = null;
-			$(document).ready(function()
+			$(document).ready(function ()
 			{
 				//("query document ready");
 				// Activates knockout.js
@@ -66,17 +115,23 @@
 				appview.makeGuiVisible(true);
 				//window.parent.queryLoaded();
 			});
-			
+
 			function queryGetUrlParams()
 			{
 				//console.log("queryGetUrlParams - returns JSON object");
 				return urlParamsJson();
 			}
-			
-			function setSelectedDatasetQuery(theId, theDscid)
+
+			function getUrlpath()
+			{
+				return window.location.origin + "/" + window.location.pathname.split("/")[1];
+			}
+
+			function setSelectedDatasetQuery(theId)
 			{
 				//console.log("setSelectedDatasetQuery");
-				if ((undefined===theId) && (undefined===theDscid))
+				//console.log("setSelectedDatasetQuery theId=" + theId);
+				if (!notUN(theId))
 				{
 					//console.log("setSelectedDatasetQuery no dataset selected, use first");
 					// get first id off query and use it
@@ -85,24 +140,45 @@
 					// NOTE CHANGING ORDER OF HEADERs/DATA will CHANGE INDEXES
 					var resultsUrl = dataRows[0][0].split(" | ")[2];
 					//console.log(resultsUrl);
-					window.parent.setCurrentViewSrcMqa(resultsUrl);
+					window.parent.setCurrentViewSrcMqa(getUrlpath() + resultsUrl);
 					// NOTE CHANGING ORDER OF HEADERs/DATA will CHANGE INDEXES
 					theId = dataRows[0][1];
 				}
-				$("#" + appview.viewedDatasetId()).removeClass( 'viewed-dataset-highlight' );
-				$("#" + appview.viewedDatasetDscid()).removeClass( 'viewed-dataset-highlight' );
-				appview.viewedDatasetId(theId);
-				appview.viewedDatasetDscid(theDscid);
-				$("#" + theId).addClass( 'viewed-dataset-highlight' );
-				if (notUN(document.getElementById(theId)))
+				// split theId into ID and Diagram Path if it has dash in id
+				var myPath = "";
+				var mySmId= theId;
+				if (notUN(theId))
 				{
-					document.getElementById(theId).scrollIntoView();
+					var index = theId.indexOf("-");
+					if (index>0)
+					{
+						var splitted = theId.split("-", -1);
+						mySmId = splitted[0];
+						myPath = splitted[1];
+					}
 				}
-				$("#" + theDscid).addClass( 'viewed-dataset-highlight' );
+				//console.log("setSelectedDatasetQuery id");
+				var viewedDataset = document.getElementById(appview.viewedDatasetId());
+				if (notUN(viewedDataset))
+				{
+					viewedDataset.classList.remove('viewed-dataset-highlight');
+				}
+				//console.log("setSelectedDatasetQuery viewedDatasetId");
+				appview.viewedDatasetId(theId);
+				var newDataset = document.getElementById(theId);
+				if (notUN(newDataset))
+				{
+					//console.log("setSelectedDatasetQuery addClass");
+					newDataset.classList.add('viewed-dataset-highlight');
+					//console.log("setSelectedDatasetQuery scrollIntoView");
+					newDataset.scrollIntoView();
+				}
 				// tell the parent window the iframe query has loaded
-				window.parent.queryLoadComplete();
+				//console.log("setSelectedDatasetQuery notify parent window");
+				window.parent.queryLoadComplete(theId, myPath);
+				//console.log("finished setSelectedDatasetQuery");
 			}
-			
+
 			function previousDatasetQuery(theParamsJson)
 			{
 				//console.log("previousDatasetQuery")
@@ -115,51 +191,51 @@
 				var currentDscId = theParamsJson.dscid;
 				// this does not create the table, it references one created in DAPIAppView.js
 				var dataRows = $('#resultsTable').DataTable().rows().data();
-				for (var index=dataRows.length-1; (index>=0)&&(null===previousIndex); index--)
+				for (var index = dataRows.length - 1; (index >= 0) && (null === previousIndex); index--)
 				{
 					// check regular and DSC ID
 					//console.log(dataRows[index]);
 					// NOTE CHANGING ORDER OF HEADERs/DATA will CHANGE INDEX 1
-					if ((dataRows[index][1]===currentId)||(dataRows[index][1]===currentDscId))
+					if ((dataRows[index][1] === currentId) || (dataRows[index][1] === currentDscId))
 					{
-						if (0===index)
+						if (0 === index)
 						{
 							// at first entry
 							previousIndex = -1;
-						}
-						else if (""!==dataRows[index-1][0].split(" | ")[2])
+						} 
+						else if ("" !== dataRows[index - 1][0].split(" | ")[2])
 						{
 							// NOTE CHANGING ORDER OF HEADERs/DATA will CHANGE INDEXES above
 							// if previous index has a View Analysis link, use it
-							previousIndex = index-1;
-						}
+							previousIndex = index - 1;
+						} 
 						else
 						{
 							// find previous index that does not have empty string for last value
-							testIndex = index-1;
+							testIndex = index - 1;
 						}
-					}
+					} 
 					else if (notUN(testIndex))
 					{
-						if (0===testIndex)
+						if (0 === testIndex)
 						{
 							// no previous index with viewable analysis
 							previousIndex = -1;
-						}
-						else if (""!==dataRows[testIndex][0].split(" | ")[2])
+						} 
+						else if ("" !== dataRows[testIndex][0].split(" | ")[2])
 						{
 							// NOTE CHANGING ORDER OF HEADERs/DATA will CHANGE INDEXES above
 							// if previous index has a View Analysis link, use it
 							previousIndex = testIndex;
-						}
+						} 
 						else
 						{
 							// find previous index that does not have empty string for last value
-							testIndex = testIndex-1;
+							testIndex = testIndex - 1;
 						}
 					}
 				}
-				if (notUN(previousIndex)&&(previousIndex>=0))
+				if (notUN(previousIndex) && (previousIndex >= 0))
 				{
 					var resultsUrl = dataRows[previousIndex][0].split(" | ")[2];
 					// NOTE CHANGING ORDER OF HEADERs/DATA will CHANGE INDEXES above
@@ -168,37 +244,45 @@
 					var params = new URLSearchParams(urlParts[1]);
 					params.delete('alg');
 					params.delete('lvl1');
-					resultsUrl = urlParts[0] + '?' + params.toString();
+					resultsUrl = getUrlpath() + urlParts[0] + '?' + params.toString();
 					// get current diagram settings
 					if (notUN(theParamsJson.alg))
 					{
-						resultsUrl = resultsUrl + '&alg='+ encodeURIComponent(theParamsJson.alg);
+						resultsUrl = resultsUrl + '&alg=' + encodeURIComponent(theParamsJson.alg);
 					}
 					if (notUN(theParamsJson.lvl1))
 					{
-						resultsUrl = resultsUrl + '&lvl1='+ encodeURIComponent(theParamsJson.lvl1);
+						resultsUrl = resultsUrl + '&lvl1=' + encodeURIComponent(theParamsJson.lvl1);
 					}
 					if (notUN(theParamsJson.lvl2))
 					{
-						resultsUrl = resultsUrl + '&lvl2='+ encodeURIComponent(theParamsJson.lvl2);
+						resultsUrl = resultsUrl + '&lvl2=' + encodeURIComponent(theParamsJson.lvl2);
+					}
+					if (notUN(theParamsJson.lvl3))
+					{
+						resultsUrl = resultsUrl + '&lvl3=' + encodeURIComponent(theParamsJson.lvl3);
+					}
+					if (notUN(theParamsJson.lvl4))
+					{
+						resultsUrl = resultsUrl + '&lvl4=' + encodeURIComponent(theParamsJson.lvl4);
 					}
 					if (notUN(theParamsJson.hideDB))
 					{
-						resultsUrl = resultsUrl + '&hideDB='+ theParamsJson.hideDB;
+						resultsUrl = resultsUrl + '&hideDB=' + theParamsJson.hideDB;
 					}
 					if (notUN(theParamsJson.hideLP))
 					{
-						resultsUrl = resultsUrl + '&hideLP='+ theParamsJson.hideLP;
+						resultsUrl = resultsUrl + '&hideLP=' + theParamsJson.hideLP;
 					}
 					window.parent.setCurrentViewSrcMqa(resultsUrl);
-				}
+				} 
 				else
 				{
 					alert("At first (viewable) dataset");
 					window.parent.setCurrentViewSrcMqa(null);
 				}
 			}
-			
+
 			function nextDatasetQuery(theParamsJson)
 			{
 				// called from button on MQA page
@@ -210,50 +294,50 @@
 				var currentDscId = theParamsJson.dscid;
 				// this does not create the table, it references one created in DAPIAppView.js
 				var dataRows = $('#resultsTable').DataTable().rows().data();
-				for (var index=0; (index<dataRows.length)&&(null===nextIndex); index++)
+				for (var index = 0; (index < dataRows.length) && (null === nextIndex); index++)
 				{
 					// check regular and DSC ID
 					// NOTE CHANGING ORDER OF HEADERs/DATA will CHANGE INDEX 1
-					if ((dataRows[index][1]===currentId)||(dataRows[index][1]===currentDscId))
+					if ((dataRows[index][1] === currentId) || (dataRows[index][1] === currentDscId))
 					{
-						if (index>=dataRows.length-1)
+						if (index >= dataRows.length - 1)
 						{
 							// at last index
 							nextIndex = -1;
-						}
-						else if (""!==dataRows[index+1][0].split(" | ")[2])
+						} 
+						else if ("" !== dataRows[index + 1][0].split(" | ")[2])
 						{
 							// NOTE CHANGING ORDER OF HEADERs/DATA will CHANGE INDEXES above
 							// if next index has a View Analysis link, use it
-							nextIndex = index+1;
-						}
+							nextIndex = index + 1;
+						} 
 						else
 						{
 							// find next index that does not have empty string for last value
-							testIndex = index+1;
+							testIndex = index + 1;
 						}
-					}
+					} 
 					else if (notUN(testIndex))
 					{
-						if (testIndex>=dataRows.length-1)
+						if (testIndex >= dataRows.length - 1)
 						{
 							// no next index with viewable analysis
 							nextIndex = -1;
-						}
-						else if (""!==dataRows[testIndex][0].split(" | ")[2])
+						} 
+						else if ("" !== dataRows[testIndex][0].split(" | ")[2])
 						{
 							// NOTE CHANGING ORDER OF HEADERs/DATA will CHANGE INDEXES above
 							// if next index has a View Analysis link, use it
 							nextIndex = testIndex;
-						}
+						} 
 						else
 						{
 							// find next index that does not have empty string for last value
-							testIndex = testIndex+1;
+							testIndex = testIndex + 1;
 						}
 					}
 				}
-				if ((notUN(nextIndex))&&(nextIndex>=0))
+				if ((notUN(nextIndex)) && (nextIndex >= 0))
 				{
 					// NOTE CHANGING ORDER OF HEADERs/DATA will CHANGE INDEXES
 					var resultsUrl = dataRows[nextIndex][0].split(" | ")[2];
@@ -262,30 +346,38 @@
 					var params = new URLSearchParams(urlParts[1]);
 					params.delete('alg');
 					params.delete('lvl1');
-					resultsUrl = urlParts[0] + '?' + params.toString();
+					resultsUrl = getUrlpath() + urlParts[0] + '?' + params.toString();
 					// get current diagram settings
 					if (notUN(theParamsJson.alg))
 					{
-						resultsUrl = resultsUrl + '&alg='+ encodeURIComponent(theParamsJson.alg);
+						resultsUrl = resultsUrl + '&alg=' + encodeURIComponent(theParamsJson.alg);
 					}
 					if (notUN(theParamsJson.lvl1))
 					{
-						resultsUrl = resultsUrl + '&lvl1='+ encodeURIComponent(theParamsJson.lvl1);
+						resultsUrl = resultsUrl + '&lvl1=' + encodeURIComponent(theParamsJson.lvl1);
 					}
 					if (notUN(theParamsJson.lvl2))
 					{
-						resultsUrl = resultsUrl + '&lvl2='+ encodeURIComponent(theParamsJson.lvl2);
+						resultsUrl = resultsUrl + '&lvl2=' + encodeURIComponent(theParamsJson.lvl2);
+					}
+					if (notUN(theParamsJson.lvl3))
+					{
+						resultsUrl = resultsUrl + '&lvl3=' + encodeURIComponent(theParamsJson.lvl3);
+					}
+					if (notUN(theParamsJson.lvl4))
+					{
+						resultsUrl = resultsUrl + '&lvl4=' + encodeURIComponent(theParamsJson.lvl4);
 					}
 					if (notUN(theParamsJson.hideDB))
 					{
-						resultsUrl = resultsUrl + '&hideDB='+ theParamsJson.hideDB;
+						resultsUrl = resultsUrl + '&hideDB=' + theParamsJson.hideDB;
 					}
 					if (notUN(theParamsJson.hideLP))
 					{
-						resultsUrl = resultsUrl + '&hideLP='+ theParamsJson.hideLP;
+						resultsUrl = resultsUrl + '&hideLP=' + theParamsJson.hideLP;
 					}
 					window.parent.setCurrentViewSrcMqa(resultsUrl);
-				}
+				} 
 				else
 				{
 					alert("At last (viewable) dataset");
@@ -293,14 +385,552 @@
 				}
 			}
 		</script>
-	</head>
-	<body class="body-wrapper" style="display: none;" data-bind="visible: $root.makeGuiVisible()">
+    </head>
+    <body class="body-wrapper" style="display: none;" data-bind="visible: $root.makeGuiVisible()">
 		<!-- put cut and paste inputs here, to avoid DOM mangling by tippy -->
 		<input type="text" readonly style="opacity: 0; position: absolute; z-index: -9999; pointer-events: none;" value="" id="dapiCopyQuery">
 		<div class="div-wrapper" id="id-div-wrapper">
 			<!-- column for selection criteria -->
 			<div class="div-query-categories">
 				<div class="div-query-categories-content">
+					<div data-bind="visible: ('kwd'===$root.urlShowParam())" class="availSelDiv">
+						<div class="availSelDevLabel">
+							<label class="gridSizesTitle">Sets with Cutoff</label>
+							<div class="tooltip inlineblock">
+								<button type="button" class="qf-control-button" title="Clear selected" data-bind="click: function () { $root.selectedCutoffFlag(false); }"><small><i class="fas fa-trash-alt" style="color: darkslateblue;"></i></small></button>
+								<img id="tooltipImage_CutoffFlag" title="Sets with Cutoff Category" data-theme="myTooltipTheme" src="images/Tooltip_icon.png" class="guiIconDimensions" alt="More Info on Sets with Cutoff Category">
+								<div id="tooltipContent_CutoffFlag" class="tooltiptext">
+									<div class="marginTop10px">
+										<p>Only show sets where the negative log10 p-value is greater than or equal to the cut-off.</p>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="availSelPaddedDiv">
+							<input type="checkbox" data-bind="checked: $root.selectedCutoffFlag">Only Show Sets with Cutoff Met</input><br>
+						</div>
+					</div>
+					<div data-bind="visible: ('kwd'===$root.urlShowParam())" class="availSelDiv">
+						<div class="availSelDevLabel">
+							<label class="gridSizesTitle">Sets with Called Batches</label>
+							<div class="tooltip inlineblock">
+								<button type="button" class="qf-control-button" title="Clear selected" data-bind="click: function () { $root.selectedBatchesCalledFlag(false); }"><small><i class="fas fa-trash-alt" style="color: darkslateblue;"></i></small></button>
+								<img id="tooltipImage_BatchesCalledFlag" title="Sets with Called Batches" data-theme="myTooltipTheme" src="images/Tooltip_icon.png" class="guiIconDimensions" alt="More Info on Sets with Called Batches">
+								<div id="tooltipContent_BatchesCalledFlag" class="tooltiptext">
+									<div class="marginTop10px">
+										<p>Only show sets where the negative log10 p-value was greater than or equal to the cut-off, and one or more batches were suggested as the source of the batch effect.</p>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="availSelPaddedDiv">
+							<input type="checkbox" data-bind="checked: $root.selectedBatchesCalledFlag">Only Show Sets with Batches Called</input><br>
+						</div>
+					</div>
+					<div data-bind="visible: ('advanced'===$root.urlShowParam())" class="availSelDiv">
+						<div class="availSelDevLabel">
+							<label class="gridSizesTitle">>= Matrix Samples</label>
+							<div class="tooltip inlineblock">
+								<a title='Clear selected' data-bind="click: function () { document.getElementById('InputGteSamplesMatrix').value = ''; $root.enteredGteSamplesMatrix(''); updateEnteredSelected($root.enteredGteSamplesMatrix, $root.selectedGteSamplesMatrix, 'InputGteSamplesMatrix'); }">
+									<small><i class="fas fa-trash-alt" style="color: darkslateblue;"></i></small>
+								</a>
+								<img id="tooltipImage_GTEMatSam" title=">= Matrix Samples" data-theme="myTooltipTheme" src="images/Tooltip_icon.png" class="guiIconDimensions" alt="More Info on >= Matrix Samples">
+								<div id="tooltipContent_GTEMatSam" class="tooltiptext">
+									<div class="marginTop10px">
+										<p>Number of samples in the matrix file should be greater than or equal to this value. Empty means accept any value.</p>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="availSelPaddedDiv">
+							<input id="InputGteSamplesMatrix" type="number" step="1" min="0"
+								   onfocusout="updateEnteredSelected(appview.enteredGteSamplesMatrix, appview.selectedGteSamplesMatrix, 'InputGteSamplesMatrix');" 
+								   data-bind="value: $root.enteredGteSamplesMatrix" maxlength="10" >
+							<button type="button" style="font-size: 10px; padding: 0px;" data-bind="click:  function() { updateEnteredSelected($root.enteredGteSamplesMatrix, $root.selectedGteSamplesMatrix, 'InputGteSamplesMatrix'); }">Apply</button>
+						</div>
+					</div>
+					<div data-bind="visible: ('advanced'===$root.urlShowParam())" class="availSelDiv">
+						<div class="availSelDevLabel">
+							<label class="gridSizesTitle"><= Matrix Samples</label>
+							<div class="tooltip inlineblock">
+								<a title='Clear selected' data-bind="click: function () { document.getElementById('InputLteSamplesMatrix').value = ''; $root.enteredLteSamplesMatrix(''); updateEnteredSelected($root.enteredLteSamplesMatrix, $root.selectedLteSamplesMatrix, 'InputLteSamplesMatrix'); }">
+									<small><i class="fas fa-trash-alt" style="color: darkslateblue;"></i></small>
+								</a>
+								<img id="tooltipImage_LTEMatSam" title="<= Matrix Samples" data-theme="myTooltipTheme" src="images/Tooltip_icon.png" class="guiIconDimensions" alt="More Info on <= Matrix Samples">
+								<div id="tooltipContent_LTEMatSam" class="tooltiptext">
+									<div class="marginTop10px">
+										<p>Number of samples in the matrix file should be less than or equal to this value. Empty means accept any value.</p>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="availSelPaddedDiv">
+							<input id="InputLteSamplesMatrix" type="number" step="1" min="0"
+								   onfocusout="updateEnteredSelected(appview.enteredLteSamplesMatrix, appview.selectedLteSamplesMatrix, 'InputLteSamplesMatrix');" 
+								   data-bind="value: $root.enteredLteSamplesMatrix" maxlength="10" >
+							<button type="button" style="font-size: 10px; padding: 0px;" data-bind="click:  function() { updateEnteredSelected($root.enteredLteSamplesMatrix, $root.selectedLteSamplesMatrix, 'InputLteSamplesMatrix'); }">Apply</button>
+						</div>
+					</div>
+					<div data-bind="visible: ('advanced'===$root.urlShowParam())" class="availSelDiv">
+						<div class="availSelDevLabel">
+							<label class="gridSizesTitle">Only Matrix Samples Empty</label>
+							<div class="tooltip inlineblock">
+								<a title='Clear selected' data-bind="click: function () { $root.selectedNanSamplesMatrix(false); }">
+									<small><i class="fas fa-trash-alt" style="color: darkslateblue;"></i></small>
+								</a>
+								<img id="tooltipImage_NanMatSam" title="Matrix Samples Empty" data-theme="myTooltipTheme" src="images/Tooltip_icon.png" class="guiIconDimensions" alt="More Info on Matrix Samples Empty">
+								<div id="tooltipContent_NanMatSam" class="tooltiptext">
+									<div class="marginTop10px">
+										<p>Only show sets where number of samples in the matrix file are empty.</p>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="availSelPaddedDiv">
+							<input type="checkbox" data-bind="checked: $root.selectedNanSamplesMatrix">Only Show Sets with No Matrix Samples</input><br>
+						</div>
+					</div>
+					<div data-bind="visible: ('advanced'===$root.urlShowParam())" class="availSelDiv">
+						<div class="availSelDevLabel">
+							<label class="gridSizesTitle">>= Mutations Samples</label>
+							<div class="tooltip inlineblock">
+								<a title='Clear selected' data-bind="click: function () { document.getElementById('InputGteSamplesMutations').value = ''; $root.enteredGteSamplesMutations(''); updateEnteredSelected($root.enteredGteSamplesMutations, $root.selectedGteSamplesMutations, 'InputGteSamplesMutations'); }">
+									<small><i class="fas fa-trash-alt" style="color: darkslateblue;"></i></small>
+								</a>
+								<img id="tooltipImage_GTEMutSam" title=">= Mutations Samples" data-theme="myTooltipTheme" src="images/Tooltip_icon.png" class="guiIconDimensions" alt="More Info on >= Mutations Samples">
+								<div id="tooltipContent_GTEMutSam" class="tooltiptext">
+									<div class="marginTop10px">
+										<p>Number of samples in the mutation file should be greater than or equal to this value. Empty means accept any value.</p>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="availSelPaddedDiv">
+							<input id="InputGteSamplesMutations" type="number" step="1" min="0"
+								   onfocusout="updateEnteredSelected(appview.enteredGteSamplesMutations, appview.selectedGteSamplesMutations, 'InputGteSamplesMutations');" 
+								   data-bind="value: $root.enteredGteSamplesMutations" maxlength="10" >
+							<button type="button" style="font-size: 10px; padding: 0px;" data-bind="click:  function() { updateEnteredSelected($root.enteredGteSamplesMutations, $root.selectedGteSamplesMutations, 'InputGteSamplesMutations'); }">Apply</button>
+						</div>
+					</div>
+					<div data-bind="visible: ('advanced'===$root.urlShowParam())" class="availSelDiv">
+						<div class="availSelDevLabel">
+							<label class="gridSizesTitle"><= Mutations Samples</label>
+							<div class="tooltip inlineblock">
+								<a title='Clear selected' data-bind="click: function () { document.getElementById('InputLteSamplesMutations').value = ''; $root.enteredLteSamplesMutations(''); updateEnteredSelected($root.enteredLteSamplesMutations, $root.selectedLteSamplesMutations, 'InputLteSamplesMutations'); }">
+									<small><i class="fas fa-trash-alt" style="color: darkslateblue;"></i></small>
+								</a>
+								<img id="tooltipImage_LTEMutSam" title="<= Mutations Samples" data-theme="myTooltipTheme" src="images/Tooltip_icon.png" class="guiIconDimensions" alt="More Info on <= Mutations Samples">
+								<div id="tooltipContent_LTEMutSam" class="tooltiptext">
+									<div class="marginTop10px">
+										<p>Number of samples in the mutation file should be less than or equal to this value. Empty means accept any value.</p>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="availSelPaddedDiv">
+							<input id="InputLteSamplesMutations" type="number" step="1" min="0"
+								   onfocusout="updateEnteredSelected(appview.enteredLteSamplesMutations, appview.selectedLteSamplesMutations, 'InputLteSamplesMutations');" 
+								   data-bind="value: $root.enteredLteSamplesMutations" maxlength="10" >
+							<button type="button" style="font-size: 10px; padding: 0px;" data-bind="click:  function() { updateEnteredSelected($root.enteredLteSamplesMutations, $root.selectedLteSamplesMutations, 'InputLteSamplesMutations'); }">Apply</button>
+						</div>
+					</div>
+					<div data-bind="visible: ('advanced'===$root.urlShowParam())" class="availSelDiv">
+						<div class="availSelDevLabel">
+							<label class="gridSizesTitle">Only Mutations Samples Empty</label>
+							<div class="tooltip inlineblock">
+								<a title='Clear selected' data-bind="click: function () { $root.selectedNanSamplesMutations(false); }">
+									<small><i class="fas fa-trash-alt" style="color: darkslateblue;"></i></small>
+								</a>
+								<img id="tooltipImage_NanMutSam" title="Mutations Samples Empty" data-theme="myTooltipTheme" src="images/Tooltip_icon.png" class="guiIconDimensions" alt="More Info on Mutations Samples Empty">
+								<div id="tooltipContent_NanMutSam" class="tooltiptext">
+									<div class="marginTop10px">
+										<p>Only show sets where number of samples in the mutation file are empty.</p>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="availSelPaddedDiv">
+							<input type="checkbox" data-bind="checked: $root.selectedNanSamplesMutations">Only Show Sets with No Mutation Samples</input><br>
+						</div>
+					</div>
+					<div data-bind="visible: ('advanced'===$root.urlShowParam())" class="availSelDiv">
+						<div class="availSelDevLabel">
+							<label class="gridSizesTitle">>= Matrix Features</label>
+							<div class="tooltip inlineblock">
+								<a title='Clear selected' data-bind="click: function () { document.getElementById('InputGteFeaturesMatrix').value = ''; $root.enteredGteFeaturesMatrix(''); updateEnteredSelected($root.enteredGteFeaturesMatrix, $root.selectedGteFeaturesMatrix, 'InputGteFeaturesMatrix'); }">
+									<small><i class="fas fa-trash-alt" style="color: darkslateblue;"></i></small>
+								</a>
+								<img id="tooltipImage_GTEMatFea" title=">= Matrix Features" data-theme="myTooltipTheme" src="images/Tooltip_icon.png" class="guiIconDimensions" alt="More Info on >= Matrix Features">
+								<div id="tooltipContent_GTEMatFea" class="tooltiptext">
+									<div class="marginTop10px">
+										<p>Number of features in the matrix file should be greater than or equal to this value. Empty means accept any value.</p>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="availSelPaddedDiv">
+							<input id="InputGteFeaturesMatrix" type="number" step="1" min="0"
+								   onfocusout="updateEnteredSelected(appview.enteredGteFeaturesMatrix, appview.selectedGteFeaturesMatrix, 'InputGteFeaturesMatrix');" 
+								   data-bind="value: $root.enteredGteFeaturesMatrix" maxlength="10" >
+							<button type="button" style="font-size: 10px; padding: 0px;" data-bind="click:  function() { updateEnteredSelected($root.enteredGteFeaturesMatrix, $root.selectedGteFeaturesMatrix, 'InputGteFeaturesMatrix'); }">Apply</button>
+						</div>
+					</div>
+					<div data-bind="visible: ('advanced'===$root.urlShowParam())" class="availSelDiv">
+						<div class="availSelDevLabel">
+							<label class="gridSizesTitle"><= Matrix Features</label>
+							<div class="tooltip inlineblock">
+								<a title='Clear selected' data-bind="click: function () { document.getElementById('InputLteFeaturesMatrix').value = ''; $root.enteredLteFeaturesMatrix(''); updateEnteredSelected($root.enteredLteFeaturesMatrix, $root.selectedLteFeaturesMatrix, 'InputLteFeaturesMatrix'); }">
+									<small><i class="fas fa-trash-alt" style="color: darkslateblue;"></i></small>
+								</a>
+								<img id="tooltipImage_LTEMatFea" title="<= Matrix Features" data-theme="myTooltipTheme" src="images/Tooltip_icon.png" class="guiIconDimensions" alt="More Info on <= Matrix Features">
+								<div id="tooltipContent_LTEMatFea" class="tooltiptext">
+									<div class="marginTop10px">
+										<p>Number of features in the matrix file should be less than or equal to this value. Empty means accept any value.</p>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="availSelPaddedDiv">
+							<input id="InputLteFeaturesMatrix" type="number" step="1" min="0"
+								   onfocusout="updateEnteredSelected(appview.enteredLteFeaturesMatrix, appview.selectedLteFeaturesMatrix, 'InputLteFeaturesMatrix');" 
+								   data-bind="value: $root.enteredLteFeaturesMatrix" maxlength="10" >
+							<button type="button" style="font-size: 10px; padding: 0px;" data-bind="click:  function() { updateEnteredSelected($root.enteredLteFeaturesMatrix, $root.selectedLteFeaturesMatrix, 'InputLteFeaturesMatrix'); }">Apply</button>
+						</div>
+					</div>
+					<div data-bind="visible: ('advanced'===$root.urlShowParam())" class="availSelDiv">
+						<div class="availSelDevLabel">
+							<label class="gridSizesTitle">Only Matrix Features Empty</label>
+							<div class="tooltip inlineblock">
+								<a title='Clear selected' data-bind="click: function () { $root.selectedNanFeaturesMatrix(false); }">
+									<small><i class="fas fa-trash-alt" style="color: darkslateblue;"></i></small>
+								</a>
+								<img id="tooltipImage_NanMatFea" title="Matrix Features Empty" data-theme="myTooltipTheme" src="images/Tooltip_icon.png" class="guiIconDimensions" alt="More Info on Matrix Features Empty">
+								<div id="tooltipContent_NanMatFea" class="tooltiptext">
+									<div class="marginTop10px">
+										<p>Only show sets where number of features in the matrix file are empty.</p>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="availSelPaddedDiv">
+							<input type="checkbox" data-bind="checked: $root.selectedNanFeaturesMatrix">Only Show Sets with No Matrix Features</input><br>
+						</div>
+					</div>
+					<div data-bind="visible: ('advanced'===$root.urlShowParam())" class="availSelDiv">
+						<div class="availSelDevLabel">
+							<label class="gridSizesTitle">>= Mutations Features</label>
+							<div class="tooltip inlineblock">
+								<a title='Clear selected' data-bind="click: function () { document.getElementById('InputGteFeaturesMutations').value = ''; $root.enteredGteFeaturesMutations(''); updateEnteredSelected($root.enteredGteFeaturesMutations, $root.selectedGteFeaturesMutations, 'InputGteFeaturesMutations'); }">
+									<small><i class="fas fa-trash-alt" style="color: darkslateblue;"></i></small>
+								</a>
+								<img id="tooltipImage_GTEMutFea" title=">= Mutations Features" data-theme="myTooltipTheme" src="images/Tooltip_icon.png" class="guiIconDimensions" alt="More Info on >= Mutations Features">
+								<div id="tooltipContent_GTEMutFea" class="tooltiptext">
+									<div class="marginTop10px">
+										<p>Number of features in the mutation file should be greater than or equal to this value. Empty means accept any value.</p>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="availSelPaddedDiv">
+							<input id="InputGteFeaturesMutations" type="number" step="1" min="0"
+								   onfocusout="updateEnteredSelected(appview.enteredGteFeaturesMutations, appview.selectedGteFeaturesMutations, 'InputGteFeaturesMutations');" 
+								   data-bind="value: $root.enteredGteFeaturesMutations" maxlength="10" >
+							<button type="button" style="font-size: 10px; padding: 0px;" data-bind="click:  function() { updateEnteredSelected($root.enteredGteFeaturesMutations, $root.selectedGteFeaturesMutations, 'InputGteFeaturesMutations'); }">Apply</button>
+						</div>
+					</div>
+					<div data-bind="visible: ('advanced'===$root.urlShowParam())" class="availSelDiv">
+						<div class="availSelDevLabel">
+							<label class="gridSizesTitle"><= Mutations Features</label>
+							<div class="tooltip inlineblock">
+								<a title='Clear selected' data-bind="click: function () { document.getElementById('InputLteFeaturesMutations').value = ''; $root.enteredLteFeaturesMutations(''); updateEnteredSelected($root.enteredLteFeaturesMutations, $root.selectedLteFeaturesMutations, 'InputLteFeaturesMutations'); }">
+									<small><i class="fas fa-trash-alt" style="color: darkslateblue;"></i></small>
+								</a>
+								<img id="tooltipImage_LTEMutFea" title="<= Mutations Features" data-theme="myTooltipTheme" src="images/Tooltip_icon.png" class="guiIconDimensions" alt="More Info on <= Mutations Features">
+								<div id="tooltipContent_LTEMutFea" class="tooltiptext">
+									<div class="marginTop10px">
+										<p>Number of features in the mutation file should be less than or equal to this value. Empty means accept any value.</p>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="availSelPaddedDiv">
+							<input id="InputLteFeaturesMutations" type="number" step="1" min="0"
+								   onfocusout="updateEnteredSelected(appview.enteredLteFeaturesMutations, appview.selectedLteFeaturesMutations, 'InputLteFeaturesMutations');" 
+								   data-bind="value: $root.enteredLteFeaturesMutations" maxlength="10" >
+							<button type="button" style="font-size: 10px; padding: 0px;" data-bind="click:  function() { updateEnteredSelected($root.enteredLteFeaturesMutations, $root.selectedLteFeaturesMutations, 'InputLteFeaturesMutations'); }">Apply</button>
+						</div>
+					</div>
+					<div data-bind="visible: ('advanced'===$root.urlShowParam())" class="availSelDiv">
+						<div class="availSelDevLabel">
+							<label class="gridSizesTitle">Only Mutations Features Empty</label>
+							<div class="tooltip inlineblock">
+								<a title='Clear selected' data-bind="click: function () { $root.selectedNanFeaturesMutations(false); }">
+									<small><i class="fas fa-trash-alt" style="color: darkslateblue;"></i></small>
+								</a>
+								<img id="tooltipImage_NanMutFea" title="Mutations Features Empty" data-theme="myTooltipTheme" src="images/Tooltip_icon.png" class="guiIconDimensions" alt="More Info on Mutations Features Empty">
+								<div id="tooltipContent_NanMutFea" class="tooltiptext">
+									<div class="marginTop10px">
+										<p>Only show sets where number of features in the mutation file are empty.</p>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="availSelPaddedDiv">
+							<input type="checkbox" data-bind="checked: $root.selectedNanFeaturesMutations">Only Show Sets with No Mutation Features</input><br>
+						</div>
+					</div>
+					<div data-bind="visible: ('advanced'===$root.urlShowParam())" class="availSelDiv">
+						<div class="availSelDevLabel">
+							<label class="gridSizesTitle">>= Batches Unknown</label>
+							<div class="tooltip inlineblock">
+								<a title='Clear selected' data-bind="click: function () { document.getElementById('InputGteUnknownBatches').value = ''; $root.enteredGteUnknownBatches(''); updateEnteredSelected($root.enteredGteUnknownBatches, $root.selectedGteUnknownBatches, 'InputGteUnknownBatches'); }">
+									<small><i class="fas fa-trash-alt" style="color: darkslateblue;"></i></small>
+								</a>
+								<img id="tooltipImage_GTEBatUnk" title=">= Batches Unknown" data-theme="myTooltipTheme" src="images/Tooltip_icon.png" class="guiIconDimensions" alt="More Info on >= Batches Unknown">
+								<div id="tooltipContent_GTEBatUnk" class="tooltiptext">
+									<div class="marginTop10px">
+										<p>One or more of the number of unknown batches should be greater than or equal to this value. Empty means accept any value.</p>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="availSelPaddedDiv">
+							<input id="InputGteUnknownBatches" type="number" step="1" min="0"
+								   onfocusout="updateEnteredSelected(appview.enteredGteUnknownBatches, appview.selectedGteUnknownBatches, 'InputGteUnknownBatches');" 
+								   data-bind="value: $root.enteredGteUnknownBatches" maxlength="10" >
+							<button type="button" style="font-size: 10px; padding: 0px;" data-bind="click:  function() { updateEnteredSelected($root.enteredGteUnknownBatches, $root.selectedGteUnknownBatches, 'InputGteUnknownBatches'); }">Apply</button>
+						</div>
+					</div>
+					<div data-bind="visible: ('advanced'===$root.urlShowParam())" class="availSelDiv">
+						<div class="availSelDevLabel">
+							<label class="gridSizesTitle"><= Batches Unknown</label>
+							<div class="tooltip inlineblock">
+								<a title='Clear selected' data-bind="click: function () { document.getElementById('InputLteUnknownBatches').value = ''; $root.enteredLteUnknownBatches(''); updateEnteredSelected($root.enteredLteUnknownBatches, $root.selectedLteUnknownBatches, 'InputLteUnknownBatches'); }">
+									<small><i class="fas fa-trash-alt" style="color: darkslateblue;"></i></small>
+								</a>
+								<img id="tooltipImage_LTEBatUnk" title="<= Batches Unknown" data-theme="myTooltipTheme" src="images/Tooltip_icon.png" class="guiIconDimensions" alt="More Info on <= Batches Unknown">
+								<div id="tooltipContent_LTEBatUnk" class="tooltiptext">
+									<div class="marginTop10px">
+										<p>One or more of the number of unknown batches should be less than or equal to this value. Empty means accept any value.</p>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="availSelPaddedDiv">
+							<input id="InputLteUnknownBatches" type="number" step="1" min="0"
+								   onfocusout="updateEnteredSelected(appview.enteredLteUnknownBatches, appview.selectedLteUnknownBatches, 'InputLteUnknownBatches');" 
+								   data-bind="value: $root.enteredLteUnknownBatches" maxlength="10" >
+							<button type="button" style="font-size: 10px; padding: 0px;" data-bind="click:  function() { updateEnteredSelected($root.enteredLteUnknownBatches, $root.selectedLteUnknownBatches, 'InputLteUnknownBatches'); }">Apply</button>
+						</div>
+					</div>
+					<div data-bind="visible: ('advanced'===$root.urlShowParam())" class="availSelDiv">
+						<div class="availSelDevLabel">
+							<label class="gridSizesTitle">Only Batches Unknown Empty</label>
+							<div class="tooltip inlineblock">
+								<a title='Clear selected' data-bind="click: function () { $root.selectedNanUnknownBatches(false); }">
+									<small><i class="fas fa-trash-alt" style="color: darkslateblue;"></i></small>
+								</a>
+								<img id="tooltipImage_NanBatUnk" title="Batches Unknown Empty" data-theme="myTooltipTheme" src="images/Tooltip_icon.png" class="guiIconDimensions" alt="More Info on Batches Unknown Empty">
+								<div id="tooltipContent_NanBatUnk" class="tooltiptext">
+									<div class="marginTop10px">
+										<p>Only show sets where unknown batch count is empty.</p>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="availSelPaddedDiv">
+							<input type="checkbox" data-bind="checked: $root.selectedNanUnknownBatches">Only Show Sets with Empty Unknown Batches</input><br>
+						</div>
+					</div>
+					<div data-bind="visible: ('advanced'===$root.urlShowParam())" class="availSelDiv">
+						<div class="availSelDevLabel">
+							<label class="gridSizesTitle">>= Unique Batch Count</label>
+							<div class="tooltip inlineblock">
+								<a title='Clear selected' data-bind="click: function () { document.getElementById('InputGteUniqueBatchCount').value = ''; $root.enteredGteUniqueBatchCount(''); updateEnteredSelected($root.enteredGteUniqueBatchCount, $root.selectedGteUniqueBatchCount, 'InputGteUniqueBatchCount'); }">
+									<small><i class="fas fa-trash-alt" style="color: darkslateblue;"></i></small>
+								</a>
+								<img id="tooltipImage_GTEUniBatCnt" title=">= Unique Batch Count" data-theme="myTooltipTheme" src="images/Tooltip_icon.png" class="guiIconDimensions" alt="More Info on >= Unique Batch Count">
+								<div id="tooltipContent_GTEUniBatCnt" class="tooltiptext">
+									<div class="marginTop10px">
+										<p>One or more of the number of unique batches should be greater than or equal to this value. Empty means accept any value.</p>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="availSelPaddedDiv">
+							<input id="InputGteUniqueBatchCount" type="number" step="1" min="0"
+								   onfocusout="updateEnteredSelected(appview.enteredGteUniqueBatchCount, appview.selectedGteUniqueBatchCount, 'InputGteUniqueBatchCount');" 
+								   data-bind="value: $root.enteredGteUniqueBatchCount" maxlength="10" >
+							<button type="button" style="font-size: 10px; padding: 0px;" data-bind="click:  function() { updateEnteredSelected($root.enteredGteUniqueBatchCount, $root.selectedGteUniqueBatchCount, 'InputGteUniqueBatchCount'); }">Apply</button>
+						</div>
+					</div>
+					<div data-bind="visible: ('advanced'===$root.urlShowParam())" class="availSelDiv">
+						<div class="availSelDevLabel">
+							<label class="gridSizesTitle"><= Unique Batch Count</label>
+							<div class="tooltip inlineblock">
+								<a title='Clear selected' data-bind="click: function () { document.getElementById('InputLteUniqueBatchCount').value = ''; $root.enteredLteUniqueBatchCount(''); updateEnteredSelected($root.enteredLteUniqueBatchCount, $root.selectedLteUniqueBatchCount, 'InputLteUniqueBatchCount'); }">
+									<small><i class="fas fa-trash-alt" style="color: darkslateblue;"></i></small>
+								</a>
+								<img id="tooltipImage_LTEUniBatCnt" title="<= Unique Batch Count" data-theme="myTooltipTheme" src="images/Tooltip_icon.png" class="guiIconDimensions" alt="More Info on <= Unique Batch Count">
+								<div id="tooltipContent_LTEUniBatCnt" class="tooltiptext">
+									<div class="marginTop10px">
+										<p>One or more of the number of unique batches should be less than or equal to this value. Empty means accept any value.</p>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="availSelPaddedDiv">
+							<input id="InputLteUniqueBatchCount" type="number" step="1" min="0"
+								   onfocusout="updateEnteredSelected(appview.enteredLteUniqueBatchCount, appview.selectedLteUniqueBatchCount, 'InputLteUniqueBatchCount');" 
+								   data-bind="value: $root.enteredLteUniqueBatchCount" maxlength="10" >
+							<button type="button" style="font-size: 10px; padding: 0px;" data-bind="click:  function() { updateEnteredSelected($root.enteredLteUniqueBatchCount, $root.selectedLteUniqueBatchCount, 'InputLteUniqueBatchCount'); }">Apply</button>
+						</div>
+					</div>
+					<div data-bind="visible: ('advanced'===$root.urlShowParam())" class="availSelDiv">
+						<div class="availSelDevLabel">
+							<label class="gridSizesTitle">Only Unique Batch Count Empty</label>
+							<div class="tooltip inlineblock">
+								<a title='Clear selected' data-bind="click: function () { $root.selectedNanUniqueBatchCount(false); }">
+									<small><i class="fas fa-trash-alt" style="color: darkslateblue;"></i></small>
+								</a>
+								<img id="tooltipImage_NanUniBatCnt" title="Unique Batch Count Empty" data-theme="myTooltipTheme" src="images/Tooltip_icon.png" class="guiIconDimensions" alt="More Info on Unique Batch Count Empty">
+								<div id="tooltipContent_NanUniBatCnt" class="tooltiptext">
+									<div class="marginTop10px">
+										<p>Only show sets where number of unique batches is empty.</p>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="availSelPaddedDiv">
+							<input type="checkbox" data-bind="checked: $root.selectedNanUniqueBatchCount">Only Show Sets with Empty Unique Batch Counts</input><br>
+						</div>
+					</div>
+					<div data-bind="visible: ('advanced'===$root.urlShowParam())" class="availSelDiv">
+						<div class="availSelDevLabel">
+							<label class="gridSizesTitle">>= Correlated Batch Types</label>
+							<div class="tooltip inlineblock">
+								<a title='Clear selected' data-bind="click: function () { document.getElementById('InputGteCorrelatedBatchTypes').value = ''; $root.enteredGteCorrelatedBatchTypes(''); updateEnteredSelected($root.enteredGteCorrelatedBatchTypes, $root.selectedGteCorrelatedBatchTypes, 'InputGteCorrelatedBatchTypes'); }">
+									<small><i class="fas fa-trash-alt" style="color: darkslateblue;"></i></small>
+								</a>
+								<img id="tooltipImage_GTECorBatTyp" title=">= Correlated Batch Types" data-theme="myTooltipTheme" src="images/Tooltip_icon.png" class="guiIconDimensions" alt="More Info on >= Correlated Batch Types">
+								<div id="tooltipContent_GTECorBatTyp" class="tooltiptext">
+									<div class="marginTop10px">
+										<p>One or more pairs of batch type correlations should be greater than or equal to this value. Empty means accept any value.</p>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="availSelPaddedDiv">
+							<input id="InputGteCorrelatedBatchTypes" type="number" step="0.01" min="0"
+								   onfocusout="updateEnteredSelected(appview.enteredGteCorrelatedBatchTypes, appview.selectedGteCorrelatedBatchTypes, 'InputGteCorrelatedBatchTypes');" 
+								   data-bind="value: $root.enteredGteCorrelatedBatchTypes" maxlength="10" >
+							<button type="button" style="font-size: 10px; padding: 0px;" data-bind="click:  function() { updateEnteredSelected($root.enteredGteCorrelatedBatchTypes, $root.selectedGteCorrelatedBatchTypes, 'InputGteCorrelatedBatchTypes'); }">Apply</button>
+						</div>
+					</div>
+					<div data-bind="visible: ('advanced'===$root.urlShowParam())" class="availSelDiv">
+						<div class="availSelDevLabel">
+							<label class="gridSizesTitle"><= Correlated Batch Types</label>
+							<div class="tooltip inlineblock">
+								<a title='Clear selected' data-bind="click: function () { document.getElementById('InputLteCorrelatedBatchTypes').value = ''; $root.enteredLteCorrelatedBatchTypes(''); updateEnteredSelected($root.enteredLteCorrelatedBatchTypes, $root.selectedLteCorrelatedBatchTypes, 'InputLteCorrelatedBatchTypes'); }">
+									<small><i class="fas fa-trash-alt" style="color: darkslateblue;"></i></small>
+								</a>
+								<img id="tooltipImage_LTECorBatTyp" title="<= Correlated Batch Types" data-theme="myTooltipTheme" src="images/Tooltip_icon.png" class="guiIconDimensions" alt="More Info on <= Correlated Batch Types">
+								<div id="tooltipContent_LTECorBatTyp" class="tooltiptext">
+									<div class="marginTop10px">
+										<p>One or more pairs of batch type correlations should be less than or equal to this value. Empty means accept any value.</p>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="availSelPaddedDiv">
+							<input id="InputLteCorrelatedBatchTypes" type="number" step="0.01" min="0"
+								   onfocusout="updateEnteredSelected(appview.enteredLteCorrelatedBatchTypes, appview.selectedLteCorrelatedBatchTypes, 'InputLteCorrelatedBatchTypes');" 
+								   data-bind="value: $root.enteredLteCorrelatedBatchTypes" maxlength="10" >
+							<button type="button" style="font-size: 10px; padding: 0px;" data-bind="click:  function() { updateEnteredSelected($root.enteredLteCorrelatedBatchTypes, $root.selectedLteCorrelatedBatchTypes, 'InputLteCorrelatedBatchTypes'); }">Apply</button>
+						</div>
+					</div>
+					<div data-bind="visible: ('advanced'===$root.urlShowParam())" class="availSelDiv">
+						<div class="availSelDevLabel">
+							<label class="gridSizesTitle">Only Correlated Batch Types Empty</label>
+							<div class="tooltip inlineblock">
+								<a title='Clear selected' data-bind="click: function () { $root.selectedNanCorrelatedBatchTypes(false); }">
+									<small><i class="fas fa-trash-alt" style="color: darkslateblue;"></i></small>
+								</a>
+								<img id="tooltipImage_NanCorBatTyp" title="Correlated Batch Types Empty" data-theme="myTooltipTheme" src="images/Tooltip_icon.png" class="guiIconDimensions" alt="More Info on Correlated Batch Types Empty">
+								<div id="tooltipContent_NanCorBatTyp" class="tooltiptext">
+									<div class="marginTop10px">
+										<p>Only show sets where number of correlated batch types in the matrix file are empty.</p>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="availSelPaddedDiv">
+							<input type="checkbox" data-bind="checked: $root.selectedNanCorrelatedBatchTypes">Only Show Sets with Empty Batch Type Correlations</input><br>
+						</div>
+					</div>
+					<div data-bind="visible: ('advanced'===$root.urlShowParam())" class="availSelDiv">
+						<div class="availSelDevLabel">
+							<label class="gridSizesTitle">>= Batch Type Count</label>
+							<div class="tooltip inlineblock">
+								<a title='Clear selected' data-bind="click: function () { document.getElementById('InputGteBatchTypeCount').value = ''; $root.enteredGteBatchTypeCount(''); updateEnteredSelected($root.enteredGteBatchTypeCount, $root.selectedGteBatchTypeCount, 'InputGteBatchTypeCount'); }">
+									<small><i class="fas fa-trash-alt" style="color: darkslateblue;"></i></small>
+								</a>
+								<img id="tooltipImage_GTEBatTypCnt" title=">= Batch Type Count" data-theme="myTooltipTheme" src="images/Tooltip_icon.png" class="guiIconDimensions" alt="More Info on >= Batch Type Count">
+								<div id="tooltipContent_GTEBatTypCnt" class="tooltiptext">
+									<div class="marginTop10px">
+										<p>Number of batch types should be greater than or equal to this value. Empty means accept any value.</p>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="availSelPaddedDiv">
+							<input id="InputGteBatchTypeCount" type="number" step="1" min="0"
+								   onfocusout="updateEnteredSelected(appview.enteredGteBatchTypeCount, appview.selectedGteBatchTypeCount, 'InputGteBatchTypeCount');" 
+								   data-bind="value: $root.enteredGteBatchTypeCount" maxlength="10" >
+							<button type="button" style="font-size: 10px; padding: 0px;" data-bind="click:  function() { updateEnteredSelected($root.enteredGteBatchTypeCount, $root.selectedGteBatchTypeCount, 'InputGteBatchTypeCount'); }">Apply</button>
+						</div>
+					</div>
+					<div data-bind="visible: ('advanced'===$root.urlShowParam())" class="availSelDiv">
+						<div class="availSelDevLabel">
+							<label class="gridSizesTitle"><= Batch Type Count</label>
+							<div class="tooltip inlineblock">
+								<a title='Clear selected' data-bind="click: function () { document.getElementById('InputLteBatchTypeCount').value = ''; $root.enteredLteBatchTypeCount(''); updateEnteredSelected($root.enteredLteBatchTypeCount, $root.selectedLteBatchTypeCount, 'InputLteBatchTypeCount'); }">
+									<small><i class="fas fa-trash-alt" style="color: darkslateblue;"></i></small>
+								</a>
+								<img id="tooltipImage_LTEBatTypCnt" title="<= Batch Type Count" data-theme="myTooltipTheme" src="images/Tooltip_icon.png" class="guiIconDimensions" alt="More Info on <= Batch Type Count">
+								<div id="tooltipContent_LTEBatTypCnt" class="tooltiptext">
+									<div class="marginTop10px">
+										<p>Number of batch types should be less than or equal to this value. Empty means accept any value.</p>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="availSelPaddedDiv">
+							<input id="InputLteBatchTypeCount" type="number" step="1" min="0"
+								   onfocusout="updateEnteredSelected(appview.enteredLteBatchTypeCount, appview.selectedLteBatchTypeCount, 'InputLteBatchTypeCount');" 
+								   data-bind="value: $root.enteredLteBatchTypeCount" maxlength="10" >
+							<button type="button" style="font-size: 10px; padding: 0px;" data-bind="click:  function() { updateEnteredSelected($root.enteredLteBatchTypeCount, $root.selectedLteBatchTypeCount, 'InputLteBatchTypeCount'); }">Apply</button>
+						</div>
+					</div>
+					<div data-bind="visible: ('advanced'===$root.urlShowParam())" class="availSelDiv">
+						<div class="availSelDevLabel">
+							<label class="gridSizesTitle">Only Batch Type Count Empty</label>
+							<div class="tooltip inlineblock">
+								<a title='Clear selected' data-bind="click: function () { $root.selectedNanBatchTypeCount(false); }">
+									<small><i class="fas fa-trash-alt" style="color: darkslateblue;"></i></small>
+								</a>
+								<img id="tooltipImage_NanBatTypCnt" title="Batch Type Count Empty" data-theme="myTooltipTheme" src="images/Tooltip_icon.png" class="guiIconDimensions" alt="More Info on Batch Type Count Empty">
+								<div id="tooltipContent_NanBatTypCnt" class="tooltiptext">
+									<div class="marginTop10px">
+										<p>Only show sets where number of batch types is empty.</p>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="availSelPaddedDiv">
+							<input type="checkbox" data-bind="checked: $root.selectedNanBatchTypeCount">Only Show Sets with Empty Batch Type Count</input><br>
+						</div>
+					</div>
 					<div data-bind="visible: ('dsc'===$root.urlShowParam())" class="availSelDiv">
 						<div class="availSelDevLabel">
 							<label class="gridSizesTitle">DSC P-Value*</label>
@@ -318,7 +948,7 @@
 						</div>
 						<div data-bind='class: $root.classOverallDSCpvalue' id="div-selectedOverallDSCpvalue">
 							<!-- ko foreach: $root.optionsOverallDSCpvalue -->
-								<input type="checkbox" data-bind="checkedValue: $data, checked: $root.selectedOverallDSCpvalue" /><span data-bind="text: $data"></span><br>
+							<input type="checkbox" data-bind="checkedValue: $data, checked: $root.selectedOverallDSCpvalue" /><span data-bind="text: $data"></span><br>
 							<!-- /ko -->
 						</div>
 					</div>
@@ -340,7 +970,7 @@
 						<div class="availSelPaddedDiv">
 							<input id="InputOverallDSCmin" type="number" step="0.001" min="0"
 								   onfocusout="updateEnteredSelected(appview.enteredOverallDSCmin, appview.selectedOverallDSCmin, 'InputOverallDSCmin');" 
-								   data-bind="value: $root.enteredOverallDSCmin">
+								   data-bind="value: $root.enteredOverallDSCmin" maxlength="10" >
 							<button type="button" style="font-size: 10px; padding: 0px;" data-bind="click:  function() { updateEnteredSelected($root.enteredOverallDSCmin, $root.selectedOverallDSCmin, 'InputOverallDSCmin'); }">Apply</button>
 						</div>
 					</div>
@@ -362,7 +992,7 @@
 						<div class="availSelPaddedDiv">
 							<input id="InputOverallDSCmax" type="number" step="0.001" min="0"
 								   onfocusout="updateEnteredSelected(appview.enteredOverallDSCmax, appview.selectedOverallDSCmax, 'InputOverallDSCmax');" 
-								   data-bind="value: $root.enteredOverallDSCmax">
+								   data-bind="value: $root.enteredOverallDSCmax" maxlength="10" >
 							<button type="button" style="font-size: 10px; padding: 0px;" data-bind="click:  function() { updateEnteredSelected($root.enteredOverallDSCmax, $root.selectedOverallDSCmax, 'InputOverallDSCmax'); }">Apply</button>
 						</div>
 					</div>
@@ -387,32 +1017,7 @@
 						</div>
 						<div data-bind='class: $root.classSources' id="div-selectedSources">
 							<!-- ko foreach: $root.optionsSources -->
-								<input type="checkbox" data-bind="checkedValue: $data, checked: $root.selectedSources" /><span data-bind="text: $data"></span><br>
-							<!-- /ko -->
-						</div>
-					</div>
-					<div class="availSelDiv">
-						<div class="availSelDevLabel">
-							<label class="gridSizesTitle">Derivations</label>
-							<div>
-								<a title='Show all options' data-bind="visible: ($root.classVariants()==='availSelPaddedDiv divSelectedLess'), click: function () { $root.classVariants('availSelPaddedDiv divSelectedMore') }"><button class="qf-control-button">More</button></a>
-								<a title='Show fewer options' data-bind="visible: ($root.classVariants()==='availSelPaddedDiv divSelectedMore'), click: function () { $root.classVariants('availSelPaddedDiv divSelectedLess') }"><button class="qf-control-button">Less</button></a>
-								<a title='Clear selected' data-bind="click: function () { $root.selectedVariants.removeAll(); }">
-									<small><i class="fas fa-trash-alt" style="color: darkslateblue;"></i></small>
-								</a>
-								<div class="tooltip inlineblock">
-									<img id="tooltipImage_CATDerivations" title="Derivations Category" data-theme="myTooltipTheme" src="images/Tooltip_icon.png" class="guiIconDimensions" alt="More Info on Derivations Category">
-									<div id="tooltipContent_CATDerivations" class="tooltiptext">
-										<div class="marginTop10px">
-											<p>The Derivations Category lists the derivation of data within a Source, such as, for the Metabolomics Workbench, "API" indicating data was accessed via the Metabolomics Workbench API.</p>
-										</div>
-									</div>
-								</div>
-							</div>
-						</div>
-						<div data-bind='class: $root.classVariants' id="div-selectedVariants">
-							<!-- ko foreach: $root.optionsVariants -->
-								<input type="checkbox" data-bind="checkedValue: $data, checked: $root.selectedVariants" /><span data-bind="text: $data"></span><br>
+							<input type="checkbox" data-bind="checkedValue: $data, checked: $root.selectedSources" /><span data-bind="text: $data"></span><br>
 							<!-- /ko -->
 						</div>
 					</div>
@@ -420,14 +1025,14 @@
 						<div class="availSelDevLabel">
 							<label class="gridSizesTitle">Study IDs</label>
 							<div>
-								<a title='Show all options' data-bind="visible: ($root.classProjects()==='availSelPaddedDiv divSelectedLess'), click: function () { $root.classProjects('availSelPaddedDiv divSelectedMore') }"><button class="qf-control-button">More</button></a>
-								<a title='Show fewer options' data-bind="visible: ($root.classProjects()==='availSelPaddedDiv divSelectedMore'), click: function () { $root.classProjects('availSelPaddedDiv divSelectedLess') }"><button class="qf-control-button">Less</button></a>
-								<a title='Clear selected' data-bind="click: function () { $root.selectedProjects.removeAll(); }">
+								<a title='Show all options' data-bind="visible: ($root.classProgram()==='availSelPaddedDiv divSelectedLess'), click: function () { $root.classVariants('availSelPaddedDiv divSelectedMore') }"><button class="qf-control-button">More</button></a>
+								<a title='Show fewer options' data-bind="visible: ($root.classProgram()==='availSelPaddedDiv divSelectedMore'), click: function () { $root.classVariants('availSelPaddedDiv divSelectedLess') }"><button class="qf-control-button">Less</button></a>
+								<a title='Clear selected' data-bind="click: function () { $root.selectedProgram.removeAll(); }">
 									<small><i class="fas fa-trash-alt" style="color: darkslateblue;"></i></small>
 								</a>
 								<div class="tooltip inlineblock">
-									<img id="tooltipImage_CATProjects" title="Study IDs Category" data-theme="myTooltipTheme" src="images/Tooltip_icon.png" class="guiIconDimensions" alt="More Info on Projects Category">
-									<div id="tooltipContent_CATProjects" class="tooltiptext">
+									<img id="tooltipImage_CATProgram" title="Study IDs Category" data-theme="myTooltipTheme" src="images/Tooltip_icon.png" class="guiIconDimensions" alt="More Info on Program Category">
+									<div id="tooltipContent_CATDerivations" class="tooltiptext">
 										<div class="marginTop10px">
 											<p>The Study IDs Category lists the higher-level project for the dataset -- for Metabolomics Workbench datasets, this is the Study ID.</p>
 										</div>
@@ -435,9 +1040,9 @@
 								</div>
 							</div>
 						</div>
-						<div data-bind='class: $root.classProjects' id="div-selectedProjects">
-							<!-- ko foreach: $root.optionsProjects -->
-								<input type="checkbox" data-bind="checkedValue: $data, checked: $root.selectedProjects" /><span data-bind="text: $data"></span><br>
+						<div data-bind='class: $root.classProgram' id="div-selectedProgram">
+							<!-- ko foreach: $root.optionsProgram -->
+							<input type="checkbox" data-bind="checkedValue: $data, checked: $root.selectedProgram" /><span data-bind="text: $data"></span><br>
 							<!-- /ko -->
 						</div>
 					</div>
@@ -445,14 +1050,14 @@
 						<div class="availSelDevLabel">
 							<label class="gridSizesTitle">Analysis IDs</label>
 							<div>
-								<a title='Show all options' data-bind="visible: ($root.classSubprojects()==='availSelPaddedDiv divSelectedLess'), click: function () { $root.classSubprojects('availSelPaddedDiv divSelectedMore') }"><button class="qf-control-button">More</button></a>
-								<a title='Show fewer options' data-bind="visible: ($root.classSubprojects()==='availSelPaddedDiv divSelectedMore'), click: function () { $root.classSubprojects('availSelPaddedDiv divSelectedLess') }"><button class="qf-control-button">Less</button></a>
-								<a title='Clear selected' data-bind="click: function () { $root.selectedSubprojects.removeAll(); }">
+								<a title='Show all options' data-bind="visible: ($root.classProjects()==='availSelPaddedDiv divSelectedLess'), click: function () { $root.classProjects('availSelPaddedDiv divSelectedMore') }"><button class="qf-control-button">More</button></a>
+								<a title='Show fewer options' data-bind="visible: ($root.classProjects()==='availSelPaddedDiv divSelectedMore'), click: function () { $root.classProjects('availSelPaddedDiv divSelectedLess') }"><button class="qf-control-button">Less</button></a>
+								<a title='Clear selected' data-bind="click: function () { $root.selectedProjects.removeAll(); }">
 									<small><i class="fas fa-trash-alt" style="color: darkslateblue;"></i></small>
 								</a>
 								<div class="tooltip inlineblock">
-									<img id="tooltipImage_CATSubProjects" title="Analysis IDs Category" data-theme="myTooltipTheme" src="images/Tooltip_icon.png" class="guiIconDimensions" alt="More Info on Sub-Projects Category">
-									<div id="tooltipContent_CATSubProjects" class="tooltiptext">
+									<img id="tooltipImage_CATProjects" title="Analysis IDs Category" data-theme="myTooltipTheme" src="images/Tooltip_icon.png" class="guiIconDimensions" alt="More Info on Projects Category">
+									<div id="tooltipContent_CATProjects" class="tooltiptext">
 										<div class="marginTop10px">
 											<p>The Analysis IDs Category lists the lower-level project for the dataset -- for Metabolomics Workbench datasets, this is the Analysis ID.</p>
 										</div>
@@ -460,15 +1065,15 @@
 								</div>
 							</div>
 						</div>
-						<div data-bind='class: $root.classSubprojects' id="div-selectedSubprojects">
-							<!-- ko foreach: $root.optionsSubprojects -->
-								<input type="checkbox" data-bind="checkedValue: $data, checked: $root.selectedSubprojects" /><span data-bind="text: $data"></span><br>
+						<div data-bind='class: $root.classProjects' id="div-selectedProjects">
+							<!-- ko foreach: $root.optionsProjects -->
+							<input type="checkbox" data-bind="checkedValue: $data, checked: $root.selectedProjects" /><span data-bind="text: $data"></span><br>
 							<!-- /ko -->
 						</div>
 					</div>
 					<div class="availSelDiv">
 						<div class="availSelDevLabel">
-							<label class="gridSizesTitle">Data Type</label>
+							<label class="gridSizesTitle">Categories</label>
 							<div>
 								<a title='Show all options' data-bind="visible: ($root.classCategories()==='availSelPaddedDiv divSelectedLess'), click: function () { $root.classCategories('availSelPaddedDiv divSelectedMore') }"><button class="qf-control-button">More</button></a>
 								<a title='Show fewer options' data-bind="visible: ($root.classCategories()==='availSelPaddedDiv divSelectedMore'), click: function () { $root.classCategories('availSelPaddedDiv divSelectedLess') }"><button class="qf-control-button">Less</button></a>
@@ -476,10 +1081,10 @@
 									<small><i class="fas fa-trash-alt" style="color: darkslateblue;"></i></small>
 								</a>
 								<div class="tooltip inlineblock">
-									<img id="tooltipImage_CATCategories" title="Data Type Category" data-theme="myTooltipTheme" src="images/Tooltip_icon.png" class="guiIconDimensions" alt="More Info on Data Type Category">
+									<img id="tooltipImage_CATCategories" title="Categories" data-theme="myTooltipTheme" src="images/Tooltip_icon.png" class="guiIconDimensions" alt="More Info on Categories">
 									<div id="tooltipContent_CATCategories" class="tooltiptext">
 										<div class="marginTop10px">
-											<p>The Data Type Category divides the datasets into general type of data. Some names have been converted to generic version for usability.</p>
+											<p>Categories divides the datasets into general type of data. Some names have been converted to generic version for usability.</p>
 										</div>
 									</div>
 								</div>
@@ -487,32 +1092,7 @@
 						</div>
 						<div data-bind='class: $root.classCategories' id="div-selectedCategories">
 							<!-- ko foreach: $root.optionsCategories -->
-								<input type="checkbox" data-bind="checkedValue: $data, checked: $root.selectedCategories" /><span data-bind="text: $data"></span><br>
-							<!-- /ko -->
-						</div>
-					</div>
-					<div class="availSelDiv">
-						<div class="availSelDevLabel">
-							<label class="gridSizesTitle">Study Titles</label>
-							<div>
-								<a title='Show all options' data-bind="visible: ($root.classDetails()==='availSelPaddedDiv divSelectedLess'), click: function () { $root.classDetails('availSelPaddedDiv divSelectedMore') }"><button class="qf-control-button">More</button></a>
-								<a title='Show fewer options' data-bind="visible: ($root.classDetails()==='availSelPaddedDiv divSelectedMore'), click: function () { $root.classDetails('availSelPaddedDiv divSelectedLess') }"><button class="qf-control-button">Less</button></a>
-								<a title='Clear selected' data-bind="click: function () { $root.selectedDetails.removeAll(); }">
-									<small><i class="fas fa-trash-alt" style="color: darkslateblue;"></i></small>
-								</a>
-								<div class="tooltip inlineblock">
-									<img id="tooltipImage_CATDetails" title="Details Category" data-theme="myTooltipTheme" src="images/Tooltip_icon.png" class="guiIconDimensions" alt="More Info on Details Category">
-									<div id="tooltipContent_CATDetails" class="tooltiptext">
-										<div class="marginTop10px">
-											<p>The Study Title Category allows filtering or searching on study titles.</p>
-										</div>
-									</div>
-								</div>
-							</div>
-						</div>
-						<div data-bind='class: $root.classDetails' id="div-selectedDetails">
-							<!-- ko foreach: $root.optionsDetails -->
-								<input type="checkbox" data-bind="checkedValue: $data, checked: $root.selectedDetails" /><span data-bind="text: $data"></span><br>
+							<input type="checkbox" data-bind="checkedValue: $data, checked: $root.selectedCategories" /><span data-bind="text: $data"></span><br>
 							<!-- /ko -->
 						</div>
 					</div>
@@ -537,13 +1117,13 @@
 						</div>
 						<div data-bind='class: $root.classPlatforms' id="div-selectedPlatforms">
 							<!-- ko foreach: $root.optionsPlatforms -->
-								<input type="checkbox" data-bind="checkedValue: $data, checked: $root.selectedPlatforms" /><span data-bind="text: $data"></span><br>
+							<input type="checkbox" data-bind="checkedValue: $data, checked: $root.selectedPlatforms" /><span data-bind="text: $data"></span><br>
 							<!-- /ko -->
 						</div>
 					</div>
 					<div class="availSelDiv">
 						<div class="availSelDevLabel">
-							<label class="gridSizesTitle">Archive Type</label>
+							<label class="gridSizesTitle">Study Titles</label>
 							<div>
 								<a title='Show all options' data-bind="visible: ($root.classData()==='availSelPaddedDiv divSelectedLess'), click: function () { $root.classData('availSelPaddedDiv divSelectedMore') }"><button class="qf-control-button">More</button></a>
 								<a title='Show fewer options' data-bind="visible: ($root.classData()==='availSelPaddedDiv divSelectedMore'), click: function () { $root.classData('availSelPaddedDiv divSelectedLess') }"><button class="qf-control-button">Less</button></a>
@@ -551,10 +1131,10 @@
 									<small><i class="fas fa-trash-alt" style="color: darkslateblue;"></i></small>
 								</a>
 								<div class="tooltip inlineblock">
-									<img id="tooltipImage_CATData" title="Archive Type Category" data-theme="myTooltipTheme" src="images/Tooltip_icon.png" class="guiIconDimensions" alt="More Info on Archive Type Category">
-									<div id="tooltipContent_CATData" class="tooltiptext">
+									<img id="tooltipImage_Elementfiles" title="Data" data-theme="myTooltipTheme" src="images/Tooltip_icon.png" class="guiIconDimensions" alt="More Info on Data">
+									<div id="tooltipContent_Elementfiles" class="tooltiptext">
 										<div class="marginTop10px">
-											<p>The Archive Type Category lists the variation of data in the dataset--this is Original-Analyzed for a traditional batch effect analysis and Original-MutBatch for a Kuskal-Wallis non-parametric analysis.</p>
+											<p>The Study Title Category allows filtering or searching on study titles.</p>
 										</div>
 									</div>
 								</div>
@@ -562,82 +1142,107 @@
 						</div>
 						<div data-bind='class: $root.classData' id="div-selectedData">
 							<!-- ko foreach: $root.optionsData -->
-								<input type="checkbox" data-bind="checkedValue: $data, checked: $root.selectedData" /><span data-bind="text: $data"></span><br>
+							<input type="checkbox" data-bind="checkedValue: $data, checked: $root.selectedData" /><span data-bind="text: $data"></span><br>
 							<!-- /ko -->
 						</div>
 					</div>
 					<div class="availSelDiv">
 						<div class="availSelDevLabel">
-							<label class="gridSizesTitle">Algorithms</label>
+							<label class="gridSizesTitle">Detail</label>
 							<div>
-								<a title='Show all options' data-bind="visible: ($root.classAlgorithms()==='availSelPaddedDiv divSelectedLess'), click: function () { $root.classAlgorithms('availSelPaddedDiv divSelectedMore') }"><button class="qf-control-button">More</button></a>
-								<a title='Show fewer options' data-bind="visible: ($root.classAlgorithms()==='availSelPaddedDiv divSelectedMore'), click: function () { $root.classAlgorithms('availSelPaddedDiv divSelectedLess') }"><button class="qf-control-button">Less</button></a>
-								<a title='Clear selected' data-bind="click: function () { $root.selectedAlgorithms.removeAll(); }">
+								<a title='Show all options' data-bind="visible: ($root.classDetails()==='availSelPaddedDiv divSelectedLess'), click: function () { $root.classDetails('availSelPaddedDiv divSelectedMore') }"><button class="qf-control-button">More</button></a>
+								<a title='Show fewer options' data-bind="visible: ($root.classDetails()==='availSelPaddedDiv divSelectedMore'), click: function () { $root.classDetails('availSelPaddedDiv divSelectedLess') }"><button class="qf-control-button">Less</button></a>
+								<a title='Clear selected' data-bind="click: function () { $root.selectedDetails.removeAll(); }">
 									<small><i class="fas fa-trash-alt" style="color: darkslateblue;"></i></small>
 								</a>
 								<div class="tooltip inlineblock">
-									<img id="tooltipImage_CATAlgorithms" title="Algorithms Category" data-theme="myTooltipTheme" src="images/Tooltip_icon.png" class="guiIconDimensions" alt="More Info on Algorithms Category">
-									<div id="tooltipContent_CATAlgorithms" class="tooltiptext">
+									<img id="tooltipImage_Details" title="Data" data-theme="myTooltipTheme" src="images/Tooltip_icon.png" class="guiIconDimensions" alt="More Info on Data">
+									<div id="tooltipContent_Details" class="tooltiptext">
 										<div class="marginTop10px">
-											<p>The Algorithms Category divides the data into "continuous", amenable to most standard statistical processing, and "discrete", generally sparse matrices and not amenable to many statistical methods. Metabolomics data is classified as "continuous" but run as both.</p>
+											<p>The Study Title Category allows filtering or searching on study titles.</p>
 										</div>
 									</div>
 								</div>
 							</div>
 						</div>
-						<div data-bind='class: $root.classAlgorithms' id="div-selectedAlgorithms">
-							<!-- ko foreach: $root.optionsAlgorithms -->
-								<input type="checkbox" data-bind="checkedValue: $data, checked: $root.selectedAlgorithms" /><span data-bind="text: $data"></span><br>
+						<div data-bind='class: $root.classDataFormat' id="div-selectedDetails">
+							<!-- ko foreach: $root.optionsDetails -->
+							<input type="checkbox" data-bind="checkedValue: $data, checked: $root.selectedDetails" /><span data-bind="text: $data"></span><br>
 							<!-- /ko -->
 						</div>
 					</div>
 					<div class="availSelDiv">
 						<div class="availSelDevLabel">
-							<label class="gridSizesTitle">Versions (special filter)</label>
+							<label class="gridSizesTitle">Data Versions</label>
 							<div>
-								<a title='Show all options' data-bind="visible: ($root.classVersions()==='availSelPaddedDiv divSelectedLess'), click: function () { $root.classVersions('availSelPaddedDiv divSelectedMore') }"><button class="qf-control-button">More</button></a>
-								<a title='Show fewer options' data-bind="visible: ($root.classVersions()==='availSelPaddedDiv divSelectedMore'), click: function () { $root.classVersions('availSelPaddedDiv divSelectedLess') }"><button class="qf-control-button">Less</button></a>
-								<a title='Clear selected' data-bind="click: function () { $root.selectedVersions.removeAll(); }">
+								<a title='Show all options' data-bind="visible: ($root.classDataVersions()==='availSelPaddedDiv divSelectedLess'), click: function () { $root.classDataVersions('availSelPaddedDiv divSelectedMore') }"><button class="qf-control-button">More</button></a>
+								<a title='Show fewer options' data-bind="visible: ($root.classDataVersions()==='availSelPaddedDiv divSelectedMore'), click: function () { $root.classDataVersions('availSelPaddedDiv divSelectedLess') }"><button class="qf-control-button">Less</button></a>
+								<a title='Clear selected' data-bind="click: function () { $root.selectedDataVersions.removeAll(); }">
 									<small><i class="fas fa-trash-alt" style="color: darkslateblue;"></i></small>
 								</a>
 								<div class="tooltip inlineblock">
-									<img id="tooltipImage_CATVersions" title="Versions Category" data-theme="myTooltipTheme" src="images/Tooltip_icon.png" class="guiIconDimensions" alt="More Info on Versions Category">
-									<div id="tooltipContent_CATVersions" class="tooltiptext">
+									<img id="tooltipImage_CATDataVersions" title="Versions Category" data-theme="myTooltipTheme" src="images/Tooltip_icon.png" class="guiIconDimensions" alt="More Info on Versions Category">
+									<div id="tooltipContent_CATDataVersions" class="tooltiptext">
 										<div class="marginTop10px">
-											<p>The Versions Category are the timestamps for when the data was acquired by the Query Form. This Category works different from the rest. By default, the Query Form will show the newest version of each dataset. Selecting one or more Versions, limits the results to that particular version. Note that in Standardized Data, each Version may only contain a single dataset.</p>
+											<p>The Data Versions Category are the timestamps for when the data was acquired.</p>
 										</div>
 									</div>
 								</div>
 							</div>
 						</div>
-						<div data-bind='class: $root.classVersions' id="div-selectedVersions">
-							<!-- ko foreach: $root.optionsVersions -->
-								<input type="checkbox" data-bind="checkedValue: $data, checked: $root.selectedVersions" /><span data-bind="text: $data"></span><br>
+						<div data-bind='class: $root.classDataVersions' id="div-selectedDataVersions">
+							<!-- ko foreach: $root.optionsDataVersions -->
+							<input type="checkbox" data-bind="checkedValue: $data, checked: $root.selectedDataVersions" /><span data-bind="text: $data"></span><br>
 							<!-- /ko -->
 						</div>
 					</div>
 					<div class="availSelDiv">
 						<div class="availSelDevLabel">
-							<label class="gridSizesTitle">Files</label>
+							<label class="gridSizesTitle">Test Versions</label>
 							<div>
-								<a title='Show all options' data-bind="visible: ($root.classFiles()==='availSelPaddedDiv divSelectedLess'), click: function () { $root.classFiles('availSelPaddedDiv divSelectedMore') }"><button class="qf-control-button">More</button></a>
-								<a title='Show fewer options' data-bind="visible: ($root.classFiles()==='availSelPaddedDiv divSelectedMore'), click: function () { $root.classFiles('availSelPaddedDiv divSelectedLess') }"><button class="qf-control-button">Less</button></a>
-								<a title='Clear selected' data-bind="click: function () { $root.selectedFiles.removeAll(); }">
+								<a title='Show all options' data-bind="visible: ($root.classTestVersions()==='availSelPaddedDiv divSelectedLess'), click: function () { $root.classTestVersions('availSelPaddedDiv divSelectedMore') }"><button class="qf-control-button">More</button></a>
+								<a title='Show fewer options' data-bind="visible: ($root.classTestVersions()==='availSelPaddedDiv divSelectedMore'), click: function () { $root.classTestVersions('availSelPaddedDiv divSelectedLess') }"><button class="qf-control-button">Less</button></a>
+								<a title='Clear selected' data-bind="click: function () { $root.selectedTestVersions.removeAll(); }">
 									<small><i class="fas fa-trash-alt" style="color: darkslateblue;"></i></small>
 								</a>
 								<div class="tooltip inlineblock">
-									<img id="tooltipImage_CATfiles" title="Files Category" data-theme="myTooltipTheme" src="images/Tooltip_icon.png" class="guiIconDimensions" alt="More Info on Files Category">
-									<div id="tooltipContent_CATfiles" class="tooltiptext">
+									<img id="tooltipImage_CATTestVersions" title="Versions Category" data-theme="myTooltipTheme" src="images/Tooltip_icon.png" class="guiIconDimensions" alt="More Info on Versions Category">
+									<div id="tooltipContent_CATTestVersions" class="tooltiptext">
 										<div class="marginTop10px">
-											<p>The Files Category lists the available types of files found within each dataset archive. You can use this to look for data with batch information or mutation files.</p>
+											<p>The Test Versions Category are the timestamps for when the data was acquired.</p>
 										</div>
 									</div>
 								</div>
 							</div>
 						</div>
-						<div data-bind='class: $root.classFiles' id="div-selectedFiles">
-							<!-- ko foreach: $root.optionsFiles -->
-								<input type="checkbox" data-bind="checkedValue: $data, checked: $root.selectedFiles" /><span data-bind="text: $data"></span><br>
+						<div data-bind='class: $root.classTestVersions' id="div-selectedTestVersions">
+							<!-- ko foreach: $root.optionsTestVersions -->
+							<input type="checkbox" data-bind="checkedValue: $data, checked: $root.selectedTestVersions" /><span data-bind="text: $data"></span><br>
+							<!-- /ko -->
+						</div>
+					</div>
+					<div class="availSelDiv">
+						<div class="availSelDevLabel">
+							<label class="gridSizesTitle">DataSet Type</label>
+							<div>
+								<a title='Show all options' data-bind="visible: ($root.classJobType()==='availSelPaddedDiv divSelectedLess'), click: function () { $root.classJobType('availSelPaddedDiv divSelectedMore') }"><button class="qf-control-button">More</button></a>
+								<a title='Show fewer options' data-bind="visible: ($root.classJobType()==='availSelPaddedDiv divSelectedMore'), click: function () { $root.classJobType('availSelPaddedDiv divSelectedLess') }"><button class="qf-control-button">Less</button></a>
+								<a title='Clear selected' data-bind="click: function () { $root.selectedJobType.removeAll(); }">
+									<small><i class="fas fa-trash-alt" style="color: darkslateblue;"></i></small>
+								</a>
+								<div class="tooltip inlineblock">
+									<img id="tooltipImage_CATJobType" title="DataSet Type Category" data-theme="myTooltipTheme" src="images/Tooltip_icon.png" class="guiIconDimensions" alt="More Info on DataSet Type Category">
+									<div id="tooltipContent_CATJobType" class="tooltiptext">
+										<div class="marginTop10px">
+											<p>Indicates if it is Original or Corrected Data.</p>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div data-bind='class: $root.classJobType' id="div-selectedJobType">
+							<!-- ko foreach: $root.optionsJobType -->
+							<input type="checkbox" data-bind="checkedValue: $data, checked: $root.selectedJobType" /><span data-bind="text: $data"></span><br>
 							<!-- /ko -->
 						</div>
 					</div>
@@ -660,16 +1265,40 @@
 						</div>
 						<br>
 						<div>
+							<!-- buttons and show value -->
 							<span data-bind="if: ('matrix'===$root.urlShowParam())">
-								&nbsp;<button type="button" class="sdb-control-button" onclick="location.href='?show=dsc'" title="Switch to DSC Values. (Refreshes page.)"><i class="fas fa-sync-alt" style="color: blue;"></i> Switch to DSC Values</button>
+								&nbsp;<small><strong>Basic Filter</strong></small>
+								&nbsp;<button type="button" class="sdb-control-button" onclick="location.href = '?show=dsc'" title="Switch to DSC Values. (Refreshes page.)"><i class="fas fa-sync-alt" style="color: blue;"></i> Switch to DSC Values</button>
+								&nbsp;<button type="button" class="sdb-control-button" onclick="location.href = '?show=kwd'" title="Switch to KWD (Kruskal-Wallis/Dunn's Test) Values. (Refreshes page.)"><i class="fas fa-sync-alt" style="color: blue;"></i> Switch to KWD Values</button>
+								&nbsp;<button type="button" class="sdb-control-button" onclick="location.href = '?show=advanced'" title="Switch to Advanced Filter. (Refreshes page.)"><i class="fas fa-sync-alt" style="color: blue;"></i> Switch to Advanced Filter</button>
 							</span>
 							<span data-bind="if: ('dsc'===$root.urlShowParam())">
-								&nbsp;<button type="button" class="sdb-control-button" onclick="location.href='?show=matrix'" title="Switch to Datasets. (Refreshes page.)"><i class="fas fa-sync-alt" style="color: blue;"></i> Switch to Datasets</button>
+								&nbsp;<small><strong>DSC Filter</strong></small>
+								&nbsp;<button type="button" class="sdb-control-button" onclick="location.href = '?show=matrix'" title="Switch to Datasets. (Refreshes page.)"><i class="fas fa-sync-alt" style="color: blue;"></i> Switch to Datasets</button>
+								&nbsp;<button type="button" class="sdb-control-button" onclick="location.href = '?show=kwd'" title="Switch to KWD (Kruskal-Wallis/Dunn's Test) Values. (Refreshes page.)"><i class="fas fa-sync-alt" style="color: blue;"></i> Switch to KWD Values</button>
+								&nbsp;<button type="button" class="sdb-control-button" onclick="location.href = '?show=advanced'" title="Switch to Advanced Filter. (Refreshes page.)"><i class="fas fa-sync-alt" style="color: blue;"></i> Switch to Advanced Filter</button>
+							</span>
+							<span data-bind="if: ('kwd'===$root.urlShowParam())">
+								&nbsp;<small><strong>KWD Filter</strong></small>
+								&nbsp;<button type="button" class="sdb-control-button" onclick="location.href = '?show=matrix'" title="Switch to Datasets. (Refreshes page.)"><i class="fas fa-sync-alt" style="color: blue;"></i> Switch to Datasets</button>
+								&nbsp;<button type="button" class="sdb-control-button" onclick="location.href = '?show=dsc'" title="Switch to DSC Values. (Refreshes page.)"><i class="fas fa-sync-alt" style="color: blue;"></i> Switch to DSC Values</button>
+								&nbsp;<button type="button" class="sdb-control-button" onclick="location.href = '?show=advanced'" title="Switch to Advanced Filter. (Refreshes page.)"><i class="fas fa-sync-alt" style="color: blue;"></i> Switch to Advanced Filter</button>
+							</span>
+							<span data-bind="if: ('advanced'===$root.urlShowParam())">
+								&nbsp;<small><strong>Advanced Filter</strong></small>
+								<div class="tooltip inlineblock">
+									<img id="tooltipImage_AdvFilter" title="Advanced Filter Notes" data-theme="myTooltipTheme" src="images/Tooltip_icon.png" class="guiIconDimensions" alt="Advanced Filter Notes">
+									<div id="tooltipContent_AdvFilter" class="tooltiptext">
+										<div class="marginTop10px">
+											<p>"-1" in the table indicates the equivalent of NA, NaN, or Not Available.</p>
+										</div>
+									</div>
+								</div>
+								&nbsp;<button type="button" class="sdb-control-button" onclick="location.href = '?show=matrix'" title="Switch to Datasets. (Refreshes page.)"><i class="fas fa-sync-alt" style="color: blue;"></i> Switch to Datasets</button>
+								&nbsp;<button type="button" class="sdb-control-button" onclick="location.href = '?show=dsc'" title="Switch to DSC Values. (Refreshes page.)"><i class="fas fa-sync-alt" style="color: blue;"></i> Switch to DSC Values</button>
+								&nbsp;<button type="button" class="sdb-control-button" onclick="location.href = '?show=kwd'" title="Switch to KWD (Kruskal-Wallis/Dunn's Test) Values. (Refreshes page.)"><i class="fas fa-sync-alt" style="color: blue;"></i> Switch to KWD Values</button>
 							</span>
 							&nbsp;<button type="button" class="sdb-control-button" data-bind="attr: { onclick: 'copyQueryString()' , title: 'Copy Query String for R Package' }"><i class="fab fa-r-project" style="color: red;"></i> Copy Query</button>
-							<!--
-							&nbsp;<button type="button" class="sdb-control-button" data-bind="attr: { onclick: 'copyURLString()' , title: 'Copy Bookmark-able URL' }"><i class="fas fa-globe" style="color: green;"></i> Copy URL</button>
-							-->
 							&nbsp;<button type="button" class="sdb-control-button" data-bind="attr: { onclick: 'downloadManifest()', title: 'Download TSV List for Available Data' }"><i class="fas fa-download" style="color: purple;"></i> Download List</button>
 							&nbsp;<button type="button" class="sdb-control-button" data-bind="attr: { onclick: 'clearSearch()', title: 'Clear Query' }"><i class="fas fa-trash-alt" style="color: darkslateblue;"></i> Clear Query</button>
 						</div>
@@ -680,5 +1309,5 @@
 				</div>
 			</div>
 		</div>
-	</body>
+    </body>
 </html>

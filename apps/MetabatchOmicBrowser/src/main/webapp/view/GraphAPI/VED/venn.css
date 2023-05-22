@@ -1,0 +1,51 @@
+/* 
+ *  Copyright (c) 2011-2022 University of Texas MD Anderson Cancer Center
+ *  
+ *  This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 2 of the License, or (at your option) any later version.
+ *  
+ *  This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+ *  
+ *  You should have received a copy of the GNU General Public License along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *  
+ *  MD Anderson Cancer Center Bioinformatics on GitHub <https://github.com/MD-Anderson-Bioinformatics>
+ *  MD Anderson Cancer Center Bioinformatics at MDA <https://www.mdanderson.org/research/departments-labs-institutes/departments-divisions/bioinformatics-and-computational-biology.html>
+ 
+ */
+
+*{
+	font-family: Arial,sans-serif;
+	font-size: 10px;
+}
+
+.SelectedBatch path
+{
+	/* stroke: red !important; */
+	/* important used to override class order and local styles */
+	fill-opacity: 60% !important;
+	fill: rgb(255, 0, 0) !important;
+}
+
+.columnDiv
+{
+	height: 100%;
+	width: 100%;
+}
+
+.VennPlottingDiv
+{
+	height: 100%;
+	width: 100%;
+}
+
+.ved-tooltip
+{
+    position: absolute;
+	text-align: center;
+	width: 60px;
+	height: 28px;
+	padding: 2px;
+	background: lightsteelblue;
+	border: 0px;
+	border-radius: 8px;
+	pointer-events: none;
+}

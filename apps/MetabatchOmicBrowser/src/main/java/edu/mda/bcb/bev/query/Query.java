@@ -1,4 +1,4 @@
-// Copyright (c) 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021 University of Texas MD Anderson Cancer Center
+// Copyright (c) 2011-2022 University of Texas MD Anderson Cancer Center
 //
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 2 of the License, or (at your option) any later version.
 //
@@ -11,9 +11,7 @@
 
 package edu.mda.bcb.bev.query;
 
-import edu.mda.bcb.bev.indexes.Indexes;
 import java.util.ArrayList;
-import javax.servlet.ServletContext;
 
 /**
  *
@@ -23,43 +21,52 @@ public class Query
 {
 	public ArrayList<String> mFiles;
 	public ArrayList<String> mSources;
-	public ArrayList<String> mVariants;
+	public ArrayList<String> mProgram;
 	public ArrayList<String> mProjects;
-	public ArrayList<String> mSubprojects;
 	public ArrayList<String> mCategories;
 	public ArrayList<String> mPlatforms;
 	public ArrayList<String> mData;
-	public ArrayList<String> mAlgorithms;
 	public ArrayList<String> mDetails;
-	public ArrayList<String> mVersions;
+	public ArrayList<String> mDataVersions;
+	public ArrayList<String> mTestVersions;
+	public ArrayList<String> mJobType;
 	// optional
+	public ArrayList<String> mAnalysisPath;
+	// optional DSC
 	public Double mOverallDSCmin;
 	public Double mOverallDSCmax;
 	public ArrayList<String> mOverallDSCpvalue;
+	// optional KWD
+	public boolean mCutoffFlag;
+	public boolean mBatchesCalledFlag;
+	// optional advanced
+	// use Integer instead of int, so non-existant values come through as null instead of 0
+	public Integer GTE_samples_matrix;
+	public Integer LTE_samples_matrix;
+	public boolean isNaN_samples_matrix;
+	public Integer GTE_samples_mutations;
+	public Integer LTE_samples_mutations;
+	public boolean isNaN_samples_mutations;
+	public Integer GTE_features_matrix;
+	public Integer LTE_features_matrix;
+	public boolean isNaN_features_matrix;
+	public Integer GTE_features_mutations;
+	public Integer LTE_features_mutations;
+	public boolean isNaN_features_mutations;
+	public Integer GTE_unknown_batches;
+	public Integer LTE_unknown_batches;
+	public boolean isNaN_unknown_batches;
+	public Integer GTE_batch_unique_cnt;
+	public Integer LTE_batch_unique_cnt;
+	public boolean isNaN_batch_unique_cnt;
+	public Integer GTE_correlated_batch_types;
+	public Integer LTE_correlated_batch_types;
+	public boolean isNaN_correlated_batch_types;
+	public Integer GTE_batch_type_count;
+	public Integer LTE_batch_type_count;
+	public boolean isNaN_batch_type_count;
 
-	public Query(ArrayList<String> theFiles, ArrayList<String> theSources, ArrayList<String> theVariants, 
-			ArrayList<String> theProjects, ArrayList<String> theSubprojects, ArrayList<String> theCategories, 
-			ArrayList<String> thePlatforms, ArrayList<String> theData, ArrayList<String> theAlgorithms, 
-			ArrayList<String> theDetails, ArrayList<String> theVersions,
-			Double theOverallDSCmin, Double theOverallDSCmax, ArrayList<String> theOverallDSCpvalue)
-	{
-		this.mFiles = theFiles;
-		this.mSources = theSources;
-		this.mVariants = theVariants;
-		this.mProjects = theProjects;
-		this.mSubprojects = theSubprojects;
-		this.mCategories = theCategories;
-		this.mPlatforms = thePlatforms;
-		this.mData = theData;
-		this.mAlgorithms = theAlgorithms;
-		this.mDetails = theDetails;
-		this.mVersions = theVersions;
-		// optional
-		this.mOverallDSCmin = theOverallDSCmin;
-		this.mOverallDSCmax = theOverallDSCmax;
-		this.mOverallDSCpvalue = theOverallDSCpvalue;
-	}
-	
+
 	public int countOptions()
 	{
 		int cnt = 0;
@@ -71,15 +78,11 @@ public class Query
 		{
 			cnt = cnt + 1;
 		}
-		if ((null!=this.mVariants)&&(this.mVariants.size()>0))
+		if ((null!=this.mProgram)&&(this.mProgram.size()>0))
 		{
 			cnt = cnt + 1;
 		}
 		if ((null!=this.mProjects)&&(this.mProjects.size()>0))
-		{
-			cnt = cnt + 1;
-		}
-		if ((null!=this.mSubprojects)&&(this.mSubprojects.size()>0))
 		{
 			cnt = cnt + 1;
 		}
@@ -95,23 +98,23 @@ public class Query
 		{
 			cnt = cnt + 1;
 		}
-		if ((null!=this.mAlgorithms)&&(this.mAlgorithms.size()>0))
-		{
-			cnt = cnt + 1;
-		}
 		if ((null!=this.mDetails)&&(this.mDetails.size()>0))
 		{
 			cnt = cnt + 1;
 		}
-		if ((null!=this.mVersions)&&(this.mVersions.size()>0))
+		if ((null!=this.mDataVersions)&&(this.mDataVersions.size()>0))
+		{
+			cnt = cnt + 1;
+		}
+		if ((null!=this.mTestVersions)&&(this.mTestVersions.size()>0))
 		{
 			cnt = cnt + 1;
 		}
 		return cnt;
 	}
 	
-	public Result process(Indexes theIndexes, ServletContext theSC)
-	{
-		return theIndexes.query(this, theSC);
-	}
+//	public Result process(Indexes theIndexes, ServletContext theSC)
+//	{
+//		return theIndexes.query(this, theSC);
+//	}
 }

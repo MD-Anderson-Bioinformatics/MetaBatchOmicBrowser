@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<!--
+ Copyright (c) 2011-2022 University of Texas MD Anderson Cancer Center
+ 
+ This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 2 of the License, or (at your option) any later version.
+ 
+ This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+ 
+ You should have received a copy of the GNU General Public License along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ 
+ MD Anderson Cancer Center Bioinformatics on GitHub <https://github.com/MD-Anderson-Bioinformatics>
+ MD Anderson Cancer Center Bioinformatics at MDA <https://www.mdanderson.org/research/departments-labs-institutes/departments-divisions/bioinformatics-and-computational-biology.html>
+
+-->
+<html style="height:100%; width:100%;">
+    <head>
+		<title>Barplot Diagram</title>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<link href="../../bev_basic.css?v=BEA_VERSION_TIMESTAMP" rel="stylesheet" type="text/css">
+		<link href="bar.css?v=BEA_VERSION_TIMESTAMP" rel="stylesheet" type="text/css">
+		<link href="../../fa5/css/all.css?v=BEA_VERSION_TIMESTAMP" rel="stylesheet" type="text/css">
+		<script src="../../lib/jquery-3.5.0.min.js?v=BEA_VERSION_TIMESTAMP" type="text/javascript" charset="utf-8"></script>
+		<script src="d3.v6.min.js?v=BEA_VERSION_TIMESTAMP" type="text/javascript" charset="utf-8"></script>
+		<script src="d3plus-text.v1.0.3.full.min.js?v=BEA_VERSION_TIMESTAMP" type="text/javascript" charset="utf-8"></script>
+		<script src="bar.js?v=BEA_VERSION_TIMESTAMP" type="text/javascript" charset="utf-8"></script>	
+		<script type="text/javascript">
+			/* global BarPlot */
+			function loadBarDiagram()
+			{
+				//console.log("BAR/index.html onload loadBarDiagram");
+				window.parent.globalDiagramControl.resizeUtil.iframeBarFunction(document.getElementById("DivLoadBarDiagram"),
+						BarPlot.BasicModel, BarPlot.DefaultParams(), BarPlot);
+			}
+		</script>
+    </head>
+    <body onload="loadBarDiagram()" style="height:90%; width:90%;">
+		<div id="DivLoadBarDiagram" style="width: 100%; height: 100%;">
+			<div class="columnDiv">
+				<div id="BarPlottingDiv" class="BarPlottingDiv plotAboveStrip">
+					<svg id="BarPlottingDivSVG" width="100%" height="100%">
+						<g id="BarPlottingTitle" width="100%" height="90"></g>
+						<g id="BarMouseG">
+							<!-- move over and down for axis and title space -->
+							<g id='BarMetaG' transform="translate(15,30)">
+								<g id="BarPlottingG"></g>
+								<g id="BarPlottingLabel"></g>
+							</g>
+						</g>
+					</svg>
+				</div>
+				<!-- <div id="BarControlDiv" class="controlStrip">
+					&nbsp;
+					<span>
+					<span id="BarResetZoomButton" class="controlButton">
+						<span class="fa-stack fa-lg controlButtonIcon">
+						<i class="fas fa-square fa-stack-1x controlButtonIcon" style="color: #ffcc99"></i>
+						<i class="fas fa-border-all fa-stack-1x controlButtonIcon" style="color: #1a0d00"></i>
+						<i class="fas fa-expand fa-stack-1x controlButtonIcon" style="color: #994d00"></i>
+						</span>
+						<span class="controlButtonLabel">Reset Zoom</span>
+					</span>
+					</span>
+				</div> -->
+			</div>
+		</div>
+    </body>
+</html>

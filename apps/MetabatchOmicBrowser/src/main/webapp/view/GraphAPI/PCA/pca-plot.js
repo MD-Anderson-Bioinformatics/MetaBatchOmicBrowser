@@ -882,7 +882,8 @@ function PcaPlot (model, node, legendNode, params)
 
 			centroids.exit().remove();
 
-			if (groupKey === "ShipDate") {
+			if ((groupKey === "ship_date") || (groupKey === "Ship Date"))
+			{
 
 				var trendlines = getTrendLines (batchData);
 
@@ -909,7 +910,8 @@ function PcaPlot (model, node, legendNode, params)
 			var centroids = centroidLayer.selectAll("path.centroid")
 								.data(drawnBatchData);
 			centroids.remove();
-			if (groupKey === "ShipDate") {
+			if ((groupKey === "ship_date") || (groupKey === "Ship Date"))
+			{
 
 				var trendlines = getTrendLines (batchData);
 
@@ -1660,10 +1662,20 @@ var lastPixelRatio = null;
 
 
 	// Provides the header necessary for browser to display SVG tags as an image
-	function _makeHeader(){
+	function _makeHeader(width, height){
 		// Package the image itself
 
-		header = '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">\n';
+		var header = '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"';
+		
+		if (null!==width)
+		{
+			header = header + ' width="' + width + '"';
+		}
+		if (null!==height)
+		{
+			header = header + ' height="' + height + '"';
+		}
+		header = header + '>\n';
 		
 		//var header = '<?xml version="1.0" standalone="no"?>';
 		//header = header + '<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">\n';
@@ -1686,12 +1698,14 @@ var lastPixelRatio = null;
 	
 	function _getSVGContent () {
 		// should check that svg is actually in parent ? ###
-		return _makeHeader() + svg.node().parentNode.innerHTML + _makeFooter();
+		var width = svg.node().getAttribute("width");
+		var height = svg.node().getAttribute("height");
+		return _makeHeader(width, height) + svg.node().parentNode.innerHTML + _makeFooter();
 	}
 	
 	function _getExtraPdfContent(thePdfObject)
 	{
-		thePdfObject.addPage();
+		thePdfObject.addPage({compress: false, size: [612, 792]});
 		var annots = _getComponentAnnotations();
 		annots.forEach(function(theRow)
 		{
@@ -1721,11 +1735,17 @@ var lastPixelRatio = null;
 		return thePdfObject;
 	}
 	
-	function _getLegendSVGContent () {
+	function _getLegendSVGContent ()
+	{
 		// should check that svg is actually in parent ? ###
-		if(legendNode !== null) {
-			return _makeHeader() + legendNode.innerHTML + _makeFooter();	
-		}else{
+		if(legendNode !== null)
+		{
+			var width = null;
+			var height = legendNode.firstChild.getAttribute("height");
+			return _makeHeader(width, height) + legendNode.innerHTML + _makeFooter();	
+		}
+		else
+		{
 			return "";
 		}
 	}
@@ -1745,7 +1765,6 @@ var lastPixelRatio = null;
 //	plot.getPlotType = () => "PcaPlot";		// ### Ugly
 //	return plot;
 	
-	// TODO: fix hack: not sure what plot(){} is for above
 	this.redrawPlot = redraw;
 	this.resizePlot = _resizePlot;
 	this.resetScale = _resetScale;

@@ -1,4 +1,4 @@
-// Copyright (c) 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021 University of Texas MD Anderson Cancer Center
+// Copyright (c) 2011-2022 University of Texas MD Anderson Cancer Center
 //
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 2 of the License, or (at your option) any later version.
 //
@@ -21,15 +21,14 @@ public class OptionKeys
 {
 	public TreeSet<String> mFiles;
 	public TreeSet<String> mSource;
-	public TreeSet<String> mVariant;
+	public TreeSet<String> mProgram;
 	public TreeSet<String> mProject;
-	public TreeSet<String> mSubproject;
 	public TreeSet<String> mCategory;
 	public TreeSet<String> mPlatform;
 	public TreeSet<String> mData;
-	public TreeSet<String> mAlgorithm;
 	public TreeSet<String> mDetail;
-	public TreeSet<String> mVersion;
+	public TreeSet<String> mDataVersion;
+	public TreeSet<String> mTestVersion;
 	// optional
 	public TreeSet<String> mOverallDSCpvalue;
 	
@@ -37,15 +36,14 @@ public class OptionKeys
 	{
 		mFiles = new TreeSet<>();
 		mSource = new TreeSet<>();
-		mVariant = new TreeSet<>();
+		mProgram = new TreeSet<>();
 		mProject = new TreeSet<>();
-		mSubproject = new TreeSet<>();
 		mCategory = new TreeSet<>();
 		mPlatform = new TreeSet<>();
 		mData = new TreeSet<>();
-		mAlgorithm = new TreeSet<>();
 		mDetail = new TreeSet<>();
-		mVersion = new TreeSet<>();
+		mDataVersion = new TreeSet<>();
+		mTestVersion = new TreeSet<>();
 		// optional
 		mOverallDSCpvalue = new TreeSet<>();
 	}
@@ -55,18 +53,17 @@ public class OptionKeys
 		for (Dataset ds : theDS)
 		{
 			mFiles.addAll(ds.mFiles);
-			mSource.add(ds.mSource);
-			mVariant.add(ds.mVariant);
-			mProject.add(ds.mProject);
-			mSubproject.add(ds.mSubproject);
-			mCategory.add(ds.mCategory);
-			mPlatform.add(ds.mPlatform);
-			mData.add(ds.mData);
-			mAlgorithm.add(ds.mAlgorithm);
-			mDetail.add(ds.mDetail);
-			mVersion.add(ds.mVersion);
+			mSource.add(ds.mEntry.getSource());
+			mProgram.add(ds.mEntry.getProgram());
+			mProject.add(ds.mEntry.getProject());
+			mCategory.add(ds.mEntry.getCategory());
+			mPlatform.add(ds.mEntry.getPlatform());
+			mData.add(ds.mEntry.getData());
+			mDetail.add(ds.mEntry.getDetails());
+			mDataVersion.add(ds.mEntry.getDataVersion());
+			mTestVersion.add(ds.mEntry.getTestVersion());
 			// optional
-			mOverallDSCpvalue.add(ds.mOverallDSCpvalue);
+			mOverallDSCpvalue.add(ds.mEntry.getOverallDSCpvalue());
 		}
 	}
 }

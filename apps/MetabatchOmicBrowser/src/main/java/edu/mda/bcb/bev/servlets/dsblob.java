@@ -1,4 +1,4 @@
-// Copyright (c) 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021 University of Texas MD Anderson Cancer Center
+// Copyright (c) 2011-2022 University of Texas MD Anderson Cancer Center
 //
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 2 of the License, or (at your option) any later version.
 //
@@ -11,8 +11,8 @@
 
 package edu.mda.bcb.bev.servlets;
 
-import edu.mda.bcb.bev.indexes.Indexes;
 import edu.mda.bcb.bev.startup.LoadIndexFiles;
+import edu.mda.bcb.bev.util.ScanCheck;
 import edu.mda.bcb.bev.util.ZipUtil;
 import java.io.File;
 import java.io.IOException;
@@ -47,17 +47,19 @@ public class dsblob extends HttpServlet
 	{
 		try
 		{
+			ScanCheck.checkForSecurity(request);
 			this.log("dsblob: get json index");
 			String id = request.getParameter("id");
+			ScanCheck.checkForMetaCharacters(id);
 			String text = request.getParameter("text");
+			ScanCheck.checkForMetaCharacters(text);
 			if (text.startsWith("/"))
 			{
 				text = text.substring(1);
 			}
 			this.log("dsblob: id = " + id);
 			this.log("dsblob: text = " + text);
-			Indexes myIndexes = LoadIndexFiles.M_BEV_DIA_INDEXES;
-			File zipPath = myIndexes.getResultsPath(id);
+			File zipPath = LoadIndexFiles.M_PATH_LOOKUP.getResultsPath(id);
 			this.log("dsblob: zipPath = " + zipPath.getAbsolutePath());
 			this.log("dsblob: call streamFile");
 			ZipUtil.streamFile(zipPath.getAbsolutePath(), text, response, this, "application/octet-stream");

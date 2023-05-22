@@ -27,7 +27,7 @@ class UtilBoxplot
 	{
 		var self = this;
 		// BatchData.tsv 
-		var batchFile = self.indexKO().mbatch.batchdata;
+		var batchFile = self.newDiagram.batch_data;
 		// "entry_label": "ShipDate", -- batch type being viewed
 		var batchType = self.newDiagram.entry_label;
 		// batchType decodeURIComponent("%c2%b1")
@@ -38,17 +38,16 @@ class UtilBoxplot
 		// "box_histogram": "/BoxPlot/AllSample-Data/BoxPlot_AllSample-Data_Histogram-ShipDate.tsv"
 		var histogramFile = self.newDiagram.box_histogram;
 		// title from index
-		var title = self.indexKO().mbatch.mbatch_run
-					+ "/" + self.indexKO().source
-					+ "/" + self.indexKO().variant
+		var title = self.indexKO().source
+					+ "/" + self.indexKO().program
 					+ "/" + self.indexKO().project
-					+ "/" + self.indexKO().subProject
 					+ "/" + self.indexKO().category
 					+ "/" + self.indexKO().platform
 					+ "/" + self.indexKO().data
-					+ "/" + self.indexKO().algorithm
 					+ ((""!==self.indexKO().details)?("/" + this.indexKO().details):"")
-					+ "/" + self.indexKO().mbatch.dataset_type;
+					+ ((""!==self.indexKO().data_version)?("/" + this.indexKO().data_version):"")
+					+ ((""!==self.indexKO().test_version)?("/" + this.indexKO().test_version):"")
+					+ "/" + batchType;
 		var [plotDiv, plotDetailedDiv, legendDiv] = self.addDivs(document.getElementById(self.divDiagramId), document.getElementById(self.divLegendId));
 		var [boxWidth,
 			boxHeight,
@@ -58,6 +57,10 @@ class UtilBoxplot
 		//console.log("newBoxplot boxHeight=" + boxHeight);
 		//console.log("newBoxplot detailedWidth=" + detailedWidth);
 		//console.log("newBoxplot detailedHeight=" + detailedHeight);
+		console.log("newBoxplot boxFile=" + boxFile);
+		console.log("newBoxplot batchFile=" + batchFile);
+		console.log("newBoxplot annotationFile=" + annotationFile);
+		console.log("newBoxplot histogramFile=" + histogramFile);
 		this.plot = new BeaBoxplot(
 				boxFile, // theBoxDataFile
 				batchFile, // theBatchDataFile
@@ -127,7 +130,7 @@ class UtilBoxplot
 		var bbox = theDiagramDiv.getBoundingClientRect();
 		//console.log("UtilBoxplot::dimensions");
 		//console.log(bbox);
-		// TODO remove magic numbers
+		// TODO:BEV: remove magic numbers
 		var bw = (bbox.width - 20);
 		var bh = (bbox.height - 20);
 		if (bw<500)
@@ -148,6 +151,7 @@ class UtilBoxplot
 	
 	getDataFileCallback(theTextFile)
 	{
+		console.log("UtilBoxplot::getDataFileCallback theTextFile='" + theTextFile + "'");
 		const dataPromise = new Promise((resolve, reject) =>
 		{
 			// used to not turn entry and Id columns into numbers, when batch "00314" becomes 314
@@ -161,7 +165,7 @@ class UtilBoxplot
 				}
 				return value;
 			};
-			if (null!==theTextFile)
+			if (notUN(theTextFile))
 			{
 				//getDataFile(theRequestedId, theTextFile, theProcessCallback)
 				// use .then, not .done, cause this is sometimes JQuery, sometimes a Promise

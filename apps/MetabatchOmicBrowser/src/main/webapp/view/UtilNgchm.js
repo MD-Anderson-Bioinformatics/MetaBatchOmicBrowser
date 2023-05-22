@@ -136,8 +136,9 @@ class UtilNgchm
 		}
 	}
 
-	plotNGCHMhtml(theTextData, theNgchm)
+	plotNGCHMhtml(theTextData)
 	{
+		// , theNgchm
 		var self = this;
 		var ngchm = document.createElement('iframe');
 		// NOTE: assumes only one ngchm iframe
@@ -147,9 +148,9 @@ class UtilNgchm
 		ngchm.classList.remove("ngchmHidden");
 		ngchm.classList.add("ngchmVisible");
 		ngchm.classList.add("plotChild");
-		theNgchm.setAttribute("srcdoc", theTextData);
+		ngchm.setAttribute("srcdoc", theTextData);
 		var plotDiv = document.getElementById(self.divDiagramId);
-		plotDiv.appendChild(theNgchm);
+		plotDiv.appendChild(ngchm);
 	}
 
 	plotNGCHMngchm(theDatasetId, theNgchmFile)
@@ -203,7 +204,7 @@ class UtilNgchm
 			var ngchmFileNgchm = ngchmFileHtml.replace(".html", "");
 			this.dataAccess.getExistance(self.datasetId, ngchmFileNgchm).then(function (exists)
 			{
-				if ("false"===exists)
+				if (("false"===exists) || (false===globalDataAccess.isOnline()))
 				{
 					globalDataAccess.getDataFile(self.datasetId, ngchmFileHtml).then(function (theTextData)
 					{
@@ -233,9 +234,7 @@ class UtilNgchm
 	finishedCallback()
 	{
 		//console.log("UtilNgchm::finishedCallback called");
-		// TODO: TDC new
 		// call through globalDiagramControl in order to trigger other gui events
-		// this.resize();
 		globalDiagramControl.resize();
 	};
 

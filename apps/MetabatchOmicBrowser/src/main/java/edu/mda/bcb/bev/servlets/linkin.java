@@ -1,4 +1,4 @@
-// Copyright (c) 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021 University of Texas MD Anderson Cancer Center
+// Copyright (c) 2011-2022 University of Texas MD Anderson Cancer Center
 //
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 2 of the License, or (at your option) any later version.
 //
@@ -11,10 +11,10 @@
 
 package edu.mda.bcb.bev.servlets;
 
+import edu.mda.bcb.bev.util.ScanCheck;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -46,17 +46,20 @@ public class linkin extends HttpServlet
 	{
 		try
 		{
+			ScanCheck.checkForSecurity(request);
 			this.log("linkin::processRequest linkins");
 			String linkType = request.getParameter("linkType");
+			ScanCheck.checkForMetaCharacters(linkType);
 			String searchOp = request.getParameter("searchOp");
+			ScanCheck.checkForMetaCharacters(searchOp);
 			String newUrl = "index.html";
 			if ("mw-study".equals(linkType))
 			{
-				newUrl = newUrl + "?default=" + URLEncoder.encode("{\"mProjects\":[\"" + searchOp + "\"],\"mData\":[]}", StandardCharsets.UTF_8.name());
+				newUrl = newUrl + "?default=" + URLEncoder.encode("{\"mProgram\":[\"" + searchOp + "\"],\"mData\":[]}", StandardCharsets.UTF_8.name());
 			}
 			else if ("mw-analysis".equals(linkType))
 			{
-				newUrl = newUrl + "?default=" + URLEncoder.encode("{\"mSubprojects\":[\"" + searchOp + "\"],\"mData\":[]}", StandardCharsets.UTF_8.name());
+				newUrl = newUrl + "?default=" + URLEncoder.encode("{\"mProjects\":[\"" + searchOp + "\"],\"mData\":[]}", StandardCharsets.UTF_8.name());
 			}
 			this.log("linkin::processRequest newUrl = " + newUrl);
 			newUrl = response.encodeRedirectURL(newUrl);

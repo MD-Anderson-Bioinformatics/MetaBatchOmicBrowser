@@ -1,0 +1,29 @@
+Derivations	Category	Platform	Details	Category-New	Platform-New	Details-New
+current	Copy Number Segment	DNAcopy		Copy Number	DNAcopy	With CNV
+current	Masked Copy Number Segment	DNAcopy		Copy Number	DNAcopy	No CNV
+legacy	Copy number variation	Affymetrix SNP Array 6.0-hg19-nocnv		Copy Number	SNP6	
+current	Methylation Beta Value	Liftover	noXY	DNA Methylation	Combined Methylation	No Sex Chromosomes
+current	Methylation Beta Value	Liftover	wXY	DNA Methylation	Combined Methylation	With Sex Chromosomes
+legacy	DNA methylation	Illumina Human Methylation 27	noXY	DNA Methylation	Methylation 27	No Sex Chromosomes
+legacy	DNA methylation	Illumina Human Methylation 27	wXY	DNA Methylation	Methylation 27	With Sex Chromosomes
+legacy	DNA methylation	Illumina Human Methylation 450	noXY	DNA Methylation	Methylation 450	No Sex Chromosomes
+legacy	DNA methylation	Illumina Human Methylation 450	wXY	DNA Methylation	Methylation 450	With Sex Chromosomes
+current	Gene Expression Quantification	HTSeq - Counts		Gene Expression	HTSeq - Counts	
+current	Gene Expression Quantification	HTSeq - FPKM		Gene Expression	HTSeq - FPKM	
+current	Gene Expression Quantification	HTSeq - FPKM-UQ		Gene Expression	HTSeq - FPKM-UQ	
+legacy	Gene expression	RNA-Seq-gene-unnormalized-v2		Gene Expression	RNA-Seq-gene-unnormalized-v2	
+legacy	Gene expression	RNA-Seq-isoform-unnormalized-v2		Gene Expression	RNA-Seq-isoform-unnormalized-v2	
+legacy	Gene expression	RNA-Seq-v1		Gene Expression	RNA-Seq-v1	
+current	Isoform Expression Quantification	BCGSC miRNA Profiling		miRNA	miRNA-Seq Isoform Quantification	
+current	miRNA Expression Quantification	BCGSC miRNA Profiling		miRNA	miRNA-Seq Gene Quantification	
+legacy	miRNA-Seq	miRNA gene quantification-gene-hg19-miRNA		miRNA	miRNA-Seq Gene Quantification	
+legacy	miRNA-Seq	miRNA isoform quantification-hg19-isoform-miRNA		miRNA	miRNA-Seq Isoform Quantification	
+legacy	Simple somatic mutation	DNA-Seq-Illumina MiSeq		Mutations	DNA-Seq-Illumina MiSeq	
+current	Gene Level Copy Number Scores	GISTIC - Copy Number Score		Mutations	GISTIC Copy Number	
+current	Masked Somatic Mutation	MuSE Variant Aggregation and Masking		Mutations	MuSE Somatic	
+current	Mutations	Call Analysis		Mutations	MutBatch Analysis	
+legacy	Mutations	Call Analysis		Mutations	MutBatch Analysis	
+current	Masked Somatic Mutation	MuTect2 Variant Aggregation and Masking		Mutations	MuTect2 Somatic	
+current	Masked Somatic Mutation	SomaticSniper Variant Aggregation and Masking		Mutations	SomaticSniper Somatic	
+current	Masked Somatic Mutation	VarScan2 Variant Aggregation and Masking		Mutations	VarScan2 Somatic	
+legacy	Protein expression	MDA_RPPA_Core		Protein Expression	RPPA	

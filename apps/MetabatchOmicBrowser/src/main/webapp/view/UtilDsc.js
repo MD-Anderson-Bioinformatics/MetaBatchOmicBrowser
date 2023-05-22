@@ -26,17 +26,15 @@ class UtilDsc
 		// "dsc_values": "DSCOverview.tsv"
 		var dscFile = self.newDiagram.dsc_values;
 		// title from index
-		var title = self.indexKO().mbatch.mbatch_run
-					+ "/" + self.indexKO().source
-					+ "/" + self.indexKO().variant
+		var title = self.indexKO().source
+					+ "/" + self.indexKO().program
 					+ "/" + self.indexKO().project
-					+ "/" + self.indexKO().subProject
 					+ "/" + self.indexKO().category
 					+ "/" + self.indexKO().platform
 					+ "/" + self.indexKO().data
-					+ "/" + self.indexKO().algorithm
 					+ ((""!==self.indexKO().details)?("/" + this.indexKO().details):"")
-					+ "/" + self.indexKO().mbatch.dataset_type;
+					+ ((""!==self.indexKO().data_version)?("/" + this.indexKO().data_version):"")
+					+ ((""!==self.indexKO().test_version)?("/" + this.indexKO().test_version):"");
 		var [plotDiv, legendDiv] = self.addDivs(document.getElementById(self.divDiagramId), document.getElementById(self.divLegendId));
 		self.plot = new BeaDsc(title, plotDiv);
 		self.getDataFileCallback(dscFile).then(function(theTextData)
@@ -55,9 +53,7 @@ class UtilDsc
 	finishedCallback()
 	{
 		//console.log("UtilDsc::finishedCallback called");
-		// TODO: TDC new
 		// call through globalDiagramControl in order to trigger other gui events
-		// this.resize();
 		globalDiagramControl.resize();
 	};
 

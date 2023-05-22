@@ -473,7 +473,7 @@ function BoxPlotOuter(theDiv)
 		mYLabel = theYLabel;
 		if (null===mBoxplotPixels)
 		{
-			// TODO: replace 0 with mScrollbarHeight and move scrollbar and time result outside SVG, also need top level G
+			// TODO:BEV: replace 0 with mScrollbarHeight and move scrollbar and time result outside SVG, also need top level G
 			mBoxplotPixels = new Pixels(theWidth, theHeight,
 									viewWidth, viewHeight,
 									boxplotResize, boxplotZoom, boxplotDrag, 0);

@@ -4,25 +4,64 @@
 		<meta charset="UTF-8">
 		<!-- Global site tag (gtag.js) - Google Analytics -->
 		<script type="text/javascript">
-			function loadGoogleAnalytics()
+			/* Google Analytics start */
+			// based on https://rankmath.com/blog/google-analytics-gdpr/
+			const cyrb53 = function(str, seed = 0)
 			{
-				var gaScript = document.createElement('script');
-				gaScript.setAttribute('async', 'true');
-				gaScript.setAttribute('src', `https://www.googletagmanager.com/gtag/js?id=UA-33425717-1`);
-
-				var gaScript2 = document.createElement('script');
-				gaScript2.innerText = `window.dataLayer = window.dataLayer || [];` + 
-										`function gtag(){dataLayer.push(arguments);}` +
-										// https://developers.google.com/tag-platform/devguides/consent
-										//`gtag(\'consent\', \'default\', { \'analytics_storage\': \'denied\', \'ad_storage\': \'denied\' });` +
-										//`dataLayer.push({ \'event\': \'default_consent\' });` + 
-										`gtag(\'js\', new Date());` +
-										`gtag(\'config\', \'UA-33425717-1\');`;
-
-				document.documentElement.firstChild.appendChild(gaScript);
-				document.documentElement.firstChild.appendChild(gaScript2);
+				let h1 = 0xdeadbeef ^ seed,
+					h2 = 0x41c6ce57 ^ seed;
+				for (let i = 0, ch; i < str.length; i++)
+				{
+					ch = str.charCodeAt(i);
+					h1 = Math.imul(h1 ^ ch, 2654435761);
+					h2 = Math.imul(h2 ^ ch, 1597334677);
+				}
+				h1 = Math.imul(h1 ^ h1 >>> 16, 2246822507) ^ Math.imul(h2 ^ h2 >>> 13, 3266489909);
+				h2 = Math.imul(h2 ^ h2 >>> 16, 2246822507) ^ Math.imul(h1 ^ h1 >>> 13, 3266489909);
+				return 4294967296 * (2097151 & h2) + (h1 >>> 0);
 			};
-			loadGoogleAnalytics();
+
+			const getNavigatorId = function() 
+			{
+				let notAvailable = "unknown";
+				let ua = navigator.userAgent || notAvailable;
+				let lang = window.navigator.language || window.navigator.userLanguage || window.navigator.browserLanguage || window.navigator.systemLanguage || not_available;
+				let colors = window.screen.colorDepth || notAvailable;
+				let memKey = window.navigator.deviceMemory || notAvailable;
+				let pixels = window.devicePixelRatio || notAvailable;
+				let res = [window.screen.width, window.screen.height].sort().reverse().join("x");
+				return ua + ";" + lang + ";" + colors + ";" + memKey + ";" + pixels + ";" + res;
+			};
+
+			let validityInterval = Math.round (new Date() / 1000 / 3600 / 24 / 7);
+			let clientIDSource = window.location.host + ";" + getNavigatorId() + ";" + validityInterval;
+
+			window.clientIDHashed = cyrb53(clientIDSource).toString(16);
+			(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+			(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+			m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+			})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+			ga('create', 'UA-33425717-1', 
+			{
+				'storage': 'none',
+				'clientId': clientIDHashed
+			});
+			ga('set', 'anonymizeIp', true);
+			ga('send', 'pageview');
+			/* Google Analytics end */
+
+			function sendGAEvent(theEvent, theCategory, theLabel)
+			{
+				/* Google Analytics start */
+				ga('send', 
+				{
+					hitType: 'event',
+					eventCategory: theEvent,
+					eventAction: theCategory,
+					eventLabel: theLabel
+				});
+				/* Google Analytics end */
+			};
 		</script>
 		<title>MetaBatch Omic Browser</title>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -67,12 +106,13 @@
 				}
 			}
 			
-			function setCurrentViewDiagramMqa(theId, theDscid)
+			function setCurrentViewDiagramMqa(theId)
 			{
 				// called from View IFrame
 				// used to set selected dataset in Query IFrame
 				//console.log("Top index setCurrentViewDiagramMqa");
-				document.getElementById('queryIframe').contentWindow.setSelectedDatasetQuery(theId, theDscid);
+				//console.log("setCurrentViewDiagramMqa theId=" + theId);
+				document.getElementById('queryIframe').contentWindow.setSelectedDatasetQuery(theId);
 				enableInput();
 			}
 			
@@ -174,25 +214,36 @@
 				// query-div	mqaQueryDivVertical	mqaQueryDivHorizontal
 			}
 			
-			function queryLoadComplete()
+			function queryLoadComplete(theId, thePath)
 			{
-				//console.log("queryLoadComplete()");
+				//console.log("queryLoadComplete() begin theId=" + theId);
+				//console.log("queryLoadComplete() begin thePath=" + thePath);
 				// called from query iframe after load complete
-				//console.log("appview.loadedQuery()=" + appview.loadedQuery());
+				//console.log("queryLoadComplete() appview.loadedQuery()=" + appview.loadedQuery());
 				if (false===appview.loadedQuery())
 				{
-					// set self.viewUrl here not in Ajax urls call.
+					//console.log("queryLoadComplete() set self.viewUrl here not in Ajax urls call.");
 					// So it is set after the query iframe loads
-					if (""===appview.mqaURLsearchValues())
+					if (""!==thePath)
 					{
+						// TODO: build view/? arguments
+						var search = appview.getViewSearchFromPath(theId, thePath);
+						//console.log("queryLoadComplete() appview.getViewSearchFromPath()=" + search);
+						appview.viewUrl("view/?" + search);
+					}
+					else if (""===appview.mqaURLsearchValues())
+					{
+						//console.log("queryLoadComplete() appview.mqaDefaultViewParams()=" + appview.mqaDefaultViewParams());
 						appview.viewUrl("view/?" + appview.mqaDefaultViewParams());
 					}
 					else
 					{
+						//console.log("queryLoadComplete() appview.mqaURLsearchValues()=" + appview.mqaURLsearchValues());
 						appview.viewUrl("view/" + appview.mqaURLsearchValues());
 					}
 				}
 				appview.loadedQuery(true);
+				//console.log("queryLoadComplete() end");
 			}
 
 		</script>	
@@ -200,7 +251,7 @@
 	<body class="body-wrapper" onload="showNotice()" style="display: none;" data-bind="visible: $root.makeGuiVisible()">
 		<!-- put cut and paste inputs here, to avoid DOM mangling by tippy -->
 		<input type="text" readonly style="opacity: 0; position: absolute; z-index: -9999; pointer-events: none;" value="" id="mqaCopyUrl">
-		<div id='alrtLegalNotice' style="display: none;">
+		<div id='alrtLegalNotice' style="display: block;">
 			<p onclick="document.getElementById('alrtLegalNotice').style.display = 'none';"><small>Privacy Notice - Legal notice: Unauthorized access to the network is prohibited. This system is for the use of authorized users only. 
 				Individuals using this computer system without authority, or in excess of their authority, are subject to having all of 
 				their activities on this system monitored and recorded by system personnel. In the course of monitoring individuals 
@@ -224,7 +275,9 @@
 						</div>
 						&nbsp;
 						<div class="mdaHeaderLinks">
+							<button type="button" class="mdaHeaderButtons" onclick="window.open('view/index.html?usezip=TRUE', '_blank');" title="Open Viewer for local ZIP file. (New Tab.)"><i class="fas fa-question-circle" style="color: violet;"></i><i class="fas fa-external-link-alt" style="color: black;"></i> Local ZIP</button>
 							<button type="button" class="mdaHeaderButtons" onclick="copyURLString();" title="Copy Bookmark-able URL"><i class="fas fa-globe" style="color: green;"></i> Copy URL</button>
+							<button type="button" class="mdaHeaderButtons" onclick="window.open('OmicBrowserData.html', '_blank');" title="Finding and using data files. (New Tab.)"><i class="fas fa-question-circle" style="color: black;"></i><i class="fas fa-external-link-alt" style="color: black;"></i> Data Help</button>
 							<button type="button" class="mdaHeaderButtons" onclick="window.open('QFusage.html', '_blank');" title="Query help and usage documentation. (New Tab.)"><i class="fas fa-question-circle" style="color: black;"></i><i class="fas fa-external-link-alt" style="color: black;"></i> Query Help</button>
 							<button type="button" class="mdaHeaderButtons" onclick="window.open('MBatch_04-99_Statistics.html', '_blank');" title="Simplified explanation of some of the MBatch statistical analyses of batch effects. (New Tab.)"><i class="fas fa-question-circle" style="color: black;"></i><i class="fas fa-external-link-alt" style="color: black;"></i> Statistics</button>
 							<!-- keep formatted like this, so sed can process it -->

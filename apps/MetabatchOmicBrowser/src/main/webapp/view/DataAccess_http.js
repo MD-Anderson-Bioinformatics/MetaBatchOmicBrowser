@@ -4,36 +4,48 @@ class DataAccess_http
 	{
 		this.parent = theParent;
 	};
+	
+	isOnline()
+	{
+		return true;
+	}
 
 	addImage(theRequestedId, theImagePath, theDisplayDivId)
 	{
-		var imgId = theDisplayDivId + "dynamicImg";
-		//console.log("imgId=" + imgId);
-		$('#' + imgId).remove();
-		if (notUN(theImagePath))
+		if (""===theImagePath)
 		{
-			$.ajax(
+			console.log("No image path " + theRequestedId);
+		}
+		else
+		{
+			var imgId = theDisplayDivId + "dynamicImg";
+			//console.log("imgId=" + imgId);
+			$('#' + imgId).remove();
+			if (notUN(theImagePath))
 			{
-				type: "GET",
-				dataType: 'text',
-				url: "../dsimage",
-				cache: false,
-				data:
+				$.ajax(
 				{
-					id: theRequestedId,
-					image: theImagePath
-				},
-				success: function (theImageData)
-				{
-					$('#' + theDisplayDivId).append('<div class="displayPngDiv plotChild"><img class="displayPngImg plotChild" id="' + imgId + '" src="" /></div>');
-					$("#" + imgId).attr("src", "data:image/png;base64," + theImageData);
-				},
-				error: function (jqXHR, textStatus, errorThrown)
-				{
-					console.log("dsimage" + " :" + textStatus + " and " + errorThrown);
-					alert("dsimage" + " :" + textStatus + " and " + errorThrown);
-				}
-			});
+					type: "GET",
+					dataType: 'text',
+					url: "../dsimage",
+					cache: false,
+					data:
+					{
+						id: theRequestedId,
+						image: theImagePath
+					},
+					success: function (theImageData)
+					{
+						$('#' + theDisplayDivId).append('<div class="displayPngDiv plotChild"><img class="displayPngImg plotChild" id="' + imgId + '" src="" /></div>');
+						$("#" + imgId).attr("src", "data:image/png;base64," + theImageData);
+					},
+					error: function (jqXHR, textStatus, errorThrown)
+					{
+						console.log("dsimage" + " :" + textStatus + " and " + errorThrown);
+						alert("dsimage" + " :" + textStatus + " and " + errorThrown);
+					}
+				});
+			}
 		}
 	};
 
@@ -41,20 +53,20 @@ class DataAccess_http
 	{
 		var url = new URL(window.location.href);
 		var tmpId = url.searchParams.get("id");
-		var tmpDscid = url.searchParams.get("dscid");
-		var tmpIndex = url.searchParams.get("index");
-		if ((null === tmpId) || (null === tmpIndex))
+		//console.log("setIndexAndId tmpId=" + tmpId);
+		if (null === tmpId)
 		{
+			console.log("setIndexAndId No ID Found");
 			return new Promise((resolve, reject) => 
 			{
 				resolve(
 				{
-					"mIndexSource": null,
 					"mID": null,
-					"mDscid": null,
 					"mAlg": null,
 					"mLvl1": null,
 					"mLvl2": null,
+					"mLvl3": null,
+					"mLvl4": null,
 					"hideDB": null,
 					"hideLP": null
 				});
@@ -86,6 +98,8 @@ class DataAccess_http
 				let alg = url.searchParams.get("alg");
 				let lvl1 = url.searchParams.get("lvl1");
 				let lvl2 = url.searchParams.get("lvl2");
+				let lvl3 = url.searchParams.get("lvl3");
+				let lvl4 = url.searchParams.get("lvl4");
 				let hideDB = url.searchParams.get("hideDB");
 				//console.log("hideDB 1=" + hideDB);
 				if ("true"===hideDB)
@@ -110,12 +124,12 @@ class DataAccess_http
 				//console.log("hideLP 2=" + hideLP);
 				resolve(
 				{
-					"mIndexSource": tmpIndex,
 					"mID": tmpId,
-					"mDscid": tmpDscid,
 					"mAlg": alg,
 					"mLvl1": lvl1,
 					"mLvl2": lvl2,
+					"mLvl3": lvl3,
+					"mLvl4": lvl4,
 					"hideDB": hideDB,
 					"hideLP": hideLP
 				});
@@ -138,8 +152,29 @@ class DataAccess_http
 			}
 		});
 	};
+	
+	loadListOfBatchTypes(theRequestedIdKO)
+	{
+		//console.log("loadIndexAndId = " + theRequestedIdKO());
+		return $.ajax(
+		{
+			type: "GET",
+			dataType: 'json',
+			url: "../dsbtypes",
+			cache: false,
+			data:
+			{
+				id: theRequestedIdKO()
+			},
+			error: function (jqXHR, textStatus, errorThrown)
+			{
+				console.log("dsbtypes" + " :" + textStatus + " and " + errorThrown);
+				alert("dsbtypes" + " :" + textStatus + " and " + errorThrown);
+			}
+		});
+	};
 
-	loadIndexAndId(theRequestedIdKO, theRequestedIndexKO)
+	loadIndexAndId(theRequestedIdKO)
 	{
 		//console.log("loadIndexAndId = " + theRequestedIdKO());
 		return $.ajax(
@@ -150,8 +185,7 @@ class DataAccess_http
 			cache: false,
 			data:
 			{
-				id: theRequestedIdKO(), 
-				index: theRequestedIndexKO()
+				id: theRequestedIdKO()
 			},
 			error: function (jqXHR, textStatus, errorThrown)
 			{
@@ -206,11 +240,11 @@ class DataAccess_http
 		return ajax;
 	};
 	
-	getDataBlobPromise(theRequestedId, theTextFile, theBaseUrl)
+	getDataBlobPromise(theRequestedId, theTextFile, theUrlBase)
 	{
 		return new Promise((resolve, reject) => 
 		{
-			var url = theBaseUrl + "/dsblob?" 
+			var url = theUrlBase + "/dsblob?" 
 					+ "id=" + theRequestedId + "&" + "text=" + theTextFile;
 			var xhr = new XMLHttpRequest();
 			xhr.open("GET", url);

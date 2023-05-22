@@ -159,16 +159,16 @@ body.wait, body.wait *
 
 .controlButtonIcon
 {
-	vertical-align: middle;
-	box-sizing: border-box;
-	margin: 0;
-	padding: 0;
-	line-height: 10px;
-	width: 10px;
-	height: 10px;
-	box-sizing: border-box;
-	margin: 0;
-	padding: 0;
+	vertical-align: middle !important;
+	box-sizing: border-box !important;
+	margin: 0 !important;
+	padding: 0 !important;
+	line-height: 10px !important;
+	width: 10px !important;
+	height: 10px !important;
+	box-sizing: border-box !important;
+	margin: 0 !important;
+	padding: 0 !important;
 }
 
 .controlButtonLabel
@@ -728,3 +728,13 @@ div.container
 {
 }
 */
+
+
+/*  used by legend */
+
+.legendsymbolTransparent
+{
+	shape-rendering: crispedges;
+	stroke: black;
+	fill-opacity: 0.25;
+}

@@ -4,25 +4,64 @@
 		<meta charset="UTF-8">
 		<!-- Global site tag (gtag.js) - Google Analytics -->
 		<script type="text/javascript">
-			function loadGoogleAnalytics()
+			/* Google Analytics start */
+			// based on https://rankmath.com/blog/google-analytics-gdpr/
+			const cyrb53 = function(str, seed = 0)
 			{
-				var gaScript = document.createElement('script');
-				gaScript.setAttribute('async', 'true');
-				gaScript.setAttribute('src', `https://www.googletagmanager.com/gtag/js?id=UA-33425717-1`);
-
-				var gaScript2 = document.createElement('script');
-				gaScript2.innerText = `window.dataLayer = window.dataLayer || [];` + 
-										`function gtag(){dataLayer.push(arguments);}` +
-										// https://developers.google.com/tag-platform/devguides/consent
-										//`gtag(\'consent\', \'default\', { \'analytics_storage\': \'denied\', \'ad_storage\': \'denied\' });` +
-										//`dataLayer.push({ \'event\': \'default_consent\' });` + 
-										`gtag(\'js\', new Date());` +
-										`gtag(\'config\', \'UA-33425717-1\');`;
-
-				document.documentElement.firstChild.appendChild(gaScript);
-				document.documentElement.firstChild.appendChild(gaScript2);
+				let h1 = 0xdeadbeef ^ seed,
+					h2 = 0x41c6ce57 ^ seed;
+				for (let i = 0, ch; i < str.length; i++)
+				{
+					ch = str.charCodeAt(i);
+					h1 = Math.imul(h1 ^ ch, 2654435761);
+					h2 = Math.imul(h2 ^ ch, 1597334677);
+				}
+				h1 = Math.imul(h1 ^ h1 >>> 16, 2246822507) ^ Math.imul(h2 ^ h2 >>> 13, 3266489909);
+				h2 = Math.imul(h2 ^ h2 >>> 16, 2246822507) ^ Math.imul(h1 ^ h1 >>> 13, 3266489909);
+				return 4294967296 * (2097151 & h2) + (h1 >>> 0);
 			};
-			loadGoogleAnalytics();
+
+			const getNavigatorId = function() 
+			{
+				let notAvailable = "unknown";
+				let ua = navigator.userAgent || notAvailable;
+				let lang = window.navigator.language || window.navigator.userLanguage || window.navigator.browserLanguage || window.navigator.systemLanguage || not_available;
+				let colors = window.screen.colorDepth || notAvailable;
+				let memKey = window.navigator.deviceMemory || notAvailable;
+				let pixels = window.devicePixelRatio || notAvailable;
+				let res = [window.screen.width, window.screen.height].sort().reverse().join("x");
+				return ua + ";" + lang + ";" + colors + ";" + memKey + ";" + pixels + ";" + res;
+			};
+
+			let validityInterval = Math.round (new Date() / 1000 / 3600 / 24 / 7);
+			let clientIDSource = window.location.host + ";" + getNavigatorId() + ";" + validityInterval;
+
+			window.clientIDHashed = cyrb53(clientIDSource).toString(16);
+			(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+			(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+			m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+			})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+			ga('create', 'UA-33425717-2', 
+			{
+				'storage': 'none',
+				'clientId': clientIDHashed
+			});
+			ga('set', 'anonymizeIp', true);
+			ga('send', 'pageview');
+			/* Google Analytics end */
+
+			function sendGAEvent(theEvent, theCategory, theLabel)
+			{
+				/* Google Analytics start */
+				ga('send', 
+				{
+					hitType: 'event',
+					eventCategory: theEvent,
+					eventAction: theCategory,
+					eventLabel: theLabel
+				});
+				/* Google Analytics end */
+			};
 		</script>
 		<title>MetaBatch Omic Browser About/Help</title>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -68,7 +107,7 @@
 		<hr>
 		<h2>Software and BCB at MDA</h2>
 		<p>
-			<a href="https://github.com/MD-Anderson-Bioinformatics/MetaBatchOmicBrowser" target="_blank">GitHub</a> Link to public software release for MetaBatch Omic Browser. Includes docker-compose files for using Docker Hub images.
+			<a href="https://github.com/MD-Anderson-Bioinformatics/MetaBatchOmicBrowser" target="_blank">GitHub</a> Link to public software release for MetaBatch Omic Browser. Includes docker compose files for using Docker Hub images.
 		</p>
 		<p>
 			<a href="https://bioinformatics.mdanderson.org" target="_blank">About BCB at MD Anderson</a> Link to the Bioinformatics and Computations Biology website at UT MD Anderson Cancer Center.

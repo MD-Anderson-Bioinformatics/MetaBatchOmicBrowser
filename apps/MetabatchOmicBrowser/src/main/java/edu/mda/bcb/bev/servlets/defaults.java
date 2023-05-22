@@ -1,4 +1,4 @@
-// Copyright (c) 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021 University of Texas MD Anderson Cancer Center
+// Copyright (c) 2011-2022 University of Texas MD Anderson Cancer Center
 //
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 2 of the License, or (at your option) any later version.
 //
@@ -13,9 +13,9 @@ package edu.mda.bcb.bev.servlets;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import edu.mda.bcb.bev.indexes.Indexes;
 import edu.mda.bcb.bev.query.Dataset;
 import edu.mda.bcb.bev.startup.LoadIndexFiles;
+import edu.mda.bcb.bev.util.ScanCheck;
 import java.io.IOException;
 import java.io.PrintWriter;
 import javax.servlet.ServletException;
@@ -48,22 +48,26 @@ public class defaults extends HttpServlet
 			throws ServletException, IOException
 	{
 		response.setContentType("application/json;charset=UTF-8");
-		try (PrintWriter out = response.getWriter())
-		{
-			this.log("defaults: find defaults");
-			Indexes myIndexes = LoadIndexFiles.M_BEV_DIA_INDEXES;
-			//myIndexes.query(	ArrayList<String> theFiles,
-			//					ArrayList<String> theSources,
-			//					ArrayList<String> theVariants, 
-			//ArrayList<String> theProjects, ArrayList<String> theSubprojects, ArrayList<String> theCategories, 
-			//ArrayList<String> thePlatforms, ArrayList<String> theData, ArrayList<String> theAlgorithms, 
-			//ArrayList<String> theDetails, ArrayList<String> theVersions)
-			String id = myIndexes.getNewestIds().last();
-			Dataset ds = myIndexes.getDataset(id);
-			GsonBuilder builder = new GsonBuilder();
-			builder.setPrettyPrinting();
-			Gson gson = builder.create();
-			out.print(gson.toJson(ds));
+		try
+		{			
+			ScanCheck.checkForSecurity(request);
+			try (PrintWriter out = response.getWriter())
+			{
+				this.log("defaults: find defaults");
+				String id = LoadIndexFiles.M_PATH_LOOKUP.getNewestIds().last();
+				Dataset ds = LoadIndexFiles.M_PATH_LOOKUP.getDataset(id);
+				GsonBuilder builder = new GsonBuilder();
+				builder.setPrettyPrinting();
+				Gson gson = builder.create();
+				if (null!=ds)
+				{
+					out.print(gson.toJson(ds));
+				}
+				else
+				{
+					out.print("");
+				}
+			}
 		}
 		catch(Exception exp)
 		{

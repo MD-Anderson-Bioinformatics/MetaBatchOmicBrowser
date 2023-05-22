@@ -1,0 +1,38 @@
+# this is the docker compose version
+version: '3'
+
+# file version 2023-05-17-13171
+
+networks:
+    # network for this compose stack
+    mob_network_hub:
+        driver: bridge
+#SUBNET        ipam:
+#SUBNET            config:
+#SUBNET            - subnet: 0
+services:
+    mob_service:
+        networks:
+            - mob_network_hub
+        # restart this container if it crashes
+        restart: always
+        build:
+            # build from directory in context and Dockerfile
+            context: .
+            dockerfile: Dockerfile
+        container_name: mob_cont_hub
+        image: mdabcb/mob_image:2023-05-17-1317
+        volumes:
+            # outside access for data files outside:inside
+            - /MOB/DATA/index:/DAPI_MOB/INDEXES:ro
+            - /MOB/DATA/util:/DAPI_MOB/CONFIG:ro
+            - /MOB/DATA/results:/DAPI_MOB/DATA:ro
+            - /MOB/logs:/opt/tomcat/logs
+            # read-only file to set time to same in image as on server
+            - /etc/localtime:/etc/localtime:ro
+        ports:
+            # (outside)host port:container port(inside) for Tomcat
+            # outside/host port is only set here (other docker compose have ports in more than one place)
+            - "8080:8080"
+        tty: true
+

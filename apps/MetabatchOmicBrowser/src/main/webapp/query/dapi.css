@@ -339,6 +339,11 @@ table.mdaCollapsedTable>thead>tr>th
 	background: black;
 }
 
+table.dataTable>tbody>tr
+{
+    background-color: #fff !important;
+}
+
 table.mdaCollapsedTable>tbody>tr>td
 {
 	padding: 5px;
@@ -758,7 +763,6 @@ div.modalContent
 .jobInfoShowHideContainer
 {
 /*    The container of all jobInfo contents inside the template*/
-	/*    TODO: maybe percentage width/height*/
 	height: 15px;
 	width: 15px;
 	border: 1px solid black;

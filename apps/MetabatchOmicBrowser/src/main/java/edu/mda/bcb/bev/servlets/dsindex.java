@@ -1,4 +1,4 @@
-// Copyright (c) 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021 University of Texas MD Anderson Cancer Center
+// Copyright (c) 2011-2022 University of Texas MD Anderson Cancer Center
 //
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 2 of the License, or (at your option) any later version.
 //
@@ -8,11 +8,10 @@
 //
 // MD Anderson Cancer Center Bioinformatics on GitHub <https://github.com/MD-Anderson-Bioinformatics>
 // MD Anderson Cancer Center Bioinformatics at MDA <https://www.mdanderson.org/research/departments-labs-institutes/departments-divisions/bioinformatics-and-computational-biology.html>
-
 package edu.mda.bcb.bev.servlets;
 
-import edu.mda.bcb.bev.indexes.Indexes;
 import edu.mda.bcb.bev.startup.LoadIndexFiles;
+import edu.mda.bcb.bev.util.ScanCheck;
 import edu.mda.bcb.bev.util.ZipUtil;
 import java.io.File;
 import java.io.IOException;
@@ -47,18 +46,18 @@ public class dsindex extends HttpServlet
 	{
 		try
 		{
+			ScanCheck.checkForSecurity(request);
 			this.log("dsindex: get json index");
 			String id = request.getParameter("id");
-			String index = request.getParameter("index");
-			this.log("dsindex: id=" + id + " index=" + index);
-			Indexes myIndexes = LoadIndexFiles.M_BEV_DIA_INDEXES;
-			File zipPath = myIndexes.getResultsPath(id);
+			ScanCheck.checkForMetaCharacters(id);
+			this.log("dsindex: id=" + id);
+			File zipPath = LoadIndexFiles.M_PATH_LOOKUP.getResultsPath(id);
 			this.log("dsindex: zipPath = " + zipPath.getAbsolutePath());
 			String indexFile = "index.json";
 			ZipUtil.streamFile(zipPath.getAbsolutePath(), indexFile, response, this, "application/json;charset=UTF-8");
 			this.log("dsindex: true after streamFile");
 		}
-		catch(Exception exp)
+		catch (Exception exp)
 		{
 			log("dsindex::processRequest failed", exp);
 			response.setStatus(400);

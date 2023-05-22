@@ -1,5 +1,5 @@
 /* 
- *  Copyright (c) 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021 University of Texas MD Anderson Cancer Center
+ *  Copyright (c) 2011-2022 University of Texas MD Anderson Cancer Center
  *  
  *  This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 2 of the License, or (at your option) any later version.
  *  
@@ -60,6 +60,7 @@ notUN = function(theValue)
 // This is a simple *viewmodel* - JavaScript that defines the data and behavior of your UI
 function AppViewModel()
 {
+	console.log("MQAAppView::AppViewModel window.location.href=" + window.location.href);
 	var self = this;
 	self.type = "deferred";
 	self.makeGuiVisible = ko.observable(false); //.extend({ deferred: true });
@@ -156,7 +157,9 @@ function urlParams()
 			"&index=" + encodeURIComponent(viewJson.index) +
 			(notUN(viewJson.alg)?("&alg=" + encodeURIComponent(viewJson.alg)):"") +
 			(notUN(viewJson.lvl1)?("&lvl1=" + encodeURIComponent(viewJson.lvl1)):"") +
-			(notUN(viewJson.lvl2)?("&lvl2=" + encodeURIComponent(viewJson.lvl2)):"");
+			(notUN(viewJson.lvl2)?("&lvl2=" + encodeURIComponent(viewJson.lvl2)):"") +
+			(notUN(viewJson.lvl3)?("&lvl3=" + encodeURIComponent(viewJson.lvl3)):"") +
+			(notUN(viewJson.lvl4)?("&lvl4=" + encodeURIComponent(viewJson.lvl4)):"");
 }
 	
 // do not make computed, as view and query iframe functions do not exist at first
@@ -171,6 +174,10 @@ function copyURLString()
 	// based on https://www.w3schools.com/howto/howto_js_copy_clipboard.asp
 	var copyText = document.getElementById("mqaCopyUrl");
 	var url = urlCurrent();
+	if (url.length>=2000)
+	{
+		alert("Too many criteria selected - resulting URL is too long and may not function properly. Please select fewer criteria.");
+	}
 	//text = text.replace(/\"/g, "\\\"");
 	copyText.value = url;
 	copyText.select();

@@ -1,7 +1,7 @@
-/* global URL, globalDiagramControl */
+/* global URL, globalDiagramControl, d3 */
 
 class DiagramControl
-{
+{	
 	constructor(theDataAccess, theDiagramId, theLegendId, theDatapaneId, theBevUrl)
 	{
 		this.dataAccess = theDataAccess;
@@ -17,10 +17,82 @@ class DiagramControl
 		this.mLv1Sel = null;
 		this.mLv2Opt = null;
 		this.mLv2Sel = null;
+		this.mLv3Opt = null;
+		this.mLv3Sel = null;
+		this.mLv4Opt = null;
+		this.mLv4Sel = null;
 		this.mBevUrl = theBevUrl;
+
+		this.notExistHTML = function()
+		{
+			var alg = this.mAlgSel();
+			if (notUN(alg))
+			{
+				alg = alg.entry_label;
+			}
+			else
+			{
+				alg = "";
+			}
+			var lvl1 = this.mLv1Sel();
+			if (notUN(lvl1))
+			{
+				lvl1 = lvl1.entry_label;
+			}
+			else
+			{
+				lvl1 = "";
+			}
+			var lvl2 = this.mLv2Sel();
+			if (notUN(lvl2))
+			{
+				lvl2 = lvl2.entry_label;
+			}
+			else
+			{
+				lvl2 = "";
+			}
+			var lvl3 = this.mLv3Sel();
+			if (notUN(lvl3))
+			{
+				lvl3 = lvl3.entry_label;
+			}
+			else
+			{
+				lvl3 = "";
+			}
+			var lvl4 = this.mLv4Sel();
+			if (notUN(lvl4))
+			{
+				lvl4 = lvl4.entry_label;
+			}
+			else
+			{
+				lvl4 = "";
+			}
+			return "<br>Due to NAs or other data issues, this analysis was unable to be generated. Please try a different diagram." + 
+				"Click <button type='button' id='NotExistButton' " +
+				"onclick='bevFindDiagram(\"" + 
+				alg + "\", \"" + 
+				lvl1 + "\", \"" + 
+				lvl2 + "\", \"" + 
+				lvl3 + "\", \"" + 
+				lvl4 + "\" ); " + 
+				"return false;'>here</button> to find an available diagram.";
+		};
 	};
 	
-	setKOVars(theAlgOpt, theAlgSel, theLv1Opt, theLv1Sel, theLv2Opt, theLv2Sel)
+	addHighlighting(theClassname)
+	{
+		d3.selectAll(("."+theClassname)).classed("SelectedBatch", true);
+	}
+
+	removeHighlighting(theClassname)
+	{
+		d3.selectAll(("."+theClassname)).classed("SelectedBatch", false);
+	}
+	
+	setKOVars(theAlgOpt, theAlgSel, theLv1Opt, theLv1Sel, theLv2Opt, theLv2Sel, theLv3Opt, theLv3Sel, theLv4Opt, theLv4Sel)
 	{
 		this.mAlgOpt = theAlgOpt;
 		this.mAlgSel = theAlgSel;
@@ -28,13 +100,33 @@ class DiagramControl
 		this.mLv1Sel = theLv1Sel;
 		this.mLv2Opt = theLv2Opt;
 		this.mLv2Sel = theLv2Sel;
+		this.mLv3Opt = theLv3Opt;
+		this.mLv3Sel = theLv3Sel;
+		this.mLv4Opt = theLv4Opt;
+		this.mLv4Sel = theLv4Sel;
 	};
 	
 	getEntries(theDatasetPath)
 	{
+		if (theDatasetPath.startsWith("/"))
+		{
+			theDatasetPath = theDatasetPath.substr(1);
+		}
 		var splitted = theDatasetPath.split("/");
-		var size = splitted.length;
-		return [ splitted[size-3], splitted[size-2], splitted[size-1] ];
+		var alg = splitted[0];
+		var batchType = splitted[1];
+		var plotType = splitted[2];
+		var dataVersion = "";
+		if (splitted.length>3)
+		{
+			dataVersion = splitted[3];
+		}
+		var testVersion = "";
+		if (splitted.length>4)
+		{
+			testVersion = splitted[4];
+		}
+		return [ alg, batchType, plotType, dataVersion, testVersion ];
 	};
 	
 	getMatchingList(theList, theValue)
@@ -55,10 +147,11 @@ class DiagramControl
 	
 	selectDiagram(theDatasetPath)
 	{
-		//console.log("DiagramControl::selectDiagram called");
-		//console.log("theDatasetPath=" + theDatasetPath);
-		// get last three entries (algorith, level 1, level 2)
-		var [alg, lv1, lv2] = this.getEntries(theDatasetPath);
+		// only called from DSC to select a PCA+ result
+		console.log("DiagramControl::selectDiagram called");
+		console.log("theDatasetPath=" + theDatasetPath);
+		// get last four entries (algorith, level 1, level 2, level 3)
+		var [alg, lv1, lv2, lv3, lv4] = this.getEntries(theDatasetPath);
 		if ("PCA"===alg)
 		{
 			alg = "PCA+";
@@ -74,6 +167,14 @@ class DiagramControl
 		if((notUN(this.mLv2Sel()))&&(lv2!==this.mLv2Sel().entry_label))
 		{
 			this.mLv2Sel(this.getMatchingList(this.mLv2Opt(), lv2));
+		}
+		if((notUN(this.mLv3Sel()))&&(lv3!==this.mLv3Sel().entry_label))
+		{
+			this.mLv3Sel(this.getMatchingList(this.mLv3Opt(), lv3));
+		}
+		if((notUN(this.mLv4Sel()))&&(lv4!==this.mLv4Sel().entry_label))
+		{
+			this.mLv4Sel(this.getMatchingList(this.mLv4Opt(), lv4));
 		}
 	};
 	
@@ -120,7 +221,9 @@ class DiagramControl
 		if (notUN(theNewDiagram))
 		{
 			//console.log("handleNewDiagram continue");
-			if(notUN(theNewDiagram.diagram_type))
+			//console.log("handleNewDiagram theNewDiagram.diagram_type='" + theNewDiagram.diagram_type + "'");
+			//console.log(theNewDiagram);
+			if(notUN(theNewDiagram.diagram_type)&&(''!==theNewDiagram.diagram_type))
 			{
 				//console.log("handleNewDiagram " + theDatasetId);
 				//console.log(theNewDiagram);
@@ -130,7 +233,7 @@ class DiagramControl
 				this.resizeFunction = null;
 				this.removePlotChildren();
 				var diagramType = theNewDiagram.diagram_type;
-				console.log("diagramType = '" + diagramType + "'");
+				//console.log("diagramType = '" + diagramType + "'");
 				if ("boxplot" === diagramType)
 				{
 					this.handleNewBoxplot(theDatasetId, theNewDiagram);
@@ -143,7 +246,7 @@ class DiagramControl
 				{
 					this.handleNewUmap(theDatasetId, theNewDiagram);
 				}
-				else if ("DSC" === diagramType)
+				else if ("dsc" === diagramType)
 				{
 					this.handleNewDsc(theDatasetId, theNewDiagram);
 				}
@@ -171,10 +274,14 @@ class DiagramControl
 				{
 					this.handleNewMutbatch(theDatasetId, theNewDiagram);
 				}
+				else if ("venn" === diagramType)
+				{
+					this.handleNewVenn(theDatasetId, theNewDiagram);
+				}
 				else
 				{
 					console.log("Unknown diagram type:" + diagramType);
-					console.log(theNewDiagram);
+					//console.log(theNewDiagram);
 				}
 				// do not use async, call in finished called for diagrams
 				// this.resize();
@@ -201,7 +308,7 @@ class DiagramControl
 			//console.log("DiagramControl::handleNewMutbatch getExistance");
 			if ("false"===exists)
 			{
-				passedThis.dataAccess.addText("<br>Due to NAs or other data issues, this analysis was unable to be generated.", passedThis.divDiagramId);
+				passedThis.dataAccess.addText(globalDiagramControl.notExistHTML(), passedThis.divDiagramId);
 			}
 			else
 			{
@@ -229,17 +336,24 @@ class DiagramControl
 			//console.log("DiagramControl::handleNewDiscrete getExistance");
 			if ("false"===exists)
 			{
-				passedThis.dataAccess.addText("<br>Due to NAs or other data issues, this analysis was unable to be generated.", passedThis.divDiagramId);
+				//console.log("DiagramControl::handleNewDiscrete false===exists");
+				passedThis.dataAccess.addText(globalDiagramControl.notExistHTML(), passedThis.divDiagramId);
+				passedThis.resizeUtil = null;
+				// call through globalDiagramControl in order to trigger other gui events
+				// done here, since there is no Util for images
+				globalDiagramControl.resize();
 			}
 			else
 			{
-				passedThis.dataAccess.addImage(theDatasetId, theNewDiagram.diagram_image, passedThis.divDiagramId);
-				passedThis.dataAccess.addImage(theDatasetId, undefined, passedThis.divLegendId);
+				//console.log("DiagramControl::handleNewDiscrete pre newBoxplot");
+				var ub = new UtilBar(passedThis.dataAccess, passedThis.divDiagramId, passedThis.divLegendId, 
+									passedThis.divDatapaneId, theNewDiagram, passedThis.indexKO, theDatasetId);
+				ub.newBar(passedThis.makeDataPointLog);
+				passedThis.resizeUtil = ub;
+				//console.log("DiagramControl::handleNewDiscrete post newBoxplot");
+				//this.dataAccess.addImage(theDatasetId, theNewDiagram.diagram_image, this.divDiagramId);
+				//this.dataAccess.addImage(theDatasetId, theNewDiagram.legend_image, this.divLegendId);
 			}
-			passedThis.resizeUtil = null;
-			// call through globalDiagramControl in order to trigger other gui events
-			// done here, since there is no Util for images
-			globalDiagramControl.resize();
 			//console.log("DiagramControl::handleNewDiscrete getExistance done");
 		});
 	};
@@ -258,7 +372,7 @@ class DiagramControl
 			//console.log("DiagramControl::handleNewBoxplot getExistance");
 			if ("false"===exists)
 			{
-				passedThis.dataAccess.addText("<br>Due to NAs or other data issues, this analysis was unable to be generated.", passedThis.divDiagramId);
+				passedThis.dataAccess.addText(globalDiagramControl.notExistHTML(), passedThis.divDiagramId);
 				passedThis.resizeUtil = null;
 				// call through globalDiagramControl in order to trigger other gui events
 				// done here, since there is no Util for images
@@ -292,7 +406,7 @@ class DiagramControl
 			//console.log("DiagramControl::handleNewCdp getExistance");
 			if ("false"===exists)
 			{
-				passedThis.dataAccess.addText("<br>Due to NAs or other data issues, this analysis was unable to be generated.", passedThis.divDiagramId);
+				passedThis.dataAccess.addText(globalDiagramControl.notExistHTML(), passedThis.divDiagramId);
 			}
 			else
 			{
@@ -314,15 +428,15 @@ class DiagramControl
 		// clear any existing images -- clear calls are syncronous
 		this.dataAccess.addImage(theDatasetId, undefined, this.divDiagramId);
 		this.dataAccess.addImage(theDatasetId, undefined, this.divLegendId);
-		this.resizeUtil = null;
 		// use .then, not .done, cause this is sometimes JQuery, sometimes a Promise
 		var passedThis = this;
+		passedThis.resizeUtil = null;
 		this.dataAccess.getExistance(theDatasetId, theNewDiagram.umap_umapdat).then(function (exists)
 		{
 			//console.log("DiagramControl::handleNewUmap getExistance");
 			if ("false"===exists)
 			{
-				passedThis.dataAccess.addText("<br>Due to NAs or other data issues, this analysis was unable to be generated.", passedThis.divDiagramId);
+				passedThis.dataAccess.addText(globalDiagramControl.notExistHTML(), passedThis.divDiagramId);
 				passedThis.resizeUtil = null;
 				// call through globalDiagramControl in order to trigger other gui events
 				// done here, since there is no Util for images
@@ -347,22 +461,25 @@ class DiagramControl
 
 	handleNewCdp(theDatasetId, theNewDiagram)
 	{
-		//console.log("DiagramControl::handleNewCdp called");
+		console.log("DiagramControl::handleNewCdp called");
 		// clear any existing images -- clear calls are syncronous
 		this.dataAccess.addImage(theDatasetId, undefined, this.divDiagramId);
 		this.dataAccess.addImage(theDatasetId, undefined, this.divLegendId);
 		this.resizeUtil = null;
 		// use .then, not .done, cause this is sometimes JQuery, sometimes a Promise
+		console.log("DiagramControl::handleNewCdp theNewDiagram.diagram_image=" + theNewDiagram.diagram_image);
 		var passedThis = this;
 		this.dataAccess.getExistance(theDatasetId, theNewDiagram.diagram_image).then(function (exists)
 		{
-			//console.log("DiagramControl::handleNewCdp getExistance");
+			console.log("DiagramControl::handleNewCdp getExistance");
 			if ("false"===exists)
 			{
-				passedThis.dataAccess.addText("<br>Due to NAs or other data issues, this analysis was unable to be generated.", passedThis.divDiagramId);
+				console.log("DiagramControl::handleNewCdp addText");
+				passedThis.dataAccess.addText(globalDiagramControl.notExistHTML(), passedThis.divDiagramId);
 			}
 			else
 			{
+				console.log("DiagramControl::handleNewCdp addImage");
 				// load calls for an image are asyncronous
 				passedThis.dataAccess.addImage(theDatasetId, theNewDiagram.diagram_image, passedThis.divDiagramId);
 				passedThis.dataAccess.addImage(theDatasetId, theNewDiagram.legend_image, passedThis.divLegendId);
@@ -389,7 +506,7 @@ class DiagramControl
 			//console.log("DiagramControl::handleNewDsc getExistance");
 			if ("false"===exists)
 			{
-				passedThis.dataAccess.addText("<br>Due to NAs or other data issues, this analysis was unable to be generated.", passedThis.divDiagramId);
+				passedThis.dataAccess.addText(globalDiagramControl.notExistHTML(), passedThis.divDiagramId);
 				passedThis.resizeUtil = null;
 				// call through globalDiagramControl in order to trigger other gui events
 				// done here, since there is no Util for images
@@ -419,7 +536,7 @@ class DiagramControl
 			//console.log("DiagramControl::handleNewHierClust getExistance");
 			if ("false"===exists)
 			{
-				passedThis.dataAccess.addText("<br>Due to NAs or other data issues, this analysis was unable to be generated.", passedThis.divDiagramId);
+				passedThis.dataAccess.addText(globalDiagramControl.notExistHTML(), passedThis.divDiagramId);
 				passedThis.resizeUtil = null;
 				// call through globalDiagramControl in order to trigger other gui events
 				// done here, since there is no Util for images
@@ -430,6 +547,40 @@ class DiagramControl
 				var ub = new UtilHierClust(passedThis.dataAccess, passedThis.divDiagramId, passedThis.divLegendId, passedThis.divDatapaneId, theNewDiagram, passedThis.indexKO, theDatasetId);
 				ub.newHierClust(passedThis.makeDataPointLog);
 				passedThis.resizeUtil = ub;
+				//this.dataAccess.addImage(theDatasetId, theNewDiagram.diagram_image, this.divDiagramId);
+				//this.dataAccess.addImage(theDatasetId, theNewDiagram.legend_image, this.divLegendId);
+			}
+			//console.log("DiagramControl::handleNewHierClust getExistance done");
+		});
+	};
+
+	handleNewVenn(theDatasetId, theNewDiagram)
+	{
+		//console.log("DiagramControl::handleNewVenn called");
+		// clear any existing images -- clear calls are syncronous
+		this.dataAccess.addImage(theDatasetId, undefined, this.divDiagramId);
+		this.dataAccess.addImage(theDatasetId, undefined, this.divLegendId);
+		this.resizeUtil = null;
+		// use .then, not .done, cause this is sometimes JQuery, sometimes a Promise
+		var passedThis = this;
+		this.dataAccess.getExistance(theDatasetId, theNewDiagram.venn_data).then(function (exists)
+		{
+			//console.log("DiagramControl::handleNewVenn getExistance");
+			if ("false"===exists)
+			{
+				passedThis.dataAccess.addText(globalDiagramControl.notExistHTML(), passedThis.divDiagramId);
+				passedThis.resizeUtil = null;
+				// call through globalDiagramControl in order to trigger other gui events
+				// done here, since there is no Util for images
+				globalDiagramControl.resize();
+			}
+			else
+			{
+				var uv = new UtilVenn(passedThis.dataAccess, passedThis.divDiagramId, 
+									passedThis.divLegendId, passedThis.divDatapaneId, 
+									theNewDiagram, passedThis.indexKO, theDatasetId);
+				uv.newVenn(passedThis.makeDataPointLog);
+				passedThis.resizeUtil = uv;
 				//this.dataAccess.addImage(theDatasetId, theNewDiagram.diagram_image, this.divDiagramId);
 				//this.dataAccess.addImage(theDatasetId, theNewDiagram.legend_image, this.divLegendId);
 			}
@@ -454,7 +605,7 @@ class DiagramControl
 			//console.log("handleNewNgchm exists=" + exists);
 			if ("false"===exists)
 			{
-				passedThis.dataAccess.addText("<br>Due to NAs or other data issues, this analysis was unable to be generated.", passedThis.divDiagramId);
+				passedThis.dataAccess.addText(globalDiagramControl.notExistHTML(), passedThis.divDiagramId);
 				passedThis.resizeUtil = null;
 				// call through globalDiagramControl in order to trigger other gui events
 				// done here, since there is no Util for images
@@ -487,7 +638,7 @@ class DiagramControl
 			//console.log("DiagramControl::handleNewPca getExistance");
 			if ("false"===exists)
 			{
-				passedThis.dataAccess.addText("<br>Due to NAs or other data issues, this analysis was unable to be generated.", passedThis.divDiagramId);
+				passedThis.dataAccess.addText(globalDiagramControl.notExistHTML(), passedThis.divDiagramId);
 				passedThis.resizeUtil = null;
 				// call through globalDiagramControl in order to trigger other gui events
 				// done here, since there is no Util for images
@@ -519,7 +670,7 @@ class DiagramControl
 			//console.log("DiagramControl::handleNewSuperClust getExistance");
 			if ("false"===exists)
 			{
-				passedThis.dataAccess.addText("<br>Due to NAs or other data issues, this analysis was unable to be generated.", passedThis.divDiagramId);
+				passedThis.dataAccess.addText(globalDiagramControl.notExistHTML(), passedThis.divDiagramId);
 			}
 			else
 			{
@@ -581,7 +732,8 @@ class DiagramControl
 			try
 			{
 				//console.log("saveAsPdf try");
-				let docPdf = new PDFDocument({compress: false});
+				// LETTER = width: 612, height: 792
+				let docPdf = new PDFDocument({compress: false, size: [612, 792]});
 				if(notUN(myThis.resizeUtil))
 				{
 					// D3 plugin (or DSC)
@@ -590,7 +742,7 @@ class DiagramControl
 						// getSVGContent
 						let hiddenDiv = document.getElementById('renderSvgForPrinting');
 						hiddenDiv.innerHTML = myThis.resizeUtil.plot.getSVGContent();
-						SVGtoPDF(docPdf, hiddenDiv.firstChild, 0, 0, {useCSS:true});
+						SVGtoPDF(docPdf, hiddenDiv.firstChild, 0, 0, {useCSS: true, assumePt: false, preserveAspectRatio: 'xMinYMin meet', width: 612, height: 792});
 						hiddenDiv.innerHTML = "";
 						// handle plots that also have HTML content (like PCA+)
 						if(notUN(myThis.resizeUtil.plot.getExtraPdfContent))
@@ -598,10 +750,10 @@ class DiagramControl
 							docPdf = myThis.resizeUtil.plot.getExtraPdfContent(docPdf);
 						}
 						//console.log("typeof(myThis.resizeUtil.plot)");
-						// TODO: change method to detect hierclustering
-						if (typeof(myThis.resizeUtil.plot) === "function")
+						// TODO:BEV: change method to detect hierclustering
+						if ( (notUN(myThis.resizeUtil.plot.getGroupVariables)) && (notUN(document.getElementById("hierClustPlotLegend"))) )
 						{
-							// iterate over batch types
+							// iterate over batch types -- should be only for HC
 							// getLegendSVGContent
 							//console.log(myThis.resizeUtil.plot.getGroupVariables());
 							var batchTypeArray = myThis.resizeUtil.plot.getGroupVariables();
@@ -611,7 +763,7 @@ class DiagramControl
 								var batchType = batchTypeArray[batchTypeIndex];
 								//console.log("batchType");
 								//console.log(batchType);
-								docPdf.addPage();
+								docPdf.addPage({compress: false, size: [612, 792]});
 								// hierClustPlotSelect
 								//console.log("set batchType");
 								$('#hierClustPlotSelect').val(batchType).change();
@@ -625,7 +777,7 @@ class DiagramControl
 								//console.log("got svg text");
 								//console.log(svgText);
 								hiddenDiv.innerHTML = svgText;
-								SVGtoPDF(docPdf, hiddenDiv.firstChild, 0, 0, {useCSS:true});
+								SVGtoPDF(docPdf, hiddenDiv.firstChild, 0, 0, {useCSS: true, assumePt: false, preserveAspectRatio: 'xMinYMin meet', width: 612, height: 792});
 								hiddenDiv.innerHTML = "";
 							}
 						}
@@ -633,9 +785,9 @@ class DiagramControl
 						{
 							// getLegendSVGContent - for things other than hierarchical clustering
 							//console.log("myThis.resizeUtil.plot.getLegendSVGContent() 2");
-							docPdf.addPage();
+							docPdf.addPage({compress: false, size: [612, 792]});
 							hiddenDiv.innerHTML = myThis.resizeUtil.plot.getLegendSVGContent();
-							SVGtoPDF(docPdf, hiddenDiv.firstChild, 0, 0, {useCSS:true});
+							SVGtoPDF(docPdf, hiddenDiv.firstChild, 0, 0, {useCSS: true, assumePt: false, preserveAspectRatio: 'xMinYMin meet', width: 612, height: 792});
 							hiddenDiv.innerHTML = "";
 						}
 					}
@@ -651,7 +803,7 @@ class DiagramControl
 					});
 					if (notUN(document.getElementById('BEVDisplay_Legend_ContentdynamicImg')))
 					{
-						docPdf.addPage();
+						docPdf.addPage({compress: false, size: [612, 792]});
 						//const buffer2 = Buffer.from($('#BEVDisplay_Legend_ContentdynamicImg')[0].src,'base64');
 						var b64strB = String(document.getElementById('BEVDisplay_Legend_ContentdynamicImg').src);
 						docPdf.image(b64strB, 
@@ -674,7 +826,6 @@ class DiagramControl
 						// create a blobURI pointing to our Blob
 						link.href = URL.createObjectURL(blob);
 						link.download = fileName;
-						// TODO: look for nicer way to download blob
 						// some browser needs the anchor to be in the doc
 						document.body.append(link);
 						link.click();

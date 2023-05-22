@@ -7,6 +7,11 @@ class DataAccess_file
 		this.parent = theParent;
 		this.fileZip = null;
 	};
+	
+	isOnline()
+	{
+		return false;
+	}
 
 	setZipFile(theZipFile)
 	{
@@ -23,6 +28,7 @@ class DataAccess_file
 		{
 			if (notUN(theImagePath))
 			{
+				// console.log("addImage theImagePath = '" + theImagePath + "'");
 				// trim to remove first /
 				if (theImagePath.startsWith("/"))
 				{
@@ -108,6 +114,7 @@ class DataAccess_file
 	
 	getExistance(theRequestedId, theTextFile)
 	{
+		console.log("getExistance theTextFile='" + theTextFile + "'");
 		// trim to remove first /
 		if (theTextFile.startsWith("/"))
 		{
@@ -150,51 +157,56 @@ class DataAccess_file
 	
 	getDataFile(theRequestedId, theTextFile)
 	{
-		// trim to remove first /
-		if (theTextFile.startsWith("/"))
+		// console.log("getDataFile theTextFile='" + theTextFile + "'");
+		if (notUN(theTextFile))
 		{
-			theTextFile = theTextFile.substr(1);
-		}
-		var thisDA = this;
-		if (notUN(thisDA.fileZip))
-		{
-			return new Promise((resolveTop, reject) => 
+			// trim to remove first /
+			if (theTextFile.startsWith("/"))
 			{
-				var fr = new FileReader();
-				fr.onload = function ()
+				theTextFile = theTextFile.substr(1);
+			}
+			var thisDA = this;
+			if (notUN(thisDA.fileZip))
+			{
+				return new Promise((resolveTop, reject) => 
 				{
-					var data = fr.result;
-					//var array = new Int8Array(data);
-					JSZip.loadAsync(data).then(function(theZip)
+					var fr = new FileReader();
+					fr.onload = function ()
 					{
-						var myZippedFile = theZip.file(theTextFile);
-						if (null===myZippedFile)
+						var data = fr.result;
+						//var array = new Int8Array(data);
+						JSZip.loadAsync(data).then(function(theZip)
 						{
-							resolveTop("");
-						}
-						else
-						{
-							myZippedFile.async("uint8array").then(function(theArray)
+							var myZippedFile = theZip.file(theTextFile);
+							if (null===myZippedFile)
 							{
-								resolveTop(new TextDecoder().decode(theArray));
-							});
-						}
-					}, 
-					function (e)
-					{
-						console.log("Error reading " + thisDA.fileZip.name + ": " + e.message);
-						alert("Error reading " + thisDA.fileZip.name + ": " + e.message);
-					});
-				};
-				//console.log("read");
-				//console.log(thisDA.fileZip);
-				fr.readAsArrayBuffer(thisDA.fileZip);
-			});
+								resolveTop("");
+							}
+							else
+							{
+								myZippedFile.async("uint8array").then(function(theArray)
+								{
+									resolveTop(new TextDecoder().decode(theArray));
+								});
+							}
+						}, 
+						function (e)
+						{
+							console.log("Error reading " + thisDA.fileZip.name + ": " + e.message);
+							alert("Error reading " + thisDA.fileZip.name + ": " + e.message);
+						});
+					};
+					//console.log("read");
+					//console.log(thisDA.fileZip);
+					fr.readAsArrayBuffer(thisDA.fileZip);
+				});
+			}
 		}
 	};
 	
-	getDataBlobPromise(theRequestedId, theTextFile, theBaseUrl)
+	getDataBlobPromise(theRequestedId, theTextFile, theUrlBase)
 	{
+		// console.log("getDataBlobPromise theTextFile='" + theTextFile + "'");
 		// trim to remove first /
 		if (theTextFile.startsWith("/"))
 		{

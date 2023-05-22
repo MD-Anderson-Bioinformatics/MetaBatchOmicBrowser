@@ -1,4 +1,4 @@
-// Copyright (c) 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021 University of Texas MD Anderson Cancer Center
+// Copyright (c) 2011-2022 University of Texas MD Anderson Cancer Center
 //
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 2 of the License, or (at your option) any later version.
 //
@@ -11,8 +11,8 @@
 
 package edu.mda.bcb.bev.servlets;
 
-import edu.mda.bcb.bev.indexes.Indexes;
 import edu.mda.bcb.bev.startup.LoadIndexFiles;
+import edu.mda.bcb.bev.util.ScanCheck;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -49,10 +49,11 @@ public class dszipresults extends HttpServlet
 	{
 		try
 		{
+			ScanCheck.checkForSecurity(request);
 			this.log("dsblob: get ds zip");
 			String id = request.getParameter("id");
-			Indexes myIndexes = LoadIndexFiles.M_BEV_DIA_INDEXES;
-			File zipPath = myIndexes.getResultsPath(id);
+			ScanCheck.checkForMetaCharacters(id);
+			File zipPath = LoadIndexFiles.M_PATH_LOOKUP.getResultsPath(id);
 			if (null==zipPath)
 			{
 				throw new Exception("Requested file not found");

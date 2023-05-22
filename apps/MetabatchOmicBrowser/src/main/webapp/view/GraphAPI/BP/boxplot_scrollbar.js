@@ -41,7 +41,7 @@ function ScrollBar(theParentG, theGlobalXLoc, theBoxplotPixels, theHeight)
 	var mZoomResetCallback = theZoomResetCallback;
 	var mZoomInCallback = theZoomInCallback;
 */
-	// TODO: function d3AddUpdateId is duplicated in boxplot_outer.js and scrollbar.js
+	// TODO:BEV: function d3AddUpdateId is duplicated in boxplot_outer.js and scrollbar.js
 	function d3AddUpdateId(theFromElement, theSelectId, theAppend)
 	{
 		// data([]) is used  to bind an existing or create a new element, allowing the same code for updating or creating

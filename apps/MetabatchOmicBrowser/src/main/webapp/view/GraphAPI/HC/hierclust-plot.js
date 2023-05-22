@@ -868,7 +868,7 @@ function HierClustPlot (model, domNode, params)
 		return (result);
 	}
 
-	// TODO: convert to class to fix hack of using plot for "class"
+	// TODO:BEV: convert to class to fix hack of using plot for "class"
 	function plot () {}
 	plot.resizePlot = _resizePlot;
 	plot.resetScale = _resetScale;

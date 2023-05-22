@@ -69,7 +69,7 @@
 		// (note--lower and upper notch not represented)
 		// .breaks 0=lower whisker, 1=lower hinge, 2=median, 3=upper hinge, 4=upper whisker
 		// .outlierBands 0=LowerOutMax, 1=LowerOutMin, 2=UpperOutMin, 3=UpperOutMax
-		// TODO: ten is a "magic number". Alternative? -TDC
+		// TODO:BEV: ten is a "magic number". Alternative? -TDC
 		if (theWidth >= 10)
 		{
 			drawbox_med(theData, theYScale, theWidth, showLabels, g, theColorScale);

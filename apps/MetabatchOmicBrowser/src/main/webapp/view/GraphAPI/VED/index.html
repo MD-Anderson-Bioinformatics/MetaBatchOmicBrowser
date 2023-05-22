@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<!--
+ Copyright (c) 2011-2022 University of Texas MD Anderson Cancer Center
+ 
+ This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 2 of the License, or (at your option) any later version.
+ 
+ This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+ 
+ You should have received a copy of the GNU General Public License along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ 
+ MD Anderson Cancer Center Bioinformatics on GitHub <https://github.com/MD-Anderson-Bioinformatics>
+ MD Anderson Cancer Center Bioinformatics at MDA <https://www.mdanderson.org/research/departments-labs-institutes/departments-divisions/bioinformatics-and-computational-biology.html>
+
+-->
+<html style="height:100%; width:100%;">
+	<head>
+		<title>Venn Diagram</title>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<link href="../../bev_basic.css?v=BEA_VERSION_TIMESTAMP" rel="stylesheet" type="text/css">
+		<link href="venn.css?v=BEA_VERSION_TIMESTAMP" rel="stylesheet" type="text/css">
+		<link href="../../fa5/css/all.css?v=BEA_VERSION_TIMESTAMP" rel="stylesheet" type="text/css">
+		<script src="../../lib/jquery-3.5.0.min.js?v=BEA_VERSION_TIMESTAMP" type="text/javascript" charset="utf-8"></script>
+		<script src="d3.v4.min.js?v=BEA_VERSION_TIMESTAMP" type="text/javascript" charset="utf-8"></script>
+		<script src="d3plus-text.v1.0.2.full.min.js?v=BEA_VERSION_TIMESTAMP" type="text/javascript" charset="utf-8"></script>
+		<script src="venn.min.1.4.2.js?v=BEA_VERSION_TIMESTAMP" type="text/Javascript" charset="utf-8"></script>
+		<script src="venn.js?v=BEA_VERSION_TIMESTAMP" type="text/javascript" charset="utf-8"></script>	
+		<script type="text/javascript">
+			/* global VennPlot */
+			function loadVennDiagram()
+			{
+				console.log("VED/index.html onload loadVennDiagram");
+				window.parent.globalDiagramControl.resizeUtil.iframeVennFunction(document.getElementById("DivLoadVennDiagram"),
+					VennPlot.BasicModel, VennPlot.DefaultParams(), VennPlot);
+			};
+		</script>
+	</head>
+	<body onload="loadVennDiagram()" style="height:90%; width:90%;">
+		<div id="DivLoadVennDiagram" style="width: 100%; height: 100%;">
+			<div class="columnDiv">
+				<div id="VennPlottingDiv" class="VennPlottingDiv plotAboveStrip">
+					<svg id="VennPlottingDivSVG" width="100%" height="100%">
+						<g id="VennPlottingTitle" width="100%" height="90"></g>
+						<g id="VennMouseG">
+							<g id="VennPlottingG" transform="translate(0,30)"></g>
+						</g>
+					</svg>
+				</div>
+				<div id="VennControlDiv" class="controlStrip">
+					<span id="VennControlDiv_Radio">
+						<!-- Euler -->
+						<!-- to change default, must also update mThis display flags in venn.js -->
+						<span class="controlButton">
+							<input type="radio" id="euler" name="ev_plot_type" value="euler" class="controlButtonIcon">
+							<label for="euler" class="controlButtonLabel">To Scale (Best Effort)</label>
+						</span>
+						<!-- Venn (with Zeros) -->
+						<!--
+						&nbsp;
+						<span class="controlButton">
+						<input type="radio" id="venn-w-z" name="ev_plot_type" value="venn-w-z">
+						<label for="venn-w-z">Not to Scale (label empty set)</label>
+						</span>
+						-->
+						<!-- Venn (sans Zeros) -->
+						<!-- to change default, must also update mThis display flags in venn.js -->
+						&nbsp;
+						<span class="controlButton">
+							<input type="radio" id="venn-san" name="ev_plot_type" value="venn-san" class="controlButtonIcon" checked>
+							<label for="venn-san" class="controlButtonLabel">Not to Scale</label>
+						</span>
+					</span>
+					&nbsp;
+					<!-- Toggle labels -->
+					<span>
+						<span class="controlButton">
+							<input type="checkbox" id="VennDisableLabels" name="VennDisableLabels" value="ev-label-disable" class="controlButtonIcon">
+							<label for="venn-disable-labels" class="controlButtonLabel">Disable Labels</label>
+						</span>
+					</span>
+					&nbsp;
+					<!-- reset zoom -->
+					<span>
+						<span id="VennResetZoomButton" class="controlButton">
+							<span class="fa-stack fa-lg controlButtonIcon">
+								<i class="fas fa-square fa-stack-1x controlButtonIcon" style="color: #ffcc99"></i>
+								<i class="fas fa-border-all fa-stack-1x controlButtonIcon" style="color: #1a0d00"></i>
+								<i class="fas fa-expand fa-stack-1x controlButtonIcon" style="color: #994d00"></i>
+							</span>
+							<span class="controlButtonLabel">Reset Zoom</span>
+						</span>
+					</span>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>

@@ -471,7 +471,8 @@ function BeaBoxplot(theBoxDataFile, theBatchDataFile, theAnnotationDataFile, the
 		//console.log("dataReady2 call openFirstDetail");
 		mBoxplotOuter.openFirstDetail();
 		//console.log("dataReady2 after render and openFirstDetail");
-		// TODO: add back in $('#Reseter').click (function() {
+		// TODO:BEV: add back in?
+		// $('#Reseter').click (function() {
 		//	myPlot.resetScale();
 		//});
 		//console.log("dataReady2 dataReady2 finished");

@@ -1,25 +1,30 @@
 class DataAccess
 {
-	constructor()
+	constructor(theUseZip)
 	{
 		this.internalDataAccess = null;
-		this.protocol = window.location.protocol;
-		//console.log("protocol = " + this.protocol);
-		if ("file:"===this.protocol)
+		if (theUseZip)
 		{
 			console.log("do file based data access");
 			this.internalDataAccess = new DataAccess_file(this);
 		}
-		else if (("http:"===this.protocol)||("https:"===this.protocol))
+		else
 		{
 			console.log("do server based data access");
 			this.internalDataAccess = new DataAccess_http(this);
 		}
-		else
+	};
+	
+	trimSlashPrefix(theString)
+	{
+		if ((notUN(theString)) && (''!==theString))
 		{
-			console.log("Unrecognized protocol: '" + this.protocol + "'");
-			alert("Unrecognized protocol: '" + this.protocol + "'");
+			if (theString.startsWith("/"))
+			{
+				theString = theString.substr(1);
+			}
 		}
+		return theString;
 	};
 
 	addText(theText, theDisplayDivId)
@@ -33,6 +38,10 @@ class DataAccess
 	{
 		return this.internalDataAccess.addImage(theRequestedId, theImagePath, theDisplayDivId);
 	};
+	isOnline()
+	{
+		return this.internalDataAccess.isOnline();
+	};
 	setIndexAndId()
 	{
 		return this.internalDataAccess.setIndexAndId();
@@ -41,12 +50,17 @@ class DataAccess
 	{
 		return this.internalDataAccess.loadLinks();
 	};
-	loadIndexAndId(theRequestedIdKO, theRequestedIndexKO)
+	loadIndexAndId(theRequestedIdKO)
 	{
-		return this.internalDataAccess.loadIndexAndId(theRequestedIdKO, theRequestedIndexKO);
+		return this.internalDataAccess.loadIndexAndId(theRequestedIdKO);
+	};
+	loadListOfBatchTypes(theRequestedIdKO)
+	{
+		return this.internalDataAccess.loadListOfBatchTypes(theRequestedIdKO);
 	};
 	getExistance(theRequestedId, theTextFile)
 	{
+		theTextFile = this.trimSlashPrefix(theTextFile);
 		// use .then, not .done, cause this is sometimes JQuery, sometimes a Promise
 		// return is sometimes JQuery, sometimes a Promise
 		return this.internalDataAccess.getExistance(theRequestedId, theTextFile);
@@ -64,11 +78,13 @@ class DataAccess
 	//};
 	getDataFile(theRequestedId, theTextFile)
 	{
+		theTextFile = this.trimSlashPrefix(theTextFile);
 		return this.internalDataAccess.getDataFile(theRequestedId, theTextFile);
 	};
-	getDataBlobPromise(theRequestedId, theTextFile, theBaseUrl)
+	getDataBlobPromise(theRequestedId, theTextFile, theUrlBase)
 	{
-		return this.internalDataAccess.getDataBlobPromise(theRequestedId, theTextFile, theBaseUrl);
+		theTextFile = this.trimSlashPrefix(theTextFile);
+		return this.internalDataAccess.getDataBlobPromise(theRequestedId, theTextFile, theUrlBase);
 	};
 
 	notUN(theValue)

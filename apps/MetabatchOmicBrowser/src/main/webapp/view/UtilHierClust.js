@@ -1,4 +1,7 @@
 /* global globalDiagramControl */
+/* global Promise */
+/* global HierClustPlot */
+/* global Papa */
 
 class UtilHierClust
 {
@@ -23,7 +26,6 @@ class UtilHierClust
 		//console.log("UtilHierClust width=" + boxWidth + " and height =" + boxHeight + " for " + this.divDiagramId);
 		this.plot.resizePlot(Math.floor(boxWidth), Math.floor(boxHeight));
 	};
-	
 	
 	// Create the legend for Hierarhcical Clustering (requires the plot instance).
 	createHierClustLegend(hierClustObj)
@@ -186,25 +188,26 @@ class UtilHierClust
 	{
 		var self = this;
 		// BatchData.tsv 
-		var batchFile = self.indexKO().mbatch.batchdata;
+		var batchFile = self.newDiagram.batch_data;
 		// "hc_order": "/HierarchicalClustering/HCOrder.tsv"
 		var orderFile = self.newDiagram.hc_order;
 		// "hc_data": "/HierarchicalClustering/HCData.tsv",
 		var plotFile = self.newDiagram.hc_data;
 		// title from index
-		var title = self.indexKO().mbatch.mbatch_run
-					+ "/" + self.indexKO().source
-					+ "/" + self.indexKO().variant
+		var title = self.indexKO().source
+					+ "/" + self.indexKO().program
 					+ "/" + self.indexKO().project
-					+ "/" + self.indexKO().subProject
 					+ "/" + self.indexKO().category
 					+ "/" + self.indexKO().platform
 					+ "/" + self.indexKO().data
-					+ "/" + self.indexKO().algorithm
 					+ ((""!==self.indexKO().details)?("/" + this.indexKO().details):"")
-					+ "/" + self.indexKO().mbatch.dataset_type;
+					+ ((""!==self.indexKO().data_version)?("/" + this.indexKO().data_version):"")
+					+ ((""!==self.indexKO().test_version)?("/" + this.indexKO().test_version):"");
 		var [plotDiv, controlDiv, legendDiv] = self.addDivs(document.getElementById(self.divDiagramId), document.getElementById(self.divLegendId));
 
+		console.log("newHierClust plotFile=" + plotFile);
+		console.log("newHierClust batchFile=" + batchFile);
+		console.log("newHierClust orderFile=" + orderFile);
 		Promise.all([
 			self.getDataFileCallback(plotFile),
 			self.getDataFileCallback(batchFile),
@@ -243,7 +246,7 @@ class UtilHierClust
 
 	dimensions(theDiagramDiv)
 	{
-		// TODO: fix hack: .8 is a magic number - not sure why need to reduce size by 20%
+		// TODO:BEV: fix hack: .8 is a magic number - not sure why need to reduce size by 20%
 		var bbox = theDiagramDiv.getBoundingClientRect();
 		return [
 			(0.8 * bbox.width) - 20, // start width

@@ -186,25 +186,33 @@ class UtilPca
 	{
 		var self = this;
 		// BatchData.tsv 
-		var batchFile = self.indexKO().mbatch.batchdata;
+		var batchFile = self.newDiagram.batch_data;
 		// "entry_label": "ShipDate", -- batch type being viewed
-		var batchType = self.newDiagram.entry_label;
-		// "pca_annotations": "/PCA/ShipDate/ManyToMany/PCAAnnotations.tsv",
+		// entry label is no longer batch type, pull batch type from path
+		// /analysis/PCA/BatchId/ManyToMany/DATA_2023_2_3_0920/TEST_2023_2_3_0920/foo.foo"
+		// remove starting / if present, so split below works
+		// console.log("newPca batchType = '" + batchType + "'");
+		var batchType = self.newDiagram.pca_values;
+		if (batchType.startsWith("/"))
+		{
+			batchType = batchType.substring(1);
+		}
+		batchType = batchType.split("/")[2];
+		// "pca_annotations": "/analysis/PCA/BatchId/ManyToMany/DATA_2023_2_3_0920/TEST_2023_2_3_0920/PCAAnnotations.tsv",
 		var annotationFile = self.newDiagram.pca_annotations;
-		// "pca_values": "/PCA/ShipDate/ManyToMany/PCAValues.tsv"
+		// "pca_values": "/analysis/PCA/BatchId/ManyToMany/DATA_2023_2_3_0920/TEST_2023_2_3_0920/PCAValues.tsv"
 		var plotFile = self.newDiagram.pca_values;
 		// title from index
-		var title = self.indexKO().mbatch.mbatch_run
-					+ "/" + self.indexKO().source
-					+ "/" + self.indexKO().variant
+		var title = self.indexKO().source
+					+ "/" + self.indexKO().program
 					+ "/" + self.indexKO().project
-					+ "/" + self.indexKO().subProject
 					+ "/" + self.indexKO().category
 					+ "/" + self.indexKO().platform
 					+ "/" + self.indexKO().data
-					+ "/" + self.indexKO().algorithm
 					+ ((""!==self.indexKO().details)?("/" + this.indexKO().details):"")
-					+ "/" + self.indexKO().mbatch.dataset_type;
+					+ ((""!==self.indexKO().data_version)?("/" + this.indexKO().data_version):"")
+					+ ((""!==self.indexKO().test_version)?("/" + this.indexKO().test_version):"")
+					+ "/" + batchType;
 		var [plotDiv, controlDiv, legendDiv] = self.addDivs(document.getElementById(self.divDiagramId), document.getElementById(self.divLegendId));
 
 		var self = this;
@@ -274,7 +282,7 @@ class UtilPca
 
 	dimensions(theDiagramDiv)
 	{
-		// TODO: fix hack: magic numbers - not sure why need to reduce size
+		// TODO:BEV: fix hack: magic numbers - not sure why need to reduce size
 		var bbox = theDiagramDiv.getBoundingClientRect();
 		return [
 			(0.7 * bbox.width) - 15, // start width

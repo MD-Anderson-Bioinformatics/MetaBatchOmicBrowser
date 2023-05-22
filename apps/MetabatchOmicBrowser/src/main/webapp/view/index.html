@@ -4,25 +4,64 @@
 		<meta charset="UTF-8">
 		<!-- Global site tag (gtag.js) - Google Analytics -->
 		<script type="text/javascript">
-			function loadGoogleAnalytics()
+			/* Google Analytics start */
+			// based on https://rankmath.com/blog/google-analytics-gdpr/
+			const cyrb53 = function(str, seed = 0)
 			{
-				var gaScript = document.createElement('script');
-				gaScript.setAttribute('async', 'true');
-				gaScript.setAttribute('src', `https://www.googletagmanager.com/gtag/js?id=UA-33425717-2`);
-
-				var gaScript2 = document.createElement('script');
-				gaScript2.innerText = `window.dataLayer = window.dataLayer || [];` + 
-										`function gtag(){dataLayer.push(arguments);}` +
-										// https://developers.google.com/tag-platform/devguides/consent
-										//`gtag(\'consent\', \'default\', { \'analytics_storage\': \'denied\', \'ad_storage\': \'denied\' });` +
-										//`dataLayer.push({ \'event\': \'default_consent\' });` + 
-										`gtag(\'js\', new Date());` +
-										`gtag(\'config\', \'UA-33425717-2\');`;
-
-				document.documentElement.firstChild.appendChild(gaScript);
-				document.documentElement.firstChild.appendChild(gaScript2);
+				let h1 = 0xdeadbeef ^ seed,
+					h2 = 0x41c6ce57 ^ seed;
+				for (let i = 0, ch; i < str.length; i++)
+				{
+					ch = str.charCodeAt(i);
+					h1 = Math.imul(h1 ^ ch, 2654435761);
+					h2 = Math.imul(h2 ^ ch, 1597334677);
+				}
+				h1 = Math.imul(h1 ^ h1 >>> 16, 2246822507) ^ Math.imul(h2 ^ h2 >>> 13, 3266489909);
+				h2 = Math.imul(h2 ^ h2 >>> 16, 2246822507) ^ Math.imul(h1 ^ h1 >>> 13, 3266489909);
+				return 4294967296 * (2097151 & h2) + (h1 >>> 0);
 			};
-			loadGoogleAnalytics();
+
+			const getNavigatorId = function() 
+			{
+				let notAvailable = "unknown";
+				let ua = navigator.userAgent || notAvailable;
+				let lang = window.navigator.language || window.navigator.userLanguage || window.navigator.browserLanguage || window.navigator.systemLanguage || not_available;
+				let colors = window.screen.colorDepth || notAvailable;
+				let memKey = window.navigator.deviceMemory || notAvailable;
+				let pixels = window.devicePixelRatio || notAvailable;
+				let res = [window.screen.width, window.screen.height].sort().reverse().join("x");
+				return ua + ";" + lang + ";" + colors + ";" + memKey + ";" + pixels + ";" + res;
+			};
+
+			let validityInterval = Math.round (new Date() / 1000 / 3600 / 24 / 7);
+			let clientIDSource = window.location.host + ";" + getNavigatorId() + ";" + validityInterval;
+
+			window.clientIDHashed = cyrb53(clientIDSource).toString(16);
+			(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+			(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+			m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+			})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+			ga('create', 'UA-33425717-1', 
+			{
+				'storage': 'none',
+				'clientId': clientIDHashed
+			});
+			ga('set', 'anonymizeIp', true);
+			ga('send', 'pageview');
+			/* Google Analytics end */
+
+			function sendGAEvent(theEvent, theCategory, theLabel)
+			{
+				/* Google Analytics start */
+				ga('send', 
+				{
+					hitType: 'event',
+					eventCategory: theEvent,
+					eventAction: theCategory,
+					eventLabel: theLabel
+				});
+				/* Google Analytics end */
+			};
 		</script>
 		<title>MetaBatch Omic Browser Visualizer</title>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -44,7 +83,7 @@
 		<link href="fa5/css/all.css?v=BEA_VERSION_TIMESTAMP" rel="stylesheet" type="text/css">
 		<!-- **** CSS Entries **** -->
 		<!-- all tag attributes (src, type, rel) are required for proper generation of standalone file BEV_AppGenerator.java -->
-		<link href="lib/jquery-ui-1.12.1/jquery-ui.min.css?v=BEA_VERSION_TIMESTAMP" rel="stylesheet" type="text/css">
+		<link href="lib/jquery-ui-1.13.2/jquery-ui.min.css?v=BEA_VERSION_TIMESTAMP" rel="stylesheet" type="text/css">
 		<link href="lib/DataTables/datatables.min.css?v=BEA_VERSION_TIMESTAMP" rel="stylesheet" type="text/css">
 		<link href="bev_basic.css?v=BEA_VERSION_TIMESTAMP" rel="stylesheet" type="text/css">
 		<link href="GraphAPI/HC/GraphAPI_HC.css?v=BEA_VERSION_TIMESTAMP" rel="stylesheet" type="text/css">
@@ -75,7 +114,7 @@
 		<script src="GraphAPI/plot-lib-utils.js?v=BEA_VERSION_TIMESTAMP" type="text/javascript" charset="utf-8"></script>
 		<script src="lib/queue.v1.min.js?v=BEA_VERSION_TIMESTAMP" type="text/javascript" charset="utf-8"></script>
 		<script src="lib/jquery-3.5.0.min.js?v=BEA_VERSION_TIMESTAMP" type="text/javascript" charset="utf-8"></script>
-		<script src="lib/jquery-ui-1.12.1/jquery-ui.min.js?v=BEA_VERSION_TIMESTAMP" type="text/javascript" charset="utf-8"></script>
+		<script src="lib/jquery-ui-1.13.2/jquery-ui.min.js?v=BEA_VERSION_TIMESTAMP" type="text/javascript" charset="utf-8"></script>
 		<script src="DataAccess.js?v=BEA_VERSION_TIMESTAMP" type="text/javascript" charset="utf-8"></script>
 		<script src="DataAccess_http.js?v=BEA_VERSION_TIMESTAMP" type="text/javascript" charset="utf-8"></script>
 		<script src="DataAccess_file.js?v=BEA_VERSION_TIMESTAMP" type="text/javascript" charset="utf-8"></script>
@@ -84,15 +123,17 @@
 		<script src="UtilHierClust.js?v=BEA_VERSION_TIMESTAMP" type="text/javascript" charset="utf-8"></script>
 		<script src="UtilDsc.js?v=BEA_VERSION_TIMESTAMP" type="text/javascript" charset="utf-8"></script>
 		<script src="UtilNgchm.js?v=BEA_VERSION_TIMESTAMP" type="text/javascript" charset="utf-8"></script>
+		<script src="UtilVenn.js?v=BEA_VERSION_TIMESTAMP" type="text/javascript" charset="utf-8"></script>
+		<script src="UtilBar.js?v=BEA_VERSION_TIMESTAMP" type="text/javascript" charset="utf-8"></script>
 		<script src="UtilScatterplot.js?v=BEA_VERSION_TIMESTAMP" ></script>
 		<script src="DiagramControl.js?v=BEA_VERSION_TIMESTAMP" type="text/javascript" charset="utf-8"></script>
 		<script src="lib/DataTables/datatables.min.js?v=BEA_VERSION_TIMESTAMP" type="text/javascript" charset="utf-8"></script>
 		<script src="bev_resize.js?v=BEA_VERSION_TIMESTAMP" type="text/javascript" charset="utf-8"></script>
 		<script src="lib/jszip.min.js?v=BEA_VERSION_TIMESTAMP" type="text/javascript" charset="utf-8"></script>
 		<!-- based on https://alafr.github.io/SVG-to-PDFKit/examples/demo.htm -->
-		<script src="lib/alafr/blobstream.js?v=BEA_VERSION_TIMESTAMP" type="text/javascript" charset="utf-8"></script>
-		<script src="lib/alafr/svgToPdfkit.js?v=BEA_VERSION_TIMESTAMP" type="text/javascript" charset="utf-8"></script>
-		<script src="lib/pdfkit.standalone.0.11.0.js?v=BEA_VERSION_TIMESTAMP" type="text/javascript" charset="utf-8"></script>
+		<script src="lib/pdf/pdfkit-0.8.3.js?v=BEA_VERSION_TIMESTAMP" type="text/javascript" charset="utf-8"></script>
+		<script src="lib/pdf/blobstream.js?v=BEA_VERSION_TIMESTAMP" type="text/javascript" charset="utf-8"></script>
+		<script src="lib/pdf/SVGtoPDF.js?v=BEA_VERSION_TIMESTAMP" type="text/javascript" charset="utf-8"></script>
 		<script src="BEVAppView.js?v=BEA_VERSION_TIMESTAMP" type="text/javascript" charset="utf-8"></script>
 		<script type="text/javascript">
 			/* global ko */
@@ -103,7 +144,10 @@
 			// this makes sure that nothing gets called until page and required JS files are loaded
 			var appview = null;
 			// actually parses URL
-			var globalDataAccess = new DataAccess();
+			var url = new URL(window.location.href);
+			var tmpUseZip = url.searchParams.get("usezip");
+			var useZip = ("TRUE"===tmpUseZip)?true:false;
+			var globalDataAccess = new DataAccess(useZip);
 			var bevUrl = window.location.origin + window.location.pathname;
 			var globalDiagramControl = new DiagramControl(globalDataAccess, "BEVDisplay_Diagram", "BEVDisplay_Legend_Content", "BEVDisplay_Datapane_Content", bevUrl);
 			$(document).ready(function()
@@ -112,7 +156,7 @@
 				// This is a simple *viewmodel* - JavaScript that defines the data and behavior of your UI
 				// handles URL containing link to specific dataset and diagram
 				// see DataAccess for URL processing
-				appview = new BEVAppView();
+				appview = new BEVAppView(useZip);
 				// Activates knockout.js
 				ko.applyBindings(appview);
 				// theDataAccess, theDiagramId, theLegendId, theDatapaneId
@@ -134,16 +178,12 @@
 				//console.log("viewGetUrlParams - returns JSON object");
 				// id index alg lvl1 lvl2
 				let urlParams = { };
-				if (appview.protocol() !== 'file:')
+				if (false === appview.usezip())
 				{
 					var tmpId = appview.requestedId();
-					var tmpDscid = appview.requestedDscid();
-					var tmpIndex = appview.requestedIndex();
-					if ((null !== tmpId) && (null !== tmpIndex))
+					if (null !== tmpId)
 					{
 						urlParams["id"] = tmpId;
-						urlParams["dscid"] = tmpDscid;
-						urlParams["index"] = tmpIndex;
 						if (notUN(appview.algorithmSelected()))
 						{
 							urlParams["alg"] = appview.algorithmSelected().entry_label;
@@ -155,6 +195,14 @@
 						if (notUN(appview.level2Selected()))
 						{
 							urlParams["lvl2"] = appview.level2Selected().entry_label;
+						}
+						if (notUN(appview.level3Selected()))
+						{
+							urlParams["lvl3"] = appview.level3Selected().entry_label;
+						}
+						if (notUN(appview.level4Selected()))
+						{
+							urlParams["lvl4"] = appview.level4Selected().entry_label;
 						}
 						//console.log("globalOn_DB="+globalOn_DB);
 						if (globalOn_DB)
@@ -177,12 +225,12 @@
 			<div class="div-plot-picker" id="BEV_PlotPicker">
 				<div class="div-plot-picker-title">
 					<span style="font-weight: normal; font-size: smaller;">Plot Picker</span>
-					<button type="button" span style="float: right;" class="bev-control-button" 
+					<button type="button" style="float: right;" class="bev-control-button" 
 							data-bind="click: function () { hidePlotPicker(); globalDiagramControl.resize(); return false; }">
 						<i class="fas fa-minus-square"></i> Hide
 					</button>
 				</div>
-				<div class="div-plotpicker-file" style="display: none;" data-bind="visible: $root.protocol() === 'file:'">
+				<div class="div-plotpicker-file" style="display: none;" data-bind="visible: $root.usezip()">
 					<input id="plotpickerFileInput" type="file" name="plotpickerFileInput" />
 				</div>
 				<div class="div-plot-picker-content">
@@ -205,12 +253,20 @@
 									<td style="white-space: nowrap;"><span data-bind="text: $root.level2Label()"></span></td>
 									<td><select data-bind="options: $root.level2Options, optionsText: 'entry_label', value: $root.level2Selected"></select></td>
 								</tr>
+								<tr style="display: none;" data-bind="visible: ( (notUN($root.level3Label())) && (''!==$root.level3Label()) )">
+									<td style="white-space: nowrap;"><span data-bind="text: $root.level3Label()"></span></td>
+									<td><select data-bind="options: $root.level3Options, optionsText: 'entry_label', value: $root.level3Selected"></select></td>
+								</tr>
+								<tr style="display: none;" data-bind="visible: ( (notUN($root.level4Label())) && (''!==$root.level4Label()) )">
+									<td style="white-space: nowrap;"><span data-bind="text: $root.level4Label()"></span></td>
+									<td><select data-bind="options: $root.level4Options, optionsText: 'entry_label', value: $root.level4Selected"></select></td>
+								</tr>
 								<tr style="background-color: greenyellow;"><td colspan="2"><center>Basic Dataset Details</center></td></tr>
 								<tr><td style="white-space: nowrap;">Source</td><td><span data-bind="text: $root.indexSource()"></span></td></tr>
-								<tr><td style="white-space: nowrap;">Study ID</td><td><span data-bind="text: $root.indexProject()"></span></td></tr>
-								<tr><td style="white-space: nowrap;">Analysis ID</td><td><span data-bind="text: $root.indexSubProject()"></span></td></tr>
+								<tr><td style="white-space: nowrap;">Study ID</td><td><span data-bind="text: $root.indexProgram()"></span></td></tr>
+								<tr><td style="white-space: nowrap;">Analysis ID</td><td><span data-bind="text: $root.indexProject()"></span></td></tr>
 								<tr><td style="white-space: nowrap;">Platform</td><td><span data-bind="text: $root.indexPlatform()"></span></td></tr>
-								<tr><td style="white-space: nowrap;">Data</td><td><span data-bind="text: $root.indexData()"></span></td></tr>
+								<tr><td style="white-space: nowrap;">Study Title</td><td><span data-bind="text: $root.indexData()"></span></td></tr>
 								<tr data-bind="visible: ('MW' === $root.indexSource())">
 									<td>Metabolomics Workbench Link to Study</td>
 									<td><a target="_blank" data-bind="attr: { href: 'https://www.metabolomicsworkbench.org/data/DRCCMetadata.php?StudyID=' + $root.indexProject(), title: 'Link to Study' }">Link to Study</a></td>
@@ -220,20 +276,19 @@
 						<table class="mdaCompactTable" id="dbtab-2">
 							<tbody>
 								<tr><td>BEV ID</td><td><span data-bind="text: $root.requestedId()"></span></td></tr>
-								<tr><td>Source ID</td><td><span data-bind="text: $root.indexSourceID()"></span></td></tr>
 								<tr><td>Source</td><td><span data-bind="text: $root.indexSource()"></span></td></tr>
-								<tr><td>Derivation</td><td><span data-bind="text: $root.indexVariant()"></span></td></tr>
-								<tr><td>Study ID</td><td><span data-bind="text: $root.indexProject()"></span></td></tr>
-								<tr><td>Analysis ID</td><td><span data-bind="text: $root.indexSubProject()"></span></td></tr>
+								<tr><td>Study ID</td><td><span data-bind="text: $root.indexProgram()"></span></td></tr>
+								<tr><td>Analysis ID</td><td><span data-bind="text: $root.indexProject()"></span></td></tr>
 								<tr><td>Category</td><td><span data-bind="text: $root.indexCategory()"></span></td></tr>
 								<tr><td>Platform</td><td><span data-bind="text: $root.indexPlatform()"></span></td></tr>
-								<tr><td>Data</td><td><span data-bind="text: $root.indexData()"></span></td></tr>
-								<tr><td>Algorithm</td><td><span data-bind="text: $root.indexAlgorithm()"></span></td></tr>
-								<tr><td>Study Title</td><td><span data-bind="text: $root.indexDetails()"></span></td></tr>
-								<tr><td>Version</td><td><span data-bind="text: $root.indexVersion()"></span></td></tr>
-								<tr><td>MBatch ID</td><td><span data-bind="text: $root.indexMbatchMBatchID()"></span></td></tr>
-								<tr><td>MBatch Run</td><td><span data-bind="text: $root.indexMbatchMBatchRun()"></span></td></tr>
-								<tr><td>Dataset Type</td><td><span data-bind="text: $root.indexMbatchMBatchDatasetType()"></span></td></tr>
+								<tr><td>Study Title</td><td><span data-bind="text: $root.indexData()"></span></td></tr>
+								<tr><td>Details</td><td><span data-bind="text: $root.indexDetails()"></span></td></tr>
+								<tr><td>Job Type</td><td><span data-bind="text: $root.indexJobType()"></span></td></tr>
+								<tr><td>Data Version</td><td><span data-bind="text: $root.indexDataVersion()"></span></td></tr>
+								<tr><td>Test Version</td><td><span data-bind="text: $root.indexTestVersion()"></span></td></tr>
+								<tr><td>DataSet Type</td><td><span data-bind="text: $root.indexJobType()"></span></td></tr>
+								<tr><td>Job Id</td><td><span data-bind="text: $root.indexJobId()"></span></td></tr>
+								<tr><td>Notice</td><td><span data-bind="text: $root.indexNotice()"></span></td></tr>
 								<tr data-bind="visible: ('MW' === $root.indexSource())">
 									<td>Metabolomics Workbench Link to Study</td>
 									<td><a target="_blank" data-bind="attr: { href: 'https://www.metabolomicsworkbench.org/data/DRCCMetadata.php?StudyID=' + $root.indexProject(), title: 'Link to Study' }">Link to Study</a></td>
@@ -268,12 +323,12 @@
 				<div class="div-diagram-viewer-control">
 					<span style="display: none;" data-bind="visible: (null !== $root.requestedId())">
 						&nbsp;<button type="button" class="bev-control-button" 
-									  data-bind="click: function(){ location.href='../dszipresults?id='+ $root.requestedId(); return false; }" 
+									  data-bind="click: function(){ sendGAEvent('action', 'download-results', $root.humanIdentifier()); location.href='../dszipresults?id='+ $root.requestedId(); return false; }" 
 									  title="Download results, includes corrected data if pertinent."><i class="fas fa-download" style="color: red;"> </i> Results</button>
 					</span>
 					<span style="display: none;" data-bind="visible: (null !== $root.requestedId())">
 						&nbsp;<button type="button" class="bev-control-button" 
-									  data-bind="click: function(){ location.href='../dszipdata?id='+ $root.requestedId(); return false; }" 
+									  data-bind="click: function(){ sendGAEvent('action', 'download-data', $root.humanIdentifier()); location.href='../dszipdata?id='+ $root.requestedId(); return false; }" 
 									  title="Download original data and metadata."><i class="fas fa-download" style="color: firebrick;"> </i> Data</button>
 					</span>
 					<span data-bind="visible: $root.isPngDiagram()">
