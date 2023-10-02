@@ -24,9 +24,9 @@ services:
         image: <IMAGEURL>
         volumes:
             # outside access for data files outside:inside
-            - <INDEXPATH>:/DAPI_MOB/INDEXES:ro
-            - <CONFIGPATH>:/DAPI_MOB/CONFIG:ro
-            - <OUTSIDE_DATA_PATH>:/DAPI_MOB/DATA:ro
+            - <INDEXPATH>:/BEA/DAPI_MOB/INDEXES:ro
+            - <CONFIGPATH>:/BEA/DAPI_MOB/CONFIG:ro
+            - <OUTSIDE_DATA_PATH>:/BEA/DAPI_MOB/DATA:ro
             - <LOGPATH>:/opt/tomcat/logs
             # read-only file to set time to same in image as on server
             - /etc/localtime:/etc/localtime:ro

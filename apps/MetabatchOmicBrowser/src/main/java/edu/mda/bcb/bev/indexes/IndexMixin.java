@@ -15,7 +15,7 @@ import java.util.TreeSet;
 
 /**
  *
- * @author Tod_Casasent
+ * @author dqs_tcga_service
  * @param <T>
  */
 public interface IndexMixin<T>

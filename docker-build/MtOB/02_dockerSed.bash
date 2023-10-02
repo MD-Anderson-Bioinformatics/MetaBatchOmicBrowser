@@ -50,10 +50,6 @@ CONFIGPATH=${DATA_PATH}/util
 # path to data results directory
 OUTSIDE_DATA_PATH=${DATA_PATH}/results
 
-RESULT_INDEX_PATH=`dirname ${DATA_PATH}`
-RESULT_INDEX_PATH=`dirname ${RESULT_INDEX_PATH}`
-RESULT_INDEX_PATH=${RESULT_INDEX_PATH}/STD_RES/INDEXES
-
 # URL and tag to use as image name, such as mdabcb/smw_image:DAP_BEA_VERSION_TIMESTAMP
 IMAGE_URL=${10}
 # group id, such as 2002

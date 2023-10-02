@@ -23,7 +23,7 @@ import java.util.Collection;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import javax.servlet.ServletContext;
+import jakarta.servlet.ServletContext;
 
 /**
  *
@@ -75,9 +75,10 @@ public class Indexes
 	
 	private String cleanId(String theId)
 	{
-		if (theId.contains("-"))
+		long count = theId.chars().filter(ch -> ch == '~').count();
+		if (count>2)
 		{
-			theId = theId.substring(0,theId.indexOf("-"));
+			theId = theId.substring(0,theId.lastIndexOf("~"));
 		}
 		return theId;
 	}
@@ -366,16 +367,20 @@ public class Indexes
 		{
 			id = id + "-" + analysisPath;
 		}
-		String replaceData = mIdToDataPath.put(id, dataPath);
-		if (null != replaceData)
-		{
-			throw new Exception("populateId found duplicate data path value for id=" + id);
-		}
-		String replaceResults = mIdToResultsPath.put(id, resultsPath);
-		if (null != replaceResults)
-		{
-			throw new Exception("populateId found duplicate results path value for id=" + id);
-		}
+		mIdToDataPath.put(id, dataPath);
+		// String replaceData = mIdToDataPath.put(id, dataPath);
+		// This is no longer an error, as different runs on same data will give same path
+		// if (null != replaceData)
+		// {
+		// 	throw new Exception("populateId found duplicate data path value for id=" + id);
+		// }
+		mIdToResultsPath.put(id, resultsPath);
+		// String replaceResults = mIdToResultsPath.put(id, resultsPath);
+		// This is no longer an error, as different runs on same data will give same path
+		// if (null != replaceResults)
+		// {
+		// 	throw new Exception("populateId found duplicate results path value for id=" + id);
+		// }
 		return id;
 	}
 

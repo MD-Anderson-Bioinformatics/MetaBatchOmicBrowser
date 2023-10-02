@@ -21,7 +21,7 @@ import java.util.ArrayList;
 
 /**
  *
- * @author Tod_Casasent
+ * @author dqs_tcga_service
  */
 public class KwdEntry extends EntryMixin
 {
@@ -54,7 +54,7 @@ public class KwdEntry extends EntryMixin
 		// AnalysisPath	NegLog10PValue	NegLog10Cutoff	BatchesCalled
 		path_data = theRow[theHeaders.indexOf("PathResults")];
 		path_results = theRow[theHeaders.indexOf("PathData")];
-		id = theRow[theHeaders.indexOf("ID")];
+		id = theRow[theHeaders.indexOf("ID")] + "~" + theRow[theHeaders.indexOf("DataVersion")] + "~" + theRow[theHeaders.indexOf("TestVersion")];
 		source = theRow[theHeaders.indexOf("Source")];
 		program = theRow[theHeaders.indexOf("Program")];
 		project = theRow[theHeaders.indexOf("Project")];
@@ -228,7 +228,7 @@ public class KwdEntry extends EntryMixin
 		String newId = this.id;
 		if ((null != this.analysis_path) && (!"".equals(this.analysis_path)))
 		{
-			newId = newId + "-" + this.analysis_path;
+			newId = newId + "~" + this.analysis_path;
 		}
 		String viewResultsUrl = theDownloadBase
 				+ ((null == theJsonQuery) ? ("view/?") : ("?default=" + URLEncoder.encode(theJsonQuery, StandardCharsets.UTF_8.name()) + "&"))

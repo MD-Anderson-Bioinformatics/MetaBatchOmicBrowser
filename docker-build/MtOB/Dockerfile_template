@@ -1,4 +1,4 @@
-FROM almalinux:8
+FROM fedora:38
 
 # reminder, use {} around environmental variables, otherwise docker uses it as a literal
 
@@ -21,7 +21,10 @@ LABEL edu.mda.bcb.name="MBatch Omics Browser" \
 RUN groupadd -g <GROUPID> bcbgroup && \
     useradd -l -s /bin/bash -d /home/bcbuser -u <USERID> -g <GROUPID> bcbuser && \
     chown -R bcbuser:bcbgroup /home/bcbuser && \
-    chmod -R 777 /home/bcbuser
+    chmod -R 777 /home/bcbuser && \
+    mkdir /BEA && \
+    chown -R bcbuser:bcbgroup /BEA && \
+    chmod -R 755 /BEA
 
 ####
 #### generic setup for OS
@@ -35,13 +38,14 @@ ENV TZ=US/Central
 #### Install/Setup Java 17 with variables
 ####
 
-RUN dnf -y install java-17-openjdk java-17-openjdk-devel java-17-openjdk-headless && \
+RUN dnf upgrade -y && \
+    dnf -y install java-17-openjdk java-17-openjdk-devel java-17-openjdk-headless && \
     update-alternatives --install /usr/bin/java java /usr/lib/jvm/java-17-openjdk/bin/java 1 && \
     update-alternatives --install /usr/bin/javac javac /usr/lib/jvm/java-17-openjdk/bin/javac 1 && \
     update-alternatives --set java /usr/lib/jvm/java-17-openjdk/bin/java && \
     update-alternatives --set javac /usr/lib/jvm/java-17-openjdk/bin/javac && \
-    yum update -y && \
-    yum clean all
+    dnf upgrade -y && \
+    dnf clean all
 
 # adding these variables fixes issue where registering Java with R (keeps getting "lost")
 ENV JAR=/usr/lib/jvm/java-17-openjdk/bin/jar 
@@ -55,15 +59,15 @@ ENV JAVA=/usr/lib/jvm/java-17-openjdk/bin/java
 ENV JAVAC=/usr/lib/jvm/java-17-openjdk/bin/javac
 ENV JAVAH=/usr/lib/jvm/java-17-openjdk/bin/javac
 ENV JAR=/usr/lib/jvm/java-17-openjdk/bin/jar
-ENV LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/lib/jvm/java-17-openjdk/lib/server
+ENV LD_LIBRARY_PATH=/usr/lib/jvm/java-17-openjdk/lib/server
 
 ####
 #### Install/Setup Tomcat
 ####
 
-# install Tomcat 9, set to run as bcbuser
-ENV TOMCAT_MAJOR=9 \
-    TOMCAT_VERSION=9.0.74 \
+# install Tomcat 10, set to run as bcbuser
+ENV TOMCAT_MAJOR=10 \
+    TOMCAT_VERSION=10.1.13 \
     TOMCAT_HOME=/opt/tomcat \
     CATALINA_HOME=/opt/tomcat \
     CATALINA_OUT=/dev/null
@@ -76,30 +80,22 @@ RUN curl -jksSL -o /tmp/apache-tomcat.tar.gz https://dlcdn.apache.org/tomcat/tom
     rm -rf ${TOMCAT_HOME}/webapps/ROOT && \
     rm -rf ${TOMCAT_HOME}/webapps/examples && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* && \
-    rm -rf /opt/tomcat/webapps/manager && \
     chown -R bcbuser:bcbgroup ${TOMCAT_HOME} && \
-    ln -s /opt/apache-tomcat-${TOMCAT_VERSION} ${TOMCAT_HOME} && \
-    yum clean all
+    ln -s /opt/apache-tomcat-${TOMCAT_VERSION} ${TOMCAT_HOME}
 
 ####
 #### Customize Tomcat and install WebApp WAR
 ####
 
 # copy installs
-# COPY is always done as root!!!!
 # copy server.xml to start compression - may need to be merged with above later
 # also formats output for LOGREPORT
-COPY installations/server.xml ${CATALINA_HOME}/conf/server.xml
-COPY installations/web.xml ${CATALINA_HOME}/conf/web.xml
-RUN chown -R bcbuser:bcbgroup ${CATALINA_HOME}/conf && \
-    chmod -R u+rwx ${CATALINA_HOME}/conf
+COPY --chown=bcbuser:bcbgroup --chmod=755 installations/server.xml ${CATALINA_HOME}/conf/server.xml
+COPY --chown=bcbuser:bcbgroup --chmod=755 installations/web.xml ${CATALINA_HOME}/conf/web.xml
 
 # copy installs
-# COPY is always done as root!!!!
 # destination is dir/ not dir/. because docker insists on being different
-COPY installations/*.war ${CATALINA_HOME}/webapps/
-RUN chown -R bcbuser:bcbgroup ${CATALINA_HOME}/webapps && \
-    chmod -R u+rwx ${CATALINA_HOME}/webapps
+COPY --chown=bcbuser:bcbgroup --chmod=755 installations/*.war ${CATALINA_HOME}/webapps/
 
 ####
 #### End of build steps

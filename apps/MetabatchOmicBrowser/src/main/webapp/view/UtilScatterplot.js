@@ -121,19 +121,35 @@ class UtilScatterplot
 	{
 		var self = this;
 		var batchFile = self.newDiagram.umap_batches;
-		var batchType = self.newDiagram.entry_label;
 		var plotFile = self.newDiagram.umap_umapdat;
+		// get DATA and TEST version if used
+		var batchType = batchFile.split("/")[3];
+		var splitted = plotFile.split("/");
+		var dataVersion = "";
+		var testVersion = "";
+		if (splitted.length>6)
+		{
+			dataVersion = splitted[5];
+			if (splitted.length>7)
+			{
+				testVersion = splitted[6];
+			}
+		}
 		// title from index
-		var title = self.indexKO().source
-					+ "/" + self.indexKO().program
-					+ "/" + self.indexKO().project
-					+ "/" + self.indexKO().category
-					+ "/" + self.indexKO().platform
-					+ "/" + self.indexKO().data
-					+ ((""!==self.indexKO().details)?("/" + this.indexKO().details):"")
-					+ ((""!==self.indexKO().data_version)?("/" + this.indexKO().data_version):"")
-					+ ((""!==self.indexKO().test_version)?("/" + this.indexKO().test_version):"")
-					+ "/" + batchType;
+		var title = self.newDiagram.title;
+		if ("" === title)
+		{
+			title = self.indexKO().source
+						+ " / " + self.indexKO().program
+						+ " / " + self.indexKO().project
+						+ " / " + self.indexKO().category
+						+ " / " + self.indexKO().platform
+						+ " / " + self.indexKO().data
+						+ ((""!==self.indexKO().details)?(" / " + this.indexKO().details):"")
+						+ ((""!==dataVersion)?(" / " + dataVersion):"")
+						+ ((""!==testVersion)?(" / " + testVersion):"")
+						+ " / " + batchType;
+		}
 		var [plotDiv, controlDiv, legendDiv] = self.addDivs(document.getElementById(self.divDiagramId), document.getElementById(self.divLegendId));
 
 		var self = this;

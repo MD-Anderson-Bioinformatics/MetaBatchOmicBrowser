@@ -37,17 +37,33 @@ class UtilBoxplot
 		var boxFile = self.newDiagram.box_data;
 		// "box_histogram": "/BoxPlot/AllSample-Data/BoxPlot_AllSample-Data_Histogram-ShipDate.tsv"
 		var histogramFile = self.newDiagram.box_histogram;
+		// get DATA and TEST version if used
+		var splitted = batchFile.split("/");
+		var dataVersion = "";
+		var testVersion = "";
+		if (splitted.length>5)
+		{
+			dataVersion = splitted[4];
+			if (splitted.length>6)
+			{
+				testVersion = splitted[5];
+			}
+		}
 		// title from index
-		var title = self.indexKO().source
-					+ "/" + self.indexKO().program
-					+ "/" + self.indexKO().project
-					+ "/" + self.indexKO().category
-					+ "/" + self.indexKO().platform
-					+ "/" + self.indexKO().data
-					+ ((""!==self.indexKO().details)?("/" + this.indexKO().details):"")
-					+ ((""!==self.indexKO().data_version)?("/" + this.indexKO().data_version):"")
-					+ ((""!==self.indexKO().test_version)?("/" + this.indexKO().test_version):"")
-					+ "/" + batchType;
+		var title = self.newDiagram.title;
+		if ("" === title)
+		{
+			title = self.indexKO().source
+					+ " / " + self.indexKO().program
+					+ " / " + self.indexKO().project
+					+ " / " + self.indexKO().category
+					+ " / " + self.indexKO().platform
+					+ " / " + self.indexKO().data
+					+ ((""!==self.indexKO().details)?(" / " + this.indexKO().details):"")
+					+ ((""!==dataVersion)?(" / " + dataVersion):"")
+					+ ((""!==testVersion)?(" / " + testVersion):"")
+					+ " / " + batchType;
+		}
 		var [plotDiv, plotDetailedDiv, legendDiv] = self.addDivs(document.getElementById(self.divDiagramId), document.getElementById(self.divLegendId));
 		var [boxWidth,
 			boxHeight,
@@ -57,10 +73,10 @@ class UtilBoxplot
 		//console.log("newBoxplot boxHeight=" + boxHeight);
 		//console.log("newBoxplot detailedWidth=" + detailedWidth);
 		//console.log("newBoxplot detailedHeight=" + detailedHeight);
-		console.log("newBoxplot boxFile=" + boxFile);
-		console.log("newBoxplot batchFile=" + batchFile);
-		console.log("newBoxplot annotationFile=" + annotationFile);
-		console.log("newBoxplot histogramFile=" + histogramFile);
+		//console.log("newBoxplot boxFile=" + boxFile);
+		//console.log("newBoxplot batchFile=" + batchFile);
+		//console.log("newBoxplot annotationFile=" + annotationFile);
+		//console.log("newBoxplot histogramFile=" + histogramFile);
 		this.plot = new BeaBoxplot(
 				boxFile, // theBoxDataFile
 				batchFile, // theBatchDataFile
@@ -151,7 +167,7 @@ class UtilBoxplot
 	
 	getDataFileCallback(theTextFile)
 	{
-		console.log("UtilBoxplot::getDataFileCallback theTextFile='" + theTextFile + "'");
+		//console.log("UtilBoxplot::getDataFileCallback theTextFile='" + theTextFile + "'");
 		const dataPromise = new Promise((resolve, reject) =>
 		{
 			// used to not turn entry and Id columns into numbers, when batch "00314" becomes 314

@@ -5,11 +5,11 @@
 package edu.mda.bcb.bev.util;
 
 import java.util.Enumeration;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  *
- * @author Tod_Casasent
+ * @author dqs_tcga_service
  */
 public class ScanCheck
 {

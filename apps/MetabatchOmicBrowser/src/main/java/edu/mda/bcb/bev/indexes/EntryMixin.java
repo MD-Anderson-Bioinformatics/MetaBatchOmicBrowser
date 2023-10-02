@@ -10,7 +10,7 @@ import java.util.ArrayList;
 
 /**
  *
- * @author Tod_Casasent
+ * @author dqs_tcga_service
  */
 abstract public class EntryMixin implements Comparable<EntryMixin>
 {

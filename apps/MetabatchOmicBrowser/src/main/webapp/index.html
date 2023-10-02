@@ -2,65 +2,29 @@
 <html>
 	<head>
 		<meta charset="UTF-8">
-		<!-- Global site tag (gtag.js) - Google Analytics -->
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-LVQMVVYWLJ"></script>
 		<script type="text/javascript">
-			/* Google Analytics start */
-			// based on https://rankmath.com/blog/google-analytics-gdpr/
-			const cyrb53 = function(str, seed = 0)
-			{
-				let h1 = 0xdeadbeef ^ seed,
-					h2 = 0x41c6ce57 ^ seed;
-				for (let i = 0, ch; i < str.length; i++)
-				{
-					ch = str.charCodeAt(i);
-					h1 = Math.imul(h1 ^ ch, 2654435761);
-					h2 = Math.imul(h2 ^ ch, 1597334677);
-				}
-				h1 = Math.imul(h1 ^ h1 >>> 16, 2246822507) ^ Math.imul(h2 ^ h2 >>> 13, 3266489909);
-				h2 = Math.imul(h2 ^ h2 >>> 16, 2246822507) ^ Math.imul(h1 ^ h1 >>> 13, 3266489909);
-				return 4294967296 * (2097151 & h2) + (h1 >>> 0);
-			};
-
-			const getNavigatorId = function() 
-			{
-				let notAvailable = "unknown";
-				let ua = navigator.userAgent || notAvailable;
-				let lang = window.navigator.language || window.navigator.userLanguage || window.navigator.browserLanguage || window.navigator.systemLanguage || not_available;
-				let colors = window.screen.colorDepth || notAvailable;
-				let memKey = window.navigator.deviceMemory || notAvailable;
-				let pixels = window.devicePixelRatio || notAvailable;
-				let res = [window.screen.width, window.screen.height].sort().reverse().join("x");
-				return ua + ";" + lang + ";" + colors + ";" + memKey + ";" + pixels + ";" + res;
-			};
-
-			let validityInterval = Math.round (new Date() / 1000 / 3600 / 24 / 7);
-			let clientIDSource = window.location.host + ";" + getNavigatorId() + ";" + validityInterval;
-
-			window.clientIDHashed = cyrb53(clientIDSource).toString(16);
-			(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-			(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-			m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-			})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-			ga('create', 'UA-33425717-1', 
-			{
-				'storage': 'none',
-				'clientId': clientIDHashed
-			});
-			ga('set', 'anonymizeIp', true);
-			ga('send', 'pageview');
-			/* Google Analytics end */
-
+			/* https://stackoverflow.com/questions/67078898/how-to-disable-cookies-in-ga4 */
+			/* https://stackoverflow.com/questions/71424887/cookieless-google-analytics-v4-still-generates-ga-cookie#75625761 */
+			window.dataLayer = window.dataLayer || [];
+			function gtag(){dataLayer.push(arguments);}
+			//gtag("consent", "default",
+			//{
+			//	ad_storage: "denied",
+			//	analytics_storage: "denied"
+			//});
+			gtag('js', new Date());
+			gtag('config', 'G-LVQMVVYWLJ');
+			gtag('send', 'pageview');
 			function sendGAEvent(theEvent, theCategory, theLabel)
 			{
-				/* Google Analytics start */
-				ga('send', 
+				gtag('send', 
 				{
 					hitType: 'event',
 					eventCategory: theEvent,
 					eventAction: theCategory,
 					eventLabel: theLabel
 				});
-				/* Google Analytics end */
 			};
 		</script>
 		<title>MetaBatch Omic Browser</title>
@@ -96,12 +60,15 @@
 			{
 				if (!notUN(theUrl))
 				{
+					//console.log("top level index setCurrentViewSrcMqa theUrl not provided");
 					enableInput();
 				}
 				else
 				{
 					// called from query IFrame
 					// used to set source in view IFrame
+					//console.log("****top level index setCurrentViewSrcMqa theUrl=" + theUrl);
+					//console.log("****top level index setCurrentViewSrcMqa id=" + new URL(theUrl).searchParams.get("id"));
 					document.getElementById('viewIframe').src = theUrl;
 				}
 			}
@@ -112,6 +79,7 @@
 				// used to set selected dataset in Query IFrame
 				//console.log("Top index setCurrentViewDiagramMqa");
 				//console.log("setCurrentViewDiagramMqa theId=" + theId);
+				//console.log("**** CALL top index setCurrentViewDiagramMqa call setSelectedDatasetQuery");
 				document.getElementById('queryIframe').contentWindow.setSelectedDatasetQuery(theId);
 				enableInput();
 			}
@@ -220,6 +188,9 @@
 				//console.log("queryLoadComplete() begin thePath=" + thePath);
 				// called from query iframe after load complete
 				//console.log("queryLoadComplete() appview.loadedQuery()=" + appview.loadedQuery());
+				//console.log("**** 0 queryLoadComplete() appview");
+				//console.log(appview);
+				//console.log("appview.loadedQuery()=" + appview.loadedQuery());
 				if (false===appview.loadedQuery())
 				{
 					//console.log("queryLoadComplete() set self.viewUrl here not in Ajax urls call.");
@@ -227,20 +198,35 @@
 					if (""!==thePath)
 					{
 						// TODO: build view/? arguments
-						var search = appview.getViewSearchFromPath(theId, thePath);
-						//console.log("queryLoadComplete() appview.getViewSearchFromPath()=" + search);
-						appview.viewUrl("view/?" + search);
+						if (jQuery.isFunction(appview.getViewSearchFromPath))
+						{
+							var search = appview.getViewSearchFromPath(theId, thePath);
+							//console.log("**** 1 queryLoadComplete() appview.getViewSearchFromPath()=" + search);
+							appview.viewUrl("view/?" + search);
+						}
+						else
+						{
+							// console.log("appview.getViewSearchFromPath not found");
+							//console.log("**** 5 queryLoadComplete() appview.mqaURLsearchValues()=" + appview.mqaURLsearchValues());
+							//console.log("**** 5 queryLoadComplete() id=" + appview.mqaURLsearchValues().substr(appview.mqaURLsearchValues().indexOf("id=")));
+							appview.viewUrl("view/" + appview.mqaURLsearchValues());
+						}
 					}
 					else if (""===appview.mqaURLsearchValues())
 					{
-						//console.log("queryLoadComplete() appview.mqaDefaultViewParams()=" + appview.mqaDefaultViewParams());
+						//console.log("**** 2 queryLoadComplete() appview.mqaDefaultViewParams()=" + appview.mqaDefaultViewParams());
 						appview.viewUrl("view/?" + appview.mqaDefaultViewParams());
 					}
 					else
 					{
-						//console.log("queryLoadComplete() appview.mqaURLsearchValues()=" + appview.mqaURLsearchValues());
+						//console.log("**** 3 queryLoadComplete() appview.mqaURLsearchValues()=" + appview.mqaURLsearchValues());
+						//console.log("**** 3 queryLoadComplete() id=" + appview.mqaURLsearchValues().substr(appview.mqaURLsearchValues().indexOf("id=")));
 						appview.viewUrl("view/" + appview.mqaURLsearchValues());
 					}
+				}
+				else
+				{
+					//console.log("queryLoadComplete() no processing");
 				}
 				appview.loadedQuery(true);
 				//console.log("queryLoadComplete() end");

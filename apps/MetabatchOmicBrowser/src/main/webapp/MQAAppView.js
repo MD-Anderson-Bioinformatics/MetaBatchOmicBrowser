@@ -60,7 +60,7 @@ notUN = function(theValue)
 // This is a simple *viewmodel* - JavaScript that defines the data and behavior of your UI
 function AppViewModel()
 {
-	console.log("MQAAppView::AppViewModel window.location.href=" + window.location.href);
+	//console.log("MQAAppView::AppViewModel window.location.href=" + window.location.href);
 	var self = this;
 	self.type = "deferred";
 	self.makeGuiVisible = ko.observable(false); //.extend({ deferred: true });
@@ -71,6 +71,7 @@ function AppViewModel()
 	
 	self.viewIframeSrc = ko.computed(function()
 	{
+		//console.log("viewIframeSrc being called");
 		var newUrl = self.viewUrl();
 		if (!newUrl.endsWith("loading.html"))
 		{
@@ -98,6 +99,9 @@ function AppViewModel()
 	self.mqaDefaultQueryParams = ko.observable("");
 	// build URL components for bookmarked MQA link
 	var url = new URL(window.location.href);
+	//console.log("MQAAppView url=" + url);
+	//console.log("MQAAppView id=" + url.searchParams.get("id"));
+	//console.log("MQAAppView url.search=" + url.search);
 	self.mqaURLsearchValues = ko.observable(url.search);
 	self.urlQuery = ko.observable(url.origin + url.pathname + "query/");
 	self.urlView = ko.observable(url.origin + url.pathname + "view/");
@@ -111,9 +115,13 @@ function AppViewModel()
 		async: false,
 		success: function(theJson)
 		{
+			//console.log("MQAAppView urls success");
 			self.mqaDefaultView(theJson.mqaDefaultView);
 			self.mqaDefaultQuery(theJson.mqaDefaultQuery);
 			self.mqaDefaultViewParams(theJson.mqaDefaultViewParams);
+			//console.log(theJson.mqaDefaultView);
+			//console.log(theJson.mqaDefaultQuery);
+			//console.log(theJson.mqaDefaultViewParams);
 			// do not set self.viewUrl here. Instead, set it after the query iframe loads
 			//if (""===self.mqaURLsearchValues())
 			//{ // self.mqaDefaultViewParams
@@ -125,6 +133,8 @@ function AppViewModel()
 			//}
 			//console.log("view/?" + theJson.mqaDefaultViewParams);
 			self.mqaDefaultQueryParams(theJson.mqaDefaultQueryParams);
+			//console.log("MQAAppView self.mqaURLsearchValues()");
+			//console.log(self.mqaURLsearchValues());
 			if (""===self.mqaURLsearchValues())
 			{
 				self.queryUrl("query/?" + theJson.mqaDefaultQueryParams);

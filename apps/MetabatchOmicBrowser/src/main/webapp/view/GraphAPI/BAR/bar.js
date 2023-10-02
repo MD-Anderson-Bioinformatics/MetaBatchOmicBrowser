@@ -177,7 +177,7 @@ function BarPlot(theModel, thePlotDivObj, theLegendDivObj, theParams)
 					.attr("y", 70)
 					.text("No batches identified as source of batch effect");
 		}
-		console.log("Set bar plotting label");
+		//console.log("Set bar plotting label");
 		const labeldata = [{text: "Blue bar represents negative log 10 of the p-value calculated from the Kruskal-Wallis test. Any called batches are from Dunn's Test. Green marker represents the negative log 10 of p-value for significance. If the blue bar goes past the green marker, this suggests the presence of significant batch effects."}];
 		new d3plus.TextBox()
 				.select("#BarPlottingLabel")
@@ -261,12 +261,18 @@ function BarPlot(theModel, thePlotDivObj, theLegendDivObj, theParams)
 							d3.select(this).on("mouseover", function()
 							{
 								//console.log("legend add " + theData.finder);
-								addHighlighting(theData.finder);
+								if (notUN(theData.finder))
+								{
+									addHighlighting(theData.finder);
+								}
 							});
 							d3.select(this).on("mouseout", function()
 							{
 								//console.log("legend remove " + theData.finder);
-								removeHighlighting(theData.finder);
+								if (notUN(theData.finder))
+								{
+									removeHighlighting(theData.finder);
+								}
 							});
 						}
 					});

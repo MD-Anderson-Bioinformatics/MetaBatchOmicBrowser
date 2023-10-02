@@ -320,7 +320,7 @@ function bevFindDiagram()
 			newUrl = newUrl + '&lvl2='+ encodeURIComponent(lvl2.entry_label);
 			newUrl = newUrl + '&lvl3='+ encodeURIComponent(lvl3.entry_label);
 		}
-		console.log(newUrl);
+		//console.log(newUrl);
 		window.open(newUrl, 'viewIframe');
 	}
 	else
@@ -379,7 +379,8 @@ function processZipSelectEvent(theEvent)
 
 function BEVAppView(theUseZip)
 {
-	console.log("BEVAppView::BEVAppView window.location.href=" + window.location.href);
+	//console.log("BEVAppView::BEVAppView window.location.href=" + window.location.href);
+	//console.log("BEVAppView::BEVAppView id=" + new URL(window.location.href).searchParams.get("id"));
 	var self = this;
 	jsBEVAppView = this;
 	self.type = "deferred";
@@ -391,6 +392,7 @@ function BEVAppView(theUseZip)
 	// selected/requested ID/index prefix for data
 	self.requestedId = ko.observable(undefined);
 	// JSON index from ZIP archive
+	self.jsonIndexShowNotice = ko.observable(true);
 	self.jsonIndex = ko.observable(undefined);
 	self.jsonIndex.subscribe(function(theNewValue)
 	{
@@ -404,18 +406,8 @@ function BEVAppView(theUseZip)
 				{
 					return theA.entry_label === theB.entry_label ? 0 : (theA.entry_label > theB.entry_label) ? -1 : 1;  
 				});
-				
 			}
 		});
-		// Alert notice if needed
-		let notice = theNewValue.notice;
-		if (notUN(notice))
-		{
-			if (""!==notice)
-			{
-				alert(notice);
-			}
-		}
 	});
 	// this below only needs to be called once, 
 	// since it is setting the KnockoutJS object, 
@@ -598,6 +590,20 @@ function BEVAppView(theUseZip)
 				}
 			}
 		}
+		if (self.jsonIndexShowNotice())
+		{
+			if (selected)
+			{
+				if (notUN(selected.notice))
+				{
+					if (""!==selected.notice)
+					{
+						alert(selected.notice);
+						self.jsonIndexShowNotice(false);
+					}
+				}
+			}
+		}
 		globalDiagramControl.handleNewDiagram(self.requestedId(), selected);
 		return selected;
 	}).extend({ throttle: 500 });
@@ -630,6 +636,8 @@ function BEVAppView(theUseZip)
 			self.urlStdData(linksJson.stdData);
 		}
 		var requestedJson = values[1];
+		//console.log("requestedJson");
+		//console.log(requestedJson);
 		if(notUN(requestedJson))
 		{
 			if(notUN(requestedJson.mID))
@@ -649,48 +657,82 @@ function BEVAppView(theUseZip)
 							}
 						});
 					}
-					if(notUN(requestedJson.mLvl1))
+					if((notUN(requestedJson.mLvl1))||(notUN(requestedJson.mData))||(notUN(requestedJson.mTest)))
 					{
 						//console.log("if(notUN(requestedJson.mLvl1))");
 						//console.log(self.level1Options());
 						self.level1Options().forEach(function(theOpt)
 						{
-							if (requestedJson.mLvl1===theOpt.entry_label)
+							if ((notUN(requestedJson.mLvl1))&&(requestedJson.mLvl1===theOpt.entry_label))
+							{
+								self.level1Selected(theOpt);
+							}
+							else if ((notUN(requestedJson.mData))&&(requestedJson.mData===theOpt.entry_label))
+							{
+								self.level1Selected(theOpt);
+							}
+							else if ((notUN(requestedJson.mTest))&&(requestedJson.mTest===theOpt.entry_label))
 							{
 								self.level1Selected(theOpt);
 							}
 						});
 					}
-					if(notUN(requestedJson.mLvl2))
+					if((notUN(requestedJson.mLvl2))||(notUN(requestedJson.mData))||(notUN(requestedJson.mTest)))
 					{
 						self.level2Options().forEach(function(theOpt)
 						{
-							if (requestedJson.mLvl2===theOpt.entry_label)
+							if ((notUN(requestedJson.mLvl2))&&(requestedJson.mLvl2===theOpt.entry_label))
+							{
+								self.level2Selected(theOpt);
+							}
+							else if ((notUN(requestedJson.mData))&&(requestedJson.mData===theOpt.entry_label))
+							{
+								self.level2Selected(theOpt);
+							}
+							else if ((notUN(requestedJson.mTest))&&(requestedJson.mTest===theOpt.entry_label))
 							{
 								self.level2Selected(theOpt);
 							}
 						});
 					}
-					if(notUN(requestedJson.mLvl3))
+					if((notUN(requestedJson.mLvl3))||(notUN(requestedJson.mData))||(notUN(requestedJson.mTest)))
 					{
 						self.level3Options().forEach(function(theOpt)
 						{
-							if (requestedJson.mLvl3===theOpt.entry_label)
+							if ((notUN(requestedJson.mLvl3))&&(requestedJson.mLvl3===theOpt.entry_label))
+							{
+								self.level3Selected(theOpt);
+							}
+							else if ((notUN(requestedJson.mData))&&(requestedJson.mData===theOpt.entry_label))
+							{
+								self.level3Selected(theOpt);
+							}
+							else if ((notUN(requestedJson.mTest))&&(requestedJson.mTest===theOpt.entry_label))
 							{
 								self.level3Selected(theOpt);
 							}
 						});
 					}
-					if(notUN(requestedJson.mLvl4))
+					if((notUN(requestedJson.mLvl4))||(notUN(requestedJson.mData))||(notUN(requestedJson.mTest)))
 					{
 						self.level4Options().forEach(function(theOpt)
 						{
-							if (requestedJson.mLvl4===theOpt.entry_label)
+							if ((notUN(requestedJson.mLvl4))&&(requestedJson.mLvl4===theOpt.entry_label))
+							{
+								self.level4Selected(theOpt);
+							}
+							else if ((notUN(requestedJson.mData))&&(requestedJson.mData===theOpt.entry_label))
+							{
+								self.level4Selected(theOpt);
+							}
+							else if ((notUN(requestedJson.mTest))&&(requestedJson.mTest===theOpt.entry_label))
 							{
 								self.level4Selected(theOpt);
 							}
 						});
 					}
+					// mark index as changed
+					self.jsonIndexShowNotice(true);
 					self.makeGuiVisible(true);
 				});
 				// handle batch types
@@ -941,6 +983,6 @@ function BEVAppView(theUseZip)
 
 	self.humanIdentifier.subscribe(function (theValue)
 	{
-		sendGAEvent('action', 'view-results', theValue);
+		sendGAEvent('action', 'mobevent-view-results', theValue);
 	}, this);
 } // END model view

@@ -24,7 +24,7 @@ import java.util.Map.Entry;
 
 /**
  *
- * @author Tod_Casasent
+ * @author dqs_tcga_service
  */
 public class ResultEntry extends EntryMixin
 {
@@ -63,7 +63,7 @@ public class ResultEntry extends EntryMixin
 		// general internal data
 		path_results = theRow[theHeaders.indexOf("PathResults")];
 		path_data = theRow[theHeaders.indexOf("PathData")];
-		id = theRow[theHeaders.indexOf("ID")];
+		id = theRow[theHeaders.indexOf("ID")] + "~" + theRow[theHeaders.indexOf("DataVersion")] + "~" + theRow[theHeaders.indexOf("TestVersion")];
 		// shared data
 		// version source variant project subProject
 		// category platform dataset_type algorithm details
@@ -411,10 +411,13 @@ public class ResultEntry extends EntryMixin
 			theDownloadBase = theDownloadBase + "/";
 		}
 		String downloadDataUrl = theDownloadBase + "dszipdata?id=" + id;
-		String downloadResultsUrl = theDownloadBase + "dszipresults?id=" + id;
+		String downloadResultsUrl = theDownloadBase + "dszipresults?id=" + id;;
+		String newId = this.id;
 		String viewResultsUrl = theDownloadBase
-				+ ((null == theJsonQuery) ? ("view/?") : ("?default=" + URLEncoder.encode(theJsonQuery, StandardCharsets.UTF_8.name()) + "&"))
-				+ "id=" + this.id;
+				+ ((null == theJsonQuery) ? 
+							("view/?") : 
+							("?default=" + URLEncoder.encode(theJsonQuery, StandardCharsets.UTF_8.name()) + "&"))
+				+ ("id=" + newId + "&data=DATA_"+this.data_version + "&test=TEST_"+this.test_version);
 		if ((null == this.path_data) || ("".equals(this.path_data)))
 		{
 			downloadDataUrl = "";
@@ -426,7 +429,7 @@ public class ResultEntry extends EntryMixin
 		}
 		ArrayList<String> list = new ArrayList<>();
 		list.add(downloadDataUrl + " | " + downloadResultsUrl + " | " + viewResultsUrl);
-		list.add(this.id);
+		list.add(newId);
 		list.add(this.source);
 		list.add(this.program);
 		list.add(this.project);

@@ -2,65 +2,29 @@
 <html>
 	<head>
 		<meta charset="UTF-8">
-		<!-- Global site tag (gtag.js) - Google Analytics -->
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-LVQMVVYWLJ"></script>
 		<script type="text/javascript">
-			/* Google Analytics start */
-			// based on https://rankmath.com/blog/google-analytics-gdpr/
-			const cyrb53 = function(str, seed = 0)
-			{
-				let h1 = 0xdeadbeef ^ seed,
-					h2 = 0x41c6ce57 ^ seed;
-				for (let i = 0, ch; i < str.length; i++)
-				{
-					ch = str.charCodeAt(i);
-					h1 = Math.imul(h1 ^ ch, 2654435761);
-					h2 = Math.imul(h2 ^ ch, 1597334677);
-				}
-				h1 = Math.imul(h1 ^ h1 >>> 16, 2246822507) ^ Math.imul(h2 ^ h2 >>> 13, 3266489909);
-				h2 = Math.imul(h2 ^ h2 >>> 16, 2246822507) ^ Math.imul(h1 ^ h1 >>> 13, 3266489909);
-				return 4294967296 * (2097151 & h2) + (h1 >>> 0);
-			};
-
-			const getNavigatorId = function() 
-			{
-				let notAvailable = "unknown";
-				let ua = navigator.userAgent || notAvailable;
-				let lang = window.navigator.language || window.navigator.userLanguage || window.navigator.browserLanguage || window.navigator.systemLanguage || not_available;
-				let colors = window.screen.colorDepth || notAvailable;
-				let memKey = window.navigator.deviceMemory || notAvailable;
-				let pixels = window.devicePixelRatio || notAvailable;
-				let res = [window.screen.width, window.screen.height].sort().reverse().join("x");
-				return ua + ";" + lang + ";" + colors + ";" + memKey + ";" + pixels + ";" + res;
-			};
-
-			let validityInterval = Math.round (new Date() / 1000 / 3600 / 24 / 7);
-			let clientIDSource = window.location.host + ";" + getNavigatorId() + ";" + validityInterval;
-
-			window.clientIDHashed = cyrb53(clientIDSource).toString(16);
-			(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-			(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-			m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-			})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-			ga('create', 'UA-33425717-1', 
-			{
-				'storage': 'none',
-				'clientId': clientIDHashed
-			});
-			ga('set', 'anonymizeIp', true);
-			ga('send', 'pageview');
-			/* Google Analytics end */
-
+			/* https://stackoverflow.com/questions/67078898/how-to-disable-cookies-in-ga4 */
+			/* https://stackoverflow.com/questions/71424887/cookieless-google-analytics-v4-still-generates-ga-cookie#75625761 */
+			window.dataLayer = window.dataLayer || [];
+			function gtag(){dataLayer.push(arguments);}
+			//gtag("consent", "default",
+			//{
+			//	ad_storage: "denied",
+			//	analytics_storage: "denied"
+			//});
+			gtag('js', new Date());
+			gtag('config', 'G-LVQMVVYWLJ');
+			gtag('send', 'pageview');
 			function sendGAEvent(theEvent, theCategory, theLabel)
 			{
-				/* Google Analytics start */
-				ga('send', 
+				gtag('send', 
 				{
 					hitType: 'event',
 					eventCategory: theEvent,
 					eventAction: theCategory,
 					eventLabel: theLabel
 				});
-				/* Google Analytics end */
 			};
 		</script>
 		<title>MetaBatch Omic Browser Visualizer</title>
@@ -145,6 +109,8 @@
 			var appview = null;
 			// actually parses URL
 			var url = new URL(window.location.href);
+			//console.log("view/index url=" + url);
+			//console.log("view/index id=" + url.searchParams.get("id"));
 			var tmpUseZip = url.searchParams.get("usezip");
 			var useZip = ("TRUE"===tmpUseZip)?true:false;
 			var globalDataAccess = new DataAccess(useZip);
@@ -267,9 +233,9 @@
 								<tr><td style="white-space: nowrap;">Analysis ID</td><td><span data-bind="text: $root.indexProject()"></span></td></tr>
 								<tr><td style="white-space: nowrap;">Platform</td><td><span data-bind="text: $root.indexPlatform()"></span></td></tr>
 								<tr><td style="white-space: nowrap;">Study Title</td><td><span data-bind="text: $root.indexData()"></span></td></tr>
-								<tr data-bind="visible: ('MW' === $root.indexSource())">
+								<tr data-bind="visible: ('MWB' === $root.indexSource())">
 									<td>Metabolomics Workbench Link to Study</td>
-									<td><a target="_blank" data-bind="attr: { href: 'https://www.metabolomicsworkbench.org/data/DRCCMetadata.php?StudyID=' + $root.indexProject(), title: 'Link to Study' }">Link to Study</a></td>
+									<td><a target="_blank" data-bind="attr: { href: 'https://www.metabolomicsworkbench.org/data/DRCCMetadata.php?StudyID=' + $root.indexProgram(), title: 'Link to Study' }">Link to Study</a></td>
 								</tr>
 							</tbody>
 						</table>
@@ -289,7 +255,7 @@
 								<tr><td>DataSet Type</td><td><span data-bind="text: $root.indexJobType()"></span></td></tr>
 								<tr><td>Job Id</td><td><span data-bind="text: $root.indexJobId()"></span></td></tr>
 								<tr><td>Notice</td><td><span data-bind="text: $root.indexNotice()"></span></td></tr>
-								<tr data-bind="visible: ('MW' === $root.indexSource())">
+								<tr data-bind="visible: ('MWB' === $root.indexSource())">
 									<td>Metabolomics Workbench Link to Study</td>
 									<td><a target="_blank" data-bind="attr: { href: 'https://www.metabolomicsworkbench.org/data/DRCCMetadata.php?StudyID=' + $root.indexProject(), title: 'Link to Study' }">Link to Study</a></td>
 								</tr>
@@ -323,12 +289,12 @@
 				<div class="div-diagram-viewer-control">
 					<span style="display: none;" data-bind="visible: (null !== $root.requestedId())">
 						&nbsp;<button type="button" class="bev-control-button" 
-									  data-bind="click: function(){ sendGAEvent('action', 'download-results', $root.humanIdentifier()); location.href='../dszipresults?id='+ $root.requestedId(); return false; }" 
+									  data-bind="click: function(){ sendGAEvent('action', 'mobevent-download-results', $root.humanIdentifier()); location.href='../dszipresults?id='+ $root.requestedId(); return false; }" 
 									  title="Download results, includes corrected data if pertinent."><i class="fas fa-download" style="color: red;"> </i> Results</button>
 					</span>
 					<span style="display: none;" data-bind="visible: (null !== $root.requestedId())">
 						&nbsp;<button type="button" class="bev-control-button" 
-									  data-bind="click: function(){ sendGAEvent('action', 'download-data', $root.humanIdentifier()); location.href='../dszipdata?id='+ $root.requestedId(); return false; }" 
+									  data-bind="click: function(){ sendGAEvent('action', 'mobevent-download-data', $root.humanIdentifier()); location.href='../dszipdata?id='+ $root.requestedId(); return false; }" 
 									  title="Download original data and metadata."><i class="fas fa-download" style="color: firebrick;"> </i> Data</button>
 					</span>
 					<span data-bind="visible: $root.isPngDiagram()">

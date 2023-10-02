@@ -114,7 +114,7 @@ class DataAccess_file
 	
 	getExistance(theRequestedId, theTextFile)
 	{
-		console.log("getExistance theTextFile='" + theTextFile + "'");
+		//console.log("getExistance theTextFile='" + theTextFile + "'");
 		// trim to remove first /
 		if (theTextFile.startsWith("/"))
 		{

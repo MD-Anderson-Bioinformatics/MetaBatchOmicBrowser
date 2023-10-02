@@ -202,17 +202,33 @@ class UtilPca
 		var annotationFile = self.newDiagram.pca_annotations;
 		// "pca_values": "/analysis/PCA/BatchId/ManyToMany/DATA_2023_2_3_0920/TEST_2023_2_3_0920/PCAValues.tsv"
 		var plotFile = self.newDiagram.pca_values;
+		// get DATA and TEST version if used
+		var splitted = plotFile.split("/");
+		var dataVersion = "";
+		var testVersion = "";
+		if (splitted.length>6)
+		{
+			dataVersion = splitted[5];
+			if (splitted.length>7)
+			{
+				testVersion = splitted[6];
+			}
+		}
 		// title from index
-		var title = self.indexKO().source
-					+ "/" + self.indexKO().program
-					+ "/" + self.indexKO().project
-					+ "/" + self.indexKO().category
-					+ "/" + self.indexKO().platform
-					+ "/" + self.indexKO().data
-					+ ((""!==self.indexKO().details)?("/" + this.indexKO().details):"")
-					+ ((""!==self.indexKO().data_version)?("/" + this.indexKO().data_version):"")
-					+ ((""!==self.indexKO().test_version)?("/" + this.indexKO().test_version):"")
-					+ "/" + batchType;
+		var title = self.newDiagram.title;
+		if ("" === title)
+		{
+			title = self.indexKO().source
+						+ " / " + self.indexKO().program
+						+ " / " + self.indexKO().project
+						+ " / " + self.indexKO().category
+						+ " / " + self.indexKO().platform
+						+ " / " + self.indexKO().data
+						+ ((""!==self.indexKO().details)?(" / " + this.indexKO().details):"")
+						+ ((""!==dataVersion)?(" / " + dataVersion):"")
+						+ ((""!==testVersion)?(" / " + testVersion):"")
+						+ " / " + batchType;
+		}
 		var [plotDiv, controlDiv, legendDiv] = self.addDivs(document.getElementById(self.divDiagramId), document.getElementById(self.divLegendId));
 
 		var self = this;
@@ -384,9 +400,9 @@ class UtilPca
 			{
 				theIcon.style.color = "red";
 			}
-			console.log("toggleCentroids plotOptions");
+			//console.log("toggleCentroids plotOptions");
 			thePlot.plotOptions(options);
-			console.log(thePlot);
+			//console.log(thePlot);
 			thePlot.redrawPlot();
 		}
 	}

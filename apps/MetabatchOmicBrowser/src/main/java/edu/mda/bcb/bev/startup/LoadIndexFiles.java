@@ -17,9 +17,9 @@ import edu.mda.bcb.bev.indexes.ResultIndex;
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.Properties;
-import javax.servlet.ServletContextEvent;
-import javax.servlet.ServletContextListener;
-import javax.servlet.annotation.WebListener;
+import jakarta.servlet.ServletContextEvent;
+import jakarta.servlet.ServletContextListener;
+import jakarta.servlet.annotation.WebListener;
 
 /**
  *
@@ -30,12 +30,12 @@ public class LoadIndexFiles implements ServletContextListener
 {
 
 	static public String M_VERSION = "BEV BEA_VERSION_TIMESTAMP";
-
-	static public String M_BEV_DIA_INDEX_FILE = "/DAPI_MOB/INDEXES/data_index_mwb.tsv";
-	static public String M_BEV_DSC_INDEX_FILE = "/DAPI_MOB/INDEXES/dsc_index_mwb.tsv";
-	static public String M_BEV_KWD_INDEX_FILE = "/DAPI_MOB/INDEXES/kwd_index_mwb.tsv";
-	static public String M_CONFIG_PROP = "/DAPI_MOB/CONFIG/dapi.properties";
-	static public String M_BEI_DATA_DIR = "/DAPI_MOB/DATA";
+	// *mapped-dir* <- used for searching for hard-coded paths
+	static public String M_BEV_DIA_INDEX_FILE = "/BEA/DAPI_MOB/INDEXES/data_index_mwb.tsv";
+	static public String M_BEV_DSC_INDEX_FILE = "/BEA/DAPI_MOB/INDEXES/dsc_index_mwb.tsv";
+	static public String M_BEV_KWD_INDEX_FILE = "/BEA/DAPI_MOB/INDEXES/kwd_index_mwb.tsv";
+	static public String M_CONFIG_PROP = "/BEA/DAPI_MOB/CONFIG/dapi.properties";
+	static public String M_BEI_DATA_DIR = "/BEA/DAPI_MOB/DATA";
 	//TDC// static public String M_CONFIG_FILTER = "/DAPI/CONFIG/dapi-filter.tsv";
 
 	static public Indexes M_PATH_LOOKUP = null;

@@ -148,8 +148,8 @@ class DiagramControl
 	selectDiagram(theDatasetPath)
 	{
 		// only called from DSC to select a PCA+ result
-		console.log("DiagramControl::selectDiagram called");
-		console.log("theDatasetPath=" + theDatasetPath);
+		//console.log("DiagramControl::selectDiagram called");
+		//console.log("theDatasetPath=" + theDatasetPath);
 		// get last four entries (algorith, level 1, level 2, level 3)
 		var [alg, lv1, lv2, lv3, lv4] = this.getEntries(theDatasetPath);
 		if ("PCA"===alg)
@@ -331,7 +331,8 @@ class DiagramControl
 		this.dataAccess.addImage(theDatasetId, undefined, this.divLegendId);
 		this.resizeUtil = null;
 		// use .then, not .done, cause this is sometimes JQuery, sometimes a Promise
-		var passedThis = this;this.dataAccess.getExistance(theDatasetId, theNewDiagram.diagram_image).then(function (exists)
+		var passedThis = this;
+		this.dataAccess.getExistance(theDatasetId, theNewDiagram.diagram_image).then(function (exists)
 		{
 			//console.log("DiagramControl::handleNewDiscrete getExistance");
 			if ("false"===exists)
@@ -461,25 +462,25 @@ class DiagramControl
 
 	handleNewCdp(theDatasetId, theNewDiagram)
 	{
-		console.log("DiagramControl::handleNewCdp called");
+		//console.log("DiagramControl::handleNewCdp called");
 		// clear any existing images -- clear calls are syncronous
 		this.dataAccess.addImage(theDatasetId, undefined, this.divDiagramId);
 		this.dataAccess.addImage(theDatasetId, undefined, this.divLegendId);
 		this.resizeUtil = null;
 		// use .then, not .done, cause this is sometimes JQuery, sometimes a Promise
-		console.log("DiagramControl::handleNewCdp theNewDiagram.diagram_image=" + theNewDiagram.diagram_image);
+		//console.log("DiagramControl::handleNewCdp theNewDiagram.diagram_image=" + theNewDiagram.diagram_image);
 		var passedThis = this;
 		this.dataAccess.getExistance(theDatasetId, theNewDiagram.diagram_image).then(function (exists)
 		{
-			console.log("DiagramControl::handleNewCdp getExistance");
+			//console.log("DiagramControl::handleNewCdp getExistance");
 			if ("false"===exists)
 			{
-				console.log("DiagramControl::handleNewCdp addText");
+				//console.log("DiagramControl::handleNewCdp addText");
 				passedThis.dataAccess.addText(globalDiagramControl.notExistHTML(), passedThis.divDiagramId);
 			}
 			else
 			{
-				console.log("DiagramControl::handleNewCdp addImage");
+				//console.log("DiagramControl::handleNewCdp addImage");
 				// load calls for an image are asyncronous
 				passedThis.dataAccess.addImage(theDatasetId, theNewDiagram.diagram_image, passedThis.divDiagramId);
 				passedThis.dataAccess.addImage(theDatasetId, theNewDiagram.legend_image, passedThis.divLegendId);

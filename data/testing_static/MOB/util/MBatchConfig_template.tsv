@@ -12,8 +12,9 @@ filterLogTransformFlag	<filterLogTransformFlag>
 filteringBatchType	null
 filteringBatchesArray	null
 CDP_Flag	TRUE
-selectedBatchToCorrect	batch_id
-selectedCorrection	null
+selectedBatchToCorrect	<selectedBatchToCorrect>
+selectedCorrection	<selectedCorrection>
+selectedCorrectionReason	<selectedCorrectionReason>
 selectedCorrectionMinBatchSize	3
 selectedDSCPermutations	2000
 selectedDSCThreads	10
@@ -36,7 +37,7 @@ EBNPlus_GroupId1	null
 EBNPlus_GroupId2	null
 EBNPlus_Seed	null
 EBNPlus_MinSamples	null
-title	<title>
+Title	
 DataVersion	<DataVersion>
 TestVersion	<TestVersion>
 replaceNAs	<replaceNAs>

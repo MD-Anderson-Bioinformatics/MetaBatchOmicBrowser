@@ -193,21 +193,38 @@ class UtilHierClust
 		var orderFile = self.newDiagram.hc_order;
 		// "hc_data": "/HierarchicalClustering/HCData.tsv",
 		var plotFile = self.newDiagram.hc_data;
+		// get DATA and TEST version if used
+		var batchType = batchFile.split("/")[3];
+		var splitted = plotFile.split("/");
+		var dataVersion = "";
+		var testVersion = "";
+		if (splitted.length>4)
+		{
+			dataVersion = splitted[3];
+			if (splitted.length>5)
+			{
+				testVersion = splitted[4];
+			}
+		}
 		// title from index
-		var title = self.indexKO().source
-					+ "/" + self.indexKO().program
-					+ "/" + self.indexKO().project
-					+ "/" + self.indexKO().category
-					+ "/" + self.indexKO().platform
-					+ "/" + self.indexKO().data
-					+ ((""!==self.indexKO().details)?("/" + this.indexKO().details):"")
-					+ ((""!==self.indexKO().data_version)?("/" + this.indexKO().data_version):"")
-					+ ((""!==self.indexKO().test_version)?("/" + this.indexKO().test_version):"");
+		var title = self.newDiagram.title;
+		if ("" === title)
+		{
+			title = self.indexKO().source
+					+ " / " + self.indexKO().program
+					+ " / " + self.indexKO().project
+					+ " / " + self.indexKO().category
+					+ " / " + self.indexKO().platform
+					+ " / " + self.indexKO().data
+					+ ((""!==self.indexKO().details)?(" / " + this.indexKO().details):"")
+					+ ((""!==dataVersion)?(" / " + dataVersion):"")
+					+ ((""!==testVersion)?(" / " + testVersion):"");
+		}
 		var [plotDiv, controlDiv, legendDiv] = self.addDivs(document.getElementById(self.divDiagramId), document.getElementById(self.divLegendId));
 
-		console.log("newHierClust plotFile=" + plotFile);
-		console.log("newHierClust batchFile=" + batchFile);
-		console.log("newHierClust orderFile=" + orderFile);
+		//console.log("newHierClust plotFile=" + plotFile);
+		//console.log("newHierClust batchFile=" + batchFile);
+		//console.log("newHierClust orderFile=" + orderFile);
 		Promise.all([
 			self.getDataFileCallback(plotFile),
 			self.getDataFileCallback(batchFile),
@@ -220,8 +237,8 @@ class UtilHierClust
 
 			var model = HierClustPlot.BasicModel(BatchData, plotValues, orderValues);
 			var params = HierClustPlot.DefaultParams();
-			// ???	params.plotTitle = title;
-			params.plotAnnotation = null;
+			params.plotTitle = title;
+			params.plotAnnotation = "annotation";
 			params.showDetailFunc = (struct) =>
 			{ // showDetailFunc
 				theMakeDataPointLog(struct, document.getElementById(self.divDatapaneId));

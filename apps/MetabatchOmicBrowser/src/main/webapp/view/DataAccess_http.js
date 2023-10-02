@@ -56,7 +56,7 @@ class DataAccess_http
 		//console.log("setIndexAndId tmpId=" + tmpId);
 		if (null === tmpId)
 		{
-			console.log("setIndexAndId No ID Found");
+			//console.log("setIndexAndId No ID Found");
 			return new Promise((resolve, reject) => 
 			{
 				resolve(
@@ -67,6 +67,8 @@ class DataAccess_http
 					"mLvl2": null,
 					"mLvl3": null,
 					"mLvl4": null,
+					"mData": null,
+					"mTest": null,
 					"hideDB": null,
 					"hideLP": null
 				});
@@ -100,6 +102,8 @@ class DataAccess_http
 				let lvl2 = url.searchParams.get("lvl2");
 				let lvl3 = url.searchParams.get("lvl3");
 				let lvl4 = url.searchParams.get("lvl4");
+				let data = url.searchParams.get("data");
+				let test = url.searchParams.get("test");
 				let hideDB = url.searchParams.get("hideDB");
 				//console.log("hideDB 1=" + hideDB);
 				if ("true"===hideDB)
@@ -130,6 +134,8 @@ class DataAccess_http
 					"mLvl2": lvl2,
 					"mLvl3": lvl3,
 					"mLvl4": lvl4,
+					"mData": data,
+					"mTest": test,
 					"hideDB": hideDB,
 					"hideLP": hideLP
 				});

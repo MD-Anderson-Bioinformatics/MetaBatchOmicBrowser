@@ -65,7 +65,8 @@ getUrlpath = function()
 // This is a simple *viewmodel* - JavaScript that defines the data and behavior of your UI
 function AppViewModel()
 {
-	console.log("DAPIAppView::AppViewModel window.location.href=" + window.location.href);
+	//console.log("DAPIAppView::AppViewModel window.location.href=" + window.location.href);
+	//console.log("DAPIAppView::AppViewModel id=" + new URL(window.location.href).searchParams.get("id"));
 	//console.log("MQA AppViewModel starting");
 	var self = this;
 	self.type = "deferred";
@@ -103,6 +104,7 @@ function AppViewModel()
 	self.defaultQuery = ko.observable("");
 	if (null !== defaultQueryJSON)
 	{
+		//console.log("DAPIAppView::AppViewModel set defaultQueryJSON")
 		self.defaultQuery(JSON.parse(defaultQueryJSON));
 	}
 
@@ -824,7 +826,6 @@ function AppViewModel()
 		return result;
 	}
 
-
 	function getOriginalOrder(theLength)
 	{
 		var indexes = Array.from(Array(theLength)).map((e, i) => i);
@@ -888,7 +889,9 @@ function AppViewModel()
 				(true === first))
 		{
 			var url = new URL(window.location.href);
-			//console.log("populateQueryResults calling");
+			//console.log("populateQueryResults computing");
+			//console.log("populateQueryResults url=" + url);
+			//console.log("populateQueryResults id=" + url.searchParams.get("id"));
 			var loadDefaults = self.firstLoad();
 			self.firstLoad(false);
 			var date = new Date();
@@ -1353,7 +1356,7 @@ function AppViewModel()
 										if (rowId === dataRows[index][1])
 										{
 											matched = dataRows[index];
-											console.log("DAPIAppView matched=" + matched);
+											//console.log("DAPIAppView matched=" + matched);
 										}
 									}
 									if (null !== matched)
@@ -1374,6 +1377,7 @@ function AppViewModel()
 							}
 							//console.log("DAPIAppView::populateQueryResults call setSelectedDatasetQuery");
 							//console.log("DAPIAppView::populateQueryResults theId=" + self.viewedDatasetId());
+							//console.log("**** CALL DAPIAppView::populateQueryResults call setSelectedDatasetQuery");
 							setSelectedDatasetQuery(self.viewedDatasetId());
 							//console.log("DAPIAppView::populateQueryResults call enableInput");
 							enableInput();
@@ -1519,12 +1523,12 @@ function tableActionOptions(data, type, row, meta)
 		}
 		if ("" !== splitted[0])
 		{
-			retVal += '<button type="button" class="sdb-control-button" onclick="sendGAEvent(\'action\', \'download-data\', \'Zip=' + humanIdFromRow(row) + '\'); location.href=\'' + getUrlpath() + splitted[0] + '\';" title="Download Data Archive">' +
+			retVal += '<button type="button" class="sdb-control-button" onclick="sendGAEvent(\'action\', \'mobevent-download-data\', \'Zip=' + humanIdFromRow(row) + '\'); location.href=\'' + getUrlpath() + splitted[0] + '\';" title="Download Data Archive">' +
 					'<i class="fas fa-download" style="color: blue;"> </i></button>';
 		}
 		if ("" !== splitted[1])
 		{
-			retVal += '<button type="button" class="sdb-control-button" onclick="sendGAEvent(\'action\', \'download-results\', \'Zip=' + humanIdFromRow(row) + '\'); location.href=\'' + getUrlpath() + splitted[1] + '\';" title="Download Results Archive">' +
+			retVal += '<button type="button" class="sdb-control-button" onclick="sendGAEvent(\'action\', \'mobevent-download-results\', \'Zip=' + humanIdFromRow(row) + '\'); location.href=\'' + getUrlpath() + splitted[1] + '\';" title="Download Results Archive">' +
 					'<i class="fas fa-download" style="color: red;"> </i></button>';
 		}
 	}

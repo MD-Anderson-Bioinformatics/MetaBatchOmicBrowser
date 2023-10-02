@@ -30,27 +30,32 @@ class UtilBar
 		this.plot.resizePlot(Math.floor(boxWidth), Math.floor(boxHeight));
 	}
 	
-	buildLegendData(theBarData)
+	buildLegendData(theBarData, theTitle)
 	{
 		var dataset = theBarData['dataset'];
 		var pvalue = theBarData['negLog10PValue'];
 		var cutoff = theBarData['negLog10Cutoff'];
 		var batches = theBarData['batchesCalled'];
+		//console.log(theBarData);
 		var legendData = [];
 		legendData[0] = {};
-		legendData[0].finder = "bar-pvalue";
-		legendData[0].color = "#0000FF";
-		legendData[0].legend = "Negative Log10 P-Value = " + pvalue;
+		legendData[0].finder = null;
+		legendData[0].color = null;
+		legendData[0].legend = theTitle;
 		legendData[1] = {};
-		legendData[1].finder = "bar-cutoff";
-		legendData[1].color = "#00FF00";
-		legendData[1].legend = "Negative Log10 Cutoff = " + cutoff;
+		legendData[1].finder = "bar-pvalue";
+		legendData[1].color = "#0000FF";
+		legendData[1].legend = "Negative Log10 P-Value = " + pvalue;
+		legendData[2] = {};
+		legendData[2].finder = "bar-cutoff";
+		legendData[2].color = "#00FF00";
+		legendData[2].legend = "Negative Log10 Cutoff = " + cutoff;
 		if (notUN(batches))
 		{
-			legendData[2] = {};
-			legendData[2].finder = null;
-			legendData[2].color = null;
-			legendData[2].legend = "Batches Called = " + batches;
+			legendData[3] = {};
+			legendData[3].finder = null;
+			legendData[3].color = null;
+			legendData[3].legend = "Batches Called = " + batches;
 		}
 		return(legendData);
 	}
@@ -119,20 +124,9 @@ class UtilBar
 	{
 		// CALLED FROM BAR IFRAME
 		var self = this;
-		var batchType = self.newDiagram.entry_label;
 		var kwdFile = self.newDiagram.kwd_kwddata;
+		var batchType = kwdFile.split("/")[3];
 		var version = self.indexKO().version;
-		// title from index
-		var title = self.indexKO().source
-					+ "/" + self.indexKO().program
-					+ "/" + self.indexKO().project
-					+ "/" + self.indexKO().category
-					+ "/" + self.indexKO().platform
-					+ "/" + self.indexKO().data
-					+ ((""!==self.indexKO().details)?("/" + this.indexKO().details):"")
-					+ ((""!==self.indexKO().data_version)?("/" + this.indexKO().data_version):"")
-					+ ((""!==self.indexKO().test_version)?("/" + this.indexKO().test_version):"")
-					+ "/" + batchType;
 		var [plotDiv, controlDiv, legendDiv] = self.addDivs(theIframeDiagramDiv, document.getElementById(self.divLegendId));
 
 		Promise.all([
@@ -142,10 +136,36 @@ class UtilBar
 			var kwdValues = values[0];
 			var bardata = self.buildBarData(kwdValues);
 			var dataset = bardata['dataset'];
+			// get DATA and TEST version if used
+			var splitted = self.newDiagram.kwd_kwddata.split("/");
+			var dataVersion = "";
+			var testVersion = "";
+			if (splitted.length>5)
+			{
+				dataVersion = splitted[4];
+				if (splitted.length>6)
+				{
+					testVersion = splitted[5];
+				}
+			}
+			var title = self.newDiagram.title;
+			if ("" === title)
+			{
+				title = self.indexKO().source
+						+ " / " + self.indexKO().program
+						+ " / " + self.indexKO().project
+						+ " / " + self.indexKO().category
+						+ " / " + self.indexKO().platform
+						+ " / " + self.indexKO().data
+						+ ((""!==self.indexKO().details)?(" / " + this.indexKO().details):"")
+						+ ((""!==dataVersion)?(" / " + dataVersion):"")
+						+ ((""!==testVersion)?(" / " + testVersion):"")
+						+ " / " + batchType;
+			}
 			var pvalue = bardata['negLog10PValue'];
 			var cutoff = bardata['negLog10Cutoff'];
 			var batches = bardata['batchesCalled'];
-			var legendValues = self.buildLegendData(bardata);
+			var legendValues = self.buildLegendData(bardata, batchType);
 			// BarPlot.BasicModel = function (theTitle, theCutoff, thePvalue, theBatches, theVersion, theLegend)
 			var model = theModelFun(title, cutoff, pvalue, batches, version, legendValues);
 			var params = theParam;
