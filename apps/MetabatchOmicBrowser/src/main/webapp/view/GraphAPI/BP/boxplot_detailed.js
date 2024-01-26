@@ -80,7 +80,7 @@ function BoxPlotDetailed(theDetailedDiv)
 		{
 			throw new Error("'theOutlierData' argument missing");
 		}
-		if (!theDetailId)
+		if ((0!==theDetailId)&&(!theDetailId))
 		{
 			throw new Error("'theDetailId' argument missing");
 		}

@@ -14,54 +14,56 @@
 -->
 <html style="height:100%; width:100%;">
     <head>
-		<title>Barplot Diagram</title>
+		<title>Volcano Diagram</title>
 		<meta charset="UTF-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 		<link href="../../bev_basic.css?v=BEA_VERSION_TIMESTAMP" rel="stylesheet" type="text/css">
-		<link href="bar.css?v=BEA_VERSION_TIMESTAMP" rel="stylesheet" type="text/css">
+		<link href="volcano.css?v=BEA_VERSION_TIMESTAMP" rel="stylesheet" type="text/css">
 		<link href="../../fa5/css/all.css?v=BEA_VERSION_TIMESTAMP" rel="stylesheet" type="text/css">
 		<script src="../../lib/jquery-3.5.0.min.js?v=BEA_VERSION_TIMESTAMP" type="text/javascript" charset="utf-8"></script>
 		<script src="d3.v6.min.js?v=BEA_VERSION_TIMESTAMP" type="text/javascript" charset="utf-8"></script>
 		<script src="d3plus-text.v1.0.3.full.min.js?v=BEA_VERSION_TIMESTAMP" type="text/javascript" charset="utf-8"></script>
-		<script src="bar.js?v=BEA_VERSION_TIMESTAMP" type="text/javascript" charset="utf-8"></script>	
+		<script src="plotly-2.27.0.min.js?v=BEA_VERSION_TIMESTAMP" type="text/javascript" charset="utf-8"></script>
+		<script src="volcano.js?v=BEA_VERSION_TIMESTAMP" type="text/javascript" charset="utf-8"></script>	
 		<script type="text/javascript">
-			/* global BarPlot */
-			function loadBarDiagram()
+			/* global VolcanoPlot */
+			function loadVolcanoDiagram()
 			{
-				//console.log("BAR/index.html onload loadBarDiagram");
-				window.parent.globalDiagramControl.resizeUtil.iframeBarFunction(document.getElementById("DivLoadBarDiagram"),
-						BarPlot.BasicModel, BarPlot.DefaultParams(), BarPlot);
+				//console.log("BAR/index.html onload loadVolcanoDiagram");
+				window.parent.globalDiagramControl.resizeUtil.iframeVolcanoFunction(document.getElementById("DivLoadVolcanoDiagram"),
+						VolcanoPlot.BasicModel, VolcanoPlot.DefaultParams(), VolcanoPlot);
 			}
 		</script>
     </head>
-    <body onload="loadBarDiagram()" style="height:90%; width:90%;">
-		<div id="DivLoadBarDiagram" style="width: 100%; height: 100%;">
+    <body onload="loadVolcanoDiagram()" style="height:90%; width:90%;">
+		<div id="DivLoadVolcanoDiagram" style="width: 100%; height: 100%;">
 			<div class="columnDiv">
-				<div id="BarPlottingDiv" class="BarPlottingDiv plotAboveStrip">
-					<svg id="BarPlottingDivSVG" width="100%" height="100%">
-						<g id="BarPlottingTitle" width="100%" height="90"></g>
-						<g id="BarMouseG">
-							<!-- move over and down for axis and title space -->
-							<g id='BarMetaG' transform="translate(15,30)">
-								<g id="BarPlottingG"></g>
-								<g id="BarPlottingLabel"></g>
+				<div id="VolcanoPlottingDiv" class="VolcanoPlottingDiv plotAboveStrip">
+					<!-- svg id="VolcanoPlottingDivSVG" width="100%" height="100%">
+						<g id="VolcanoPlottingTitle" width="100%" height="90"></g>
+						<g id="VolcanoMouseG">
+							< !-- move over and down for axis and title space -- >
+							<g id='VolcanoMetaG' transform="translate(15,30)">
 							</g>
 						</g>
-					</svg>
+					</svg -->
+					<div id="VolcanoPlottingG"></div>
 				</div>
-				<!-- <div id="BarControlDiv" class="controlStrip">
-					&nbsp;
-					<span>
-					<span id="BarResetZoomButton" class="controlButton">
-						<span class="fa-stack fa-lg controlButtonIcon">
-						<i class="fas fa-square fa-stack-1x controlButtonIcon" style="color: #ffcc99"></i>
-						<i class="fas fa-border-all fa-stack-1x controlButtonIcon" style="color: #1a0d00"></i>
-						<i class="fas fa-expand fa-stack-1x controlButtonIcon" style="color: #994d00"></i>
+				<div id="VolcanoControlDiv" class="controlStrip">
+					<div id="volcanoControlDiv">
+						<!-- reset zoom -->
+						<span>
+							<span id="VolcanoResetZoomButton" class="controlButton">
+								<span class="fa-stack fa-lg controlButtonIcon">
+									<i class="fas fa-square fa-stack-1x controlButtonIcon" style="color: #ffcc99"></i>
+									<i class="fas fa-border-all fa-stack-1x controlButtonIcon" style="color: #1a0d00"></i>
+									<i class="fas fa-expand fa-stack-1x controlButtonIcon" style="color: #994d00"></i>
+								</span>
+								<span class="controlButtonLabel">Reset Zoom</span>
+							</span>
 						</span>
-						<span class="controlButtonLabel">Reset Zoom</span>
-					</span>
-					</span>
-				</div> -->
+					</div>
+				</div>
 			</div>
 		</div>
     </body>

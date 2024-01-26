@@ -44,11 +44,11 @@ OUTSIDE_LOGPATH=${7}
 # path to DATA
 DATA_PATH=${9}
 # path to index file directory
-INDEXPATH=${DATA_PATH}/index
+INDEXPATH=${DATA_PATH}/INDEXES
 # path to util directory
-CONFIGPATH=${DATA_PATH}/util
+CONFIGPATH=${DATA_PATH}/CONFIG
 # path to data results directory
-OUTSIDE_DATA_PATH=${DATA_PATH}/results
+OUTSIDE_DATA_PATH=${DATA_PATH}/DATA
 
 # URL and tag to use as image name, such as mdabcb/smw_image:DAP_BEA_VERSION_TIMESTAMP
 IMAGE_URL=${10}

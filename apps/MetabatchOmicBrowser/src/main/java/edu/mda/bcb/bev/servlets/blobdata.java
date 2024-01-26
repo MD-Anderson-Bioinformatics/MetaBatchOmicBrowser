@@ -8,6 +8,7 @@
 //
 // MD Anderson Cancer Center Bioinformatics on GitHub <https://github.com/MD-Anderson-Bioinformatics>
 // MD Anderson Cancer Center Bioinformatics at MDA <https://www.mdanderson.org/research/departments-labs-institutes/departments-divisions/bioinformatics-and-computational-biology.html>
+
 package edu.mda.bcb.bev.servlets;
 
 import edu.mda.bcb.bev.startup.LoadIndexFiles;
@@ -25,11 +26,11 @@ import jakarta.servlet.http.HttpServletResponse;
  *
  * @author Tod-Casasent
  */
-@WebServlet(name = "dsindex", urlPatterns =
+@WebServlet(name = "blobdata", urlPatterns =
 {
-	"/dsindex"
+	"/blobdata"
 })
-public class dsindex extends HttpServlet
+public class blobdata extends HttpServlet
 {
 
 	/**
@@ -47,19 +48,26 @@ public class dsindex extends HttpServlet
 		try
 		{
 			ScanCheck.checkForSecurity(request);
-			this.log("dsindex: get json index");
+			this.log("blobdata: get json index");
 			String id = request.getParameter("id");
 			ScanCheck.checkForMetaCharacters(id);
-			this.log("dsindex: id=" + id);
-			File zipPath = LoadIndexFiles.M_PATH_LOOKUP.getResultsPath(id);
-			this.log("dsindex: zipPath = " + zipPath.getAbsolutePath());
-			String indexFile = "index.json";
-			ZipUtil.streamFile(zipPath.getAbsolutePath(), indexFile, response, this, "application/json;charset=UTF-8");
-			this.log("dsindex: true after streamFile");
+			String text = request.getParameter("text");
+			ScanCheck.checkForMetaCharacters(text);
+			if (text.startsWith("/"))
+			{
+				text = text.substring(1);
+			}
+			this.log("blobdata: id = " + id);
+			this.log("blobdata: text = " + text);
+			File zipPath = LoadIndexFiles.M_PATH_LOOKUP.getDataPath(id);
+			this.log("blobdata: zipPath = " + zipPath.getAbsolutePath());
+			this.log("blobdata: call streamFile");
+			ZipUtil.streamFile(zipPath.getAbsolutePath(), text, response, this, "application/octet-stream");
+			this.log("blobdata: after streamFile");
 		}
-		catch (Exception exp)
+		catch(Exception exp)
 		{
-			log("dsindex::processRequest failed", exp);
+			log("blobdata::processRequest failed", exp);
 			response.setStatus(400);
 			response.sendError(400);
 		}

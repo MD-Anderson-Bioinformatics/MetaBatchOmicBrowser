@@ -137,7 +137,7 @@ class UtilScatterplot
 		}
 		// title from index
 		var title = self.newDiagram.title;
-		if ("" === title)
+		if (("" === title)||(!notUN(title)))
 		{
 			title = self.indexKO().source
 						+ " / " + self.indexKO().program

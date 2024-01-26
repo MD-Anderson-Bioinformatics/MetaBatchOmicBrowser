@@ -1,4 +1,4 @@
-/*
+/* 
  *  Copyright (c) 2011-2024 University of Texas MD Anderson Cancer Center
  *  
  *  This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 2 of the License, or (at your option) any later version.
@@ -9,31 +9,33 @@
  *  
  *  MD Anderson Cancer Center Bioinformatics on GitHub <https://github.com/MD-Anderson-Bioinformatics>
  *  MD Anderson Cancer Center Bioinformatics at MDA <https://www.mdanderson.org/research/departments-labs-institutes/departments-divisions/bioinformatics-and-computational-biology.html>
-
+ 
  */
-package edu.mda.bcb.bev.startup;
 
-/**
- *
- * @author Tod-Casasent
- */
-public class DefaultUrl
+.SelectedBatch
 {
-	public DefaultUrl(String theMqaDefaultView, 
-			String theMqaDefaultQuery, String theMqaDefaultViewParams, String theMqaDefaultQueryParams)
-	{
-		mqaDefaultView = theMqaDefaultView;
-		mqaDefaultQuery = theMqaDefaultQuery;
-		mqaDefaultViewParams = theMqaDefaultViewParams;
-		mqaDefaultQueryParams = theMqaDefaultQueryParams;
-	};
-	public String mqaDefaultView;
-	public String mqaDefaultQuery;
-	public String mqaDefaultViewParams;
-	public String mqaDefaultQueryParams;
-	
-//	static public String buildUrl(HttpServletRequest theRequest)
-//	{
-//		theRequest.get
-//	}
+	/* stroke: red !important; */
+	/* important used to override class order and local styles */
+	fill-opacity: 60% !important;
+	fill: rgb(255, 0, 0) !important;
+	stroke: rgb(255, 0, 0) !important;
+}
+
+.columnDiv
+{
+	height: 100%;
+	width: 100%;
+}
+
+.VolcanoPlottingDiv
+{
+	height: 100%;
+	width: 100%;
+}
+
+.legendtext
+{
+  font-family: Verdana, Arial, sans-serif;
+  font-size: 12px;
+  /*font-weight: bold;*/
 }
