@@ -46,12 +46,24 @@
 			{
 				//console.log("MQA document ready");
 				// Activates knockout.js
-				ko.options.deferUpdates = true;
+				ko.options.deferUpdates = false;
 				appview = new AppViewModel();
 				ko.applyBindings(appview);
 				////////////////////////////////////////////////////////////////
 				//// this is used to prevent "flickering" characteristic on load with knockoutJS
 				////////////////////////////////////////////////////////////////
+				// override to complex view for load
+				if (false===appview.useSimpleMode())
+				{
+					//console.log("MQA document ready restoreSliderMqa");
+					restoreSliderMqa();
+				}
+				else
+				{
+					//console.log("MQA document ready minimizeSliderMqa");
+					minimizeSliderMqa(true);
+				}
+				// set GUI to viewable
 				appview.makeGuiVisible(true);
 				// note that appviewChildLoadedCallback has additional setup triggered by loading of two child iframes
 			});
@@ -114,17 +126,28 @@
 				setTimeout(function() {document.getElementById('alrtLegalNotice').style.display = 'none';},3000);
 			}
 			
-			var tmpAheight = "";
-			var tmpBheight = "";
-			var tmpAwidth = "";
-			var tmpBwidth = "";
+			var tmpAheight = "65vh";
+			var tmpBheight = "35vh";
+			var tmpAwidth = "65vw";
+			var tmpBwidth = "35vw";
 			
-			function minimizeSliderMqa()
+			function minimizeSliderMqa(theHideBothFlag)
 			{
-				document.getElementById('mqaSliderRestore').style.display = "inline";
-				document.getElementById('mqaSliderMinimize').style.display = "none";
+				if (theHideBothFlag)
+				{
+					document.getElementById('slider-div').style.display = "none";
+				}
+				else
+				{
+					// set rotate to restore from minimized Simple Search state
+					document.getElementById('mqaSliderRotate').style.display = "inline";
+					document.getElementById('mqaSliderRestore').style.display = "inline";
+					document.getElementById('mqaSliderMinimize').style.display = "none";
+				}
 				tmpAheight = getComputedStyle(document.documentElement).getPropertyValue('--row-A-height');
 				tmpBheight = getComputedStyle(document.documentElement).getPropertyValue('--row-B-height');
+				//console.log("minimizeSliderMqa tmpAheight = " + tmpAheight);
+				//console.log("minimizeSliderMqa tmpBheight = " + tmpBheight);
 				document.documentElement.style.setProperty('--row-A-height', "100vh");
 				document.documentElement.style.setProperty('--row-B-height', "0vh");
 				tmpAwidth = getComputedStyle(document.documentElement).getPropertyValue('--col-A-width');
@@ -136,6 +159,11 @@
 			
 			function restoreSliderMqa()
 			{
+				//console.log("restoreSliderMqa tmpAheight = " + tmpAheight);
+				//console.log("restoreSliderMqa tmpBheight = " + tmpBheight);
+				document.getElementById('slider-div').style.display = "inline";
+				// set rotate to restore from minimized Simple Search state
+				document.getElementById('mqaSliderRotate').style.display = "inline";
 				document.getElementById('mqaSliderRestore').style.display = "none";
 				document.getElementById('mqaSliderMinimize').style.display = "inline";
 				document.documentElement.style.setProperty('--row-A-height', tmpAheight);
@@ -182,10 +210,40 @@
 				// query-div	mqaQueryDivVertical	mqaQueryDivHorizontal
 			}
 			
+			function getUseSimpleModeFlag()
+			{
+				return appview.useSimpleMode();
+			}
+			
+			function setUseSimpleModeFlag(theFlag)
+			{
+				//console.log("setUseSimpleModeFlag = " + theFlag);
+				appview.useSimpleMode(theFlag);
+			}
+
+			function reloadViewSimpleUrlPlain()
+			{
+				appview.useSimpleMode(true);
+				appview.viewUrl("view/");
+			}
+
+			function resetViewSimpleUrlPlain()
+			{
+				appview.viewUrl("view/");
+			}
+
+			function redoQueryLoadComplete()
+			{
+				//console.log("set loadedQuery to false");
+				appview.loadedQuery(false);
+				//console.log("call rerun");
+				document.getElementById('queryIframe').contentWindow.rerunSetSelectedDatasetQuery();
+			}
+
 			function queryLoadComplete(theId, thePath)
 			{
-				//console.log("queryLoadComplete() begin theId=" + theId);
-				//console.log("queryLoadComplete() begin thePath=" + thePath);
+				//console.log("queryLoadComplete() begin theId='" + theId + "'");
+				//console.log("queryLoadComplete() begin thePath='" + thePath + "'");
 				// called from query iframe after load complete
 				//console.log("queryLoadComplete() appview.loadedQuery()=" + appview.loadedQuery());
 				//console.log("**** 0 queryLoadComplete() appview");
@@ -193,11 +251,12 @@
 				//console.log("appview.loadedQuery()=" + appview.loadedQuery());
 				if (false===appview.loadedQuery())
 				{
+					//console.log("(false===appview.loadedQuery())");
 					//console.log("queryLoadComplete() set self.viewUrl here not in Ajax urls call.");
 					// So it is set after the query iframe loads
 					if (""!==thePath)
 					{
-						// TODO: build view/? arguments
+						// handle advanced mode URLs
 						if (jQuery.isFunction(appview.getViewSearchFromPath))
 						{
 							var search = appview.getViewSearchFromPath(theId, thePath);
@@ -206,30 +265,134 @@
 						}
 						else
 						{
-							// console.log("appview.getViewSearchFromPath not found");
-							//console.log("**** 5 queryLoadComplete() appview.mqaURLsearchValues()=" + appview.mqaURLsearchValues());
-							//console.log("**** 5 queryLoadComplete() id=" + appview.mqaURLsearchValues().substr(appview.mqaURLsearchValues().indexOf("id=")));
-							appview.viewUrl("view/" + appview.mqaURLsearchValues());
+							//console.log("appview.getViewSearchFromPath not found");
+							//console.log("**** 2 queryLoadComplete() appview.mqaURLsearchValues()=" + appview.mqaURLsearchValues());
+							appview.viewUrl("view/?" + appview.mqaURLsearchValues());
 						}
 					}
-					else if (""===appview.mqaURLsearchValues())
+					else if (getUseSimpleModeFlag())
 					{
-						//console.log("**** 2 queryLoadComplete() appview.mqaDefaultViewParams()=" + appview.mqaDefaultViewParams());
-						appview.viewUrl("view/?" + appview.mqaDefaultViewParams());
+						// TODO: get pre-set from URL!!!!
+						// handle simple mode URLs
+						//console.log("**** SIMPLE queryLoadComplete()");
+						if (jQuery.isFunction(document.getElementById('viewIframe').contentWindow.viewGetUrlParams))
+						{
+							//console.log("**** 3 queryLoadComplete() urlParamsViewOnly()=" + urlParamsViewOnly());
+							appview.viewUrl("view/?" + urlParamsViewOnly() );
+						}
+						else
+						{
+							//console.log("**** 4 queryLoadComplete() view?");
+							appview.viewUrl("view/" );
+						}
 					}
 					else
 					{
-						//console.log("**** 3 queryLoadComplete() appview.mqaURLsearchValues()=" + appview.mqaURLsearchValues());
-						//console.log("**** 3 queryLoadComplete() id=" + appview.mqaURLsearchValues().substr(appview.mqaURLsearchValues().indexOf("id=")));
-						appview.viewUrl("view/" + appview.mqaURLsearchValues());
+						if (""===appview.mqaURLsearchValues())
+						{
+							//console.log("(\"\"===appview.mqaURLsearchValues())");
+							//console.log("**** 5 queryLoadComplete() appview.mqaDefaultViewParams()=" + appview.mqaDefaultViewParams());
+							appview.viewUrl("view/?" + appview.mqaDefaultViewParams());
+						}
+						else
+						{
+							//console.log("else");
+							//console.log("**** 6 queryLoadComplete() appview.mqaURLsearchValues()=" + appview.mqaURLsearchValues());
+							appview.viewUrl("view/?" + appview.mqaURLsearchValues());
+						}
 					}
 				}
 				else
 				{
+					//console.log("**** 7 queryLoadComplete() nothing");
 					//console.log("queryLoadComplete() no processing");
 				}
 				appview.loadedQuery(true);
 				//console.log("queryLoadComplete() end");
+			}
+
+
+			// do not make computed, as view and query iframe functions do not exist at first
+			function urlParams() 
+			{
+				// id index alg lvl1 lvl2
+				var viewJson = viewGetUrlParamsMQA();
+				// show pageLength default
+				var queryJson = queryGetUrlParamsMQA();
+				return  "?show=" + encodeURIComponent(queryJson.show) +
+						"&useSimple=" + appview.useSimpleMode() +
+						"&pageLength=" + encodeURIComponent(queryJson.pageLength) +
+						"&default=" + encodeURIComponent(queryJson.default) +
+						"&id=" + encodeURIComponent(viewJson.id) +
+						"&index=" + encodeURIComponent(viewJson.index) +
+						(notUN(viewJson.alg)?("&alg=" + encodeURIComponent(viewJson.alg)):"") +
+						(notUN(viewJson.lvl1)?("&lvl1=" + encodeURIComponent(viewJson.lvl1)):"") +
+						(notUN(viewJson.lvl2)?("&lvl2=" + encodeURIComponent(viewJson.lvl2)):"") +
+						(notUN(viewJson.lvl3)?("&lvl3=" + encodeURIComponent(viewJson.lvl3)):"") +
+						(notUN(viewJson.lvl4)?("&lvl4=" + encodeURIComponent(viewJson.lvl4)):"") +
+						(notUN(viewJson.ssource)?("&ssource=" + encodeURIComponent(viewJson.ssource)):"") +
+						(notUN(viewJson.sprogram)?("&sprogram=" + encodeURIComponent(viewJson.sprogram)):"") +
+						(notUN(viewJson.sproject)?("&sproject=" + encodeURIComponent(viewJson.sproject)):"") +
+						(notUN(viewJson.scategory)?("&scategory=" + encodeURIComponent(viewJson.scategory)):"") +
+						(notUN(viewJson.splatform)?("&splatform=" + encodeURIComponent(viewJson.splatform)):"") +
+						(notUN(viewJson.sdata)?("&sdata=" + encodeURIComponent(viewJson.sdata)):"") +
+						(notUN(viewJson.sdetails)?("&sdetails=" + encodeURIComponent(viewJson.sdetails)):"") +
+						(notUN(viewJson.sjobtype)?("&sjobtype=" + encodeURIComponent(viewJson.sjobtype)):"") +
+						(notUN(viewJson.sdataversion)?("&sdataversion=" + encodeURIComponent(viewJson.sdataversion)):"") +
+						(notUN(viewJson.stestversion)?("&stestversion=" + encodeURIComponent(viewJson.stestversion)):"");
+			}
+
+			// do not make computed, as view and query iframe functions do not exist at first
+			function urlParamsViewOnly()
+			{
+				// id index alg lvl1 lvl2
+				var viewJson = viewGetUrlParamsMQA();
+				//console.log("urlParamsViewOnly viewJson");
+				//console.log(viewJson);
+				return  "id=" + encodeURIComponent(viewJson.id) +
+						"&index=" + encodeURIComponent(viewJson.index) +
+						(notUN(viewJson.alg)?("&alg=" + encodeURIComponent(viewJson.alg)):"") +
+						(notUN(viewJson.lvl1)?("&lvl1=" + encodeURIComponent(viewJson.lvl1)):"") +
+						(notUN(viewJson.lvl2)?("&lvl2=" + encodeURIComponent(viewJson.lvl2)):"") +
+						(notUN(viewJson.lvl3)?("&lvl3=" + encodeURIComponent(viewJson.lvl3)):"") +
+						(notUN(viewJson.lvl4)?("&lvl4=" + encodeURIComponent(viewJson.lvl4)):"") +
+						(notUN(viewJson.ssource)?("&ssource=" + encodeURIComponent(viewJson.ssource)):"") +
+						(notUN(viewJson.sprogram)?("&sprogram=" + encodeURIComponent(viewJson.sprogram)):"") +
+						(notUN(viewJson.sproject)?("&sproject=" + encodeURIComponent(viewJson.sproject)):"") +
+						(notUN(viewJson.scategory)?("&scategory=" + encodeURIComponent(viewJson.scategory)):"") +
+						(notUN(viewJson.splatform)?("&splatform=" + encodeURIComponent(viewJson.splatform)):"") +
+						(notUN(viewJson.sdata)?("&sdata=" + encodeURIComponent(viewJson.sdata)):"") +
+						(notUN(viewJson.sdetails)?("&sdetails=" + encodeURIComponent(viewJson.sdetails)):"") +
+						(notUN(viewJson.sjobtype)?("&sjobtype=" + encodeURIComponent(viewJson.sjobtype)):"") +
+						(notUN(viewJson.sdataversion)?("&sdataversion=" + encodeURIComponent(viewJson.sdataversion)):"") +
+						(notUN(viewJson.stestversion)?("&stestversion=" + encodeURIComponent(viewJson.stestversion)):"");
+			}
+
+			// do not make computed, as view and query iframe functions do not exist at first
+			function urlCurrent() 
+			{
+				const myparams = urlParams();
+				//console.log("MQAAppView::urlCurrent params = " + myparams);
+				return window.location.origin + window.location.pathname + myparams;
+			};
+
+			function copyURLString()
+			{
+				// urlCurrent mqaCopyUrl
+				// based on https://www.w3schools.com/howto/howto_js_copy_clipboard.asp
+				var copyText = document.getElementById("mqaCopyUrl");
+				var url = urlCurrent();
+				if (url.length>=2000)
+				{
+					alert("Too many criteria selected - resulting URL is too long and may not function properly. Please select fewer criteria.");
+				}
+				//text = text.replace(/\"/g, "\\\"");
+				copyText.value = url;
+				copyText.select();
+				//For mobile devices
+				copyText.setSelectionRange(0, 99999);
+				document.execCommand("copy");
+				copyText.blur();
 			}
 
 		</script>	
@@ -262,7 +425,7 @@
 						&nbsp;
 						<div class="mdaHeaderLinks">
 							<button type="button" class="mdaHeaderButtons" onclick="window.open('view/index.html?usezip=TRUE', '_blank');" title="Open Viewer for local ZIP file. (New Tab.)"><i class="fas fa-question-circle" style="color: violet;"></i><i class="fas fa-external-link-alt" style="color: black;"></i> Local ZIP</button>
-							<button type="button" class="mdaHeaderButtons" onclick="copyURLString();" title="Copy Bookmark-able URL"><i class="fas fa-globe" style="color: green;"></i> Copy URL</button>
+							<button data-bind="visible: !$root.useSimpleMode()" type="button" class="mdaHeaderButtons" onclick="copyURLString();" title="Copy Bookmark-able URL"><i class="fas fa-globe" style="color: green;"></i> Copy URL</button>
 							<button type="button" class="mdaHeaderButtons" onclick="window.open('OmicBrowserData.html', '_blank');" title="Finding and using data files. (New Tab.)"><i class="fas fa-question-circle" style="color: black;"></i><i class="fas fa-external-link-alt" style="color: black;"></i> Data Help</button>
 							<button type="button" class="mdaHeaderButtons" onclick="window.open('QFusage.html', '_blank');" title="Query help and usage documentation. (New Tab.)"><i class="fas fa-question-circle" style="color: black;"></i><i class="fas fa-external-link-alt" style="color: black;"></i> Query Help</button>
 							<button type="button" class="mdaHeaderButtons" onclick="window.open('MBatch_04-99_Statistics.html', '_blank');" title="Simplified explanation of some of the MBatch statistical analyses of batch effects. (New Tab.)"><i class="fas fa-question-circle" style="color: black;"></i><i class="fas fa-external-link-alt" style="color: black;"></i> Statistics</button>
@@ -282,13 +445,13 @@
 					<table id="mqa-slider-button-div" class="mdaMinTable">
 						<tr>
 							<td>
-								<button id="mqaSliderRotate" type="button" class="mdaSliderButtons" onclick="rotateSliderMqa();" title="Rotate slider"><i class="fas fa-sync-alt" style="color: brown;"></i> Rotate</button>
+								<button id="mqaSliderRotate" type="button" class="mdaSliderButtons" style="display: none;" onclick="rotateSliderMqa();" title="Rotate slider"><i class="fas fa-sync-alt" style="color: brown;"></i> Rotate</button>
 							</td>
 							<td>
 								&nbsp;
 							</td>
 							<td>
-								<button id="mqaSliderMinimize" type="button" class="mdaSliderButtons" onclick="minimizeSliderMqa();" title="Minimize Query View"><i class="fas fa-compress-arrows-alt" style="color: sienna;"></i> Minimize</button>
+								<button id="mqaSliderMinimize" type="button" class="mdaSliderButtons" style="display: none;" onclick="minimizeSliderMqa(false);" title="Minimize Query View"><i class="fas fa-compress-arrows-alt" style="color: sienna;"></i> Minimize</button>
 							</td>
 							<td>
 								<button id="mqaSliderRestore" type="button" class="mdaSliderButtons" style="display: none;" onclick="restoreSliderMqa();" title="Restore Query View"><i class="fas fa-arrows-alt" style="color: sienna;"></i> Restore</button>

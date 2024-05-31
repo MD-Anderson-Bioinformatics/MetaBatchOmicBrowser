@@ -62,8 +62,42 @@ function AppViewModel()
 {
 	//console.log("MQAAppView::AppViewModel window.location.href=" + window.location.href);
 	var self = this;
-	self.type = "deferred";
+	//self.type = "deferred";
 	self.makeGuiVisible = ko.observable(false); //.extend({ deferred: true });
+	//
+	let url = new URL(window.location.href);
+	//console.log("Top AppView");
+	let simple = url.searchParams.get("useSimple");
+	//console.log("Top AppView simple = " + simple);
+	let urlSimple = true; 
+	if ("false" === simple)
+	{
+		urlSimple = false;
+	}
+	self.useSimpleMode = ko.observable(urlSimple);
+	// Notify always, since we use setting simgple mode to true to reset dropdown contents,
+	// which requires being able to do that from simple mode
+	self.useSimpleMode.extend({ notify: 'always' });
+	var simpleModeFlagOldValue = self.useSimpleMode.peek();
+	self.useSimpleMode.subscribe(function(theNewValue)
+	{
+		//console.log("self.useSimpleMode.subscribe theNewValue = " + theNewValue);
+		//console.log("self.useSimpleMode.subscribe simpleModeFlagOldValue = " + simpleModeFlagOldValue);
+		if (simpleModeFlagOldValue !== theNewValue)
+		{
+			if (false===theNewValue)
+			{
+				//console.log("self.useSimpleMode.subscribe restoreSliderMqa");
+				restoreSliderMqa();
+			}
+			else
+			{
+				//console.log("self.useSimpleMode.subscribe minimizeSliderMqa");
+				minimizeSliderMqa(true);
+			}
+			simpleModeFlagOldValue = theNewValue;
+		}
+	});
 	self.viewUrl = ko.observable("loading.html");
 	self.queryUrl = ko.observable("loading.html");
 	// tracl when query iframe is done
@@ -72,21 +106,39 @@ function AppViewModel()
 	self.viewIframeSrc = ko.computed(function()
 	{
 		//console.log("viewIframeSrc being called");
+		//console.log("viewIframeSrc self.viewUrl() = " + self.viewUrl());
 		var newUrl = self.viewUrl();
 		if (!newUrl.endsWith("loading.html"))
 		{
-			newUrl = self.viewUrl() + "&stamp=" + jQuery.now();
+			var add = "&";
+			if (newUrl.endsWith("/"))
+			{
+				add = "?";
+			}
+			if (false===self.useSimpleMode())
+			{
+				newUrl = newUrl + add + "useSimple=false&stamp=" + jQuery.now();
+				//console.log("viewIframeSrc advanced mode = " + newUrl);
+			}
+			else
+			{
+				newUrl = newUrl + add + "useSimple=true&stamp=" + jQuery.now();
+				//console.log("viewIframeSrc simple mode = " + newUrl);
+			}
 		}
 		return newUrl;
 	});
 	
 	self.queryIframeSrc = ko.computed(function()
 	{
+		//console.log("queryIframeSrc being called");
 		var newUrl = self.queryUrl();
+		//console.log("queryIframeSrc self.queryUrl() = " + self.queryUrl());
 		if (!newUrl.endsWith("loading.html"))
 		{
-			newUrl = self.queryUrl() + "&stamp=" + jQuery.now();
+			newUrl = newUrl + "&stamp=" + jQuery.now();
 		}
+		//console.log("queryIframeSrc = " + newUrl);
 		return newUrl;
 	});
 	
@@ -98,14 +150,27 @@ function AppViewModel()
 	self.mqaDefaultViewParams = ko.observable("");
 	self.mqaDefaultQueryParams = ko.observable("");
 	// build URL components for bookmarked MQA link
-	var url = new URL(window.location.href);
 	//console.log("MQAAppView url=" + url);
 	//console.log("MQAAppView id=" + url.searchParams.get("id"));
 	//console.log("MQAAppView url.search=" + url.search);
-	self.mqaURLsearchValues = ko.observable(url.search);
+	// remove ? and useSimple from url.search path
+	let tempSrch = url.search;
+	if (tempSrch.startsWith("?"))
+	{
+		tempSrch = tempSrch.slice(1);
+	}
+	tempSrch = tempSrch.replace("useSimple=true", "");
+	tempSrch = tempSrch.replace("useSimple=false", "");
+	if (tempSrch.startsWith("&"))
+	{
+		tempSrch = tempSrch.slice(1);
+	}
+	//console.log("tempSrch = '" + tempSrch + "'");
+	self.mqaURLsearchValues = ko.observable(tempSrch);
 	self.urlQuery = ko.observable(url.origin + url.pathname + "query/");
 	self.urlView = ko.observable(url.origin + url.pathname + "view/");
 	self.urlMqa = ko.observable(url.origin + url.pathname);
+	//
 	$.ajax(
 	{
 		type: "GET",
@@ -119,31 +184,19 @@ function AppViewModel()
 			self.mqaDefaultView(theJson.mqaDefaultView);
 			self.mqaDefaultQuery(theJson.mqaDefaultQuery);
 			self.mqaDefaultViewParams(theJson.mqaDefaultViewParams);
-			//console.log(theJson.mqaDefaultView);
-			//console.log(theJson.mqaDefaultQuery);
-			//console.log(theJson.mqaDefaultViewParams);
-			// do not set self.viewUrl here. Instead, set it after the query iframe loads
-			//if (""===self.mqaURLsearchValues())
-			//{ // self.mqaDefaultViewParams
-			//	self.viewUrl("view/?" + theJson.mqaDefaultViewParams);
-			//}
-			//else
-			//{
-			//	self.viewUrl("view/" + self.mqaURLsearchValues());
-			//}
-			//console.log("view/?" + theJson.mqaDefaultViewParams);
 			self.mqaDefaultQueryParams(theJson.mqaDefaultQueryParams);
-			//console.log("MQAAppView self.mqaURLsearchValues()");
-			//console.log(self.mqaURLsearchValues());
 			if (""===self.mqaURLsearchValues())
 			{
+				//console.log("**** 1 MQAAppView urls call");
+				//console.log("theJson.mqaDefaultQueryParams = " + theJson.mqaDefaultQueryParams);
 				self.queryUrl("query/?" + theJson.mqaDefaultQueryParams);
 			}
 			else
 			{
-				self.queryUrl("query/" + self.mqaURLsearchValues());
+				//console.log("**** 2 MQAAppView urls call");
+				//console.log("self.mqaURLsearchValues = " + self.mqaURLsearchValues());
+				self.queryUrl("query/?" + self.mqaURLsearchValues());
 			}
-			//console.log("query/?" + theJson.mqaDefaultQueryParams);
 		},
 		error: function(jqXHR, textStatus, errorThrown)
 		{
@@ -152,47 +205,3 @@ function AppViewModel()
 		}
 	});
 } //End Appview Model
-
-// do not make computed, as view and query iframe functions do not exist at first
-function urlParams() 
-{
-	// id index alg lvl1 lvl2
-	var viewJson = viewGetUrlParamsMQA();
-	// show pageLength default
-	var queryJson = queryGetUrlParamsMQA();
-	return  "?show=" + encodeURIComponent(queryJson.show) +
-			"&pageLength=" + encodeURIComponent(queryJson.pageLength) +
-			"&default=" + encodeURIComponent(queryJson.default) +
-			"&id=" + encodeURIComponent(viewJson.id) +
-			"&index=" + encodeURIComponent(viewJson.index) +
-			(notUN(viewJson.alg)?("&alg=" + encodeURIComponent(viewJson.alg)):"") +
-			(notUN(viewJson.lvl1)?("&lvl1=" + encodeURIComponent(viewJson.lvl1)):"") +
-			(notUN(viewJson.lvl2)?("&lvl2=" + encodeURIComponent(viewJson.lvl2)):"") +
-			(notUN(viewJson.lvl3)?("&lvl3=" + encodeURIComponent(viewJson.lvl3)):"") +
-			(notUN(viewJson.lvl4)?("&lvl4=" + encodeURIComponent(viewJson.lvl4)):"");
-}
-	
-// do not make computed, as view and query iframe functions do not exist at first
-function urlCurrent() 
-{
-	return window.location.origin + window.location.pathname + urlParams();
-};
-
-function copyURLString()
-{
-	// urlCurrent mqaCopyUrl
-	// based on https://www.w3schools.com/howto/howto_js_copy_clipboard.asp
-	var copyText = document.getElementById("mqaCopyUrl");
-	var url = urlCurrent();
-	if (url.length>=2000)
-	{
-		alert("Too many criteria selected - resulting URL is too long and may not function properly. Please select fewer criteria.");
-	}
-	//text = text.replace(/\"/g, "\\\"");
-	copyText.value = url;
-	copyText.select();
-	//For mobile devices
-	copyText.setSelectionRange(0, 99999);
-	document.execCommand("copy");
-	copyText.blur();
-}

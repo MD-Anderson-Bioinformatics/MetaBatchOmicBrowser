@@ -94,6 +94,7 @@ tr.viewed-dataset-highlight *
 	border: 1px solid gray;
 	border-top-style: none;
 	height: 100%;
+	overflow: auto;
 }
 
 .mqaTableWrapper

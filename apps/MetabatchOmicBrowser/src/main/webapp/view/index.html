@@ -125,6 +125,9 @@
 				// This is a simple *viewmodel* - JavaScript that defines the data and behavior of your UI
 				// handles URL containing link to specific dataset and diagram
 				// see DataAccess for URL processing
+				// do not use deferUpdates, it breaks the default selections
+				// if the algorithm keeps selecting the first value on the list, this is probably set to true
+				ko.options.deferUpdates = false;
 				appview = new BEVAppView(useZip);
 				// Activates knockout.js
 				ko.applyBindings(appview);
@@ -138,7 +141,7 @@
 					processZipSelectEvent(theEvent);
 				});
 				// resize before showing popup, to prevent d3 plotting weirdly partly off the page
-				bodyResize();
+				bodyResize(appview);
 				//window.parent.viewLoaded();
 			});
 			
@@ -149,12 +152,15 @@
 				let urlParams = { };
 				if (false === appview.usezip())
 				{
+					//console.log("viewGetUrlParams - not use zip");
 					var tmpId = appview.requestedId();
 					if (null !== tmpId)
 					{
+						//console.log("viewGetUrlParams - no requested id");
 						urlParams["id"] = tmpId;
 						if (notUN(appview.algorithmSelected()))
 						{
+							//console.log("viewGetUrlParams alg setting is = " + appview.algorithmSelected().entry_label);
 							urlParams["alg"] = appview.algorithmSelected().entry_label;
 						}
 						if (notUN(appview.level1Selected()))
@@ -184,17 +190,91 @@
 							urlParams["hideLP"] = true;
 						}
 					}
+					if (true===appview.viewUseSimpleSearch())
+					{
+						if (notUN(appview.availableSourcesSelected()))
+						{
+							urlParams["ssource"] = appview.availableSourcesSelected();
+						}
+						if (notUN(appview.availableProgramSelected()))
+						{
+							urlParams["sprogram"] = appview.availableProgramSelected();
+						}
+						if (notUN(appview.availableProjectsSelected()))
+						{
+							urlParams["sproject"] = appview.availableProjectsSelected();
+						}
+						if (notUN(appview.availableCategoriesSelected()))
+						{
+							urlParams["scategory"] = appview.availableCategoriesSelected();
+						}
+						if (notUN(appview.availablePlatformsSelected()))
+						{
+							urlParams["splatform"] = appview.availablePlatformsSelected();
+						}
+						if (notUN(appview.availableDataSelected()))
+						{
+							urlParams["sdata"] = appview.availableDataSelected();
+						}
+						if (notUN(appview.availableDetailsSelected()))
+						{
+							urlParams["sdetails"] = appview.availableDetailsSelected();
+						}
+						if (notUN(appview.availableJobTypeSelected()))
+						{
+							urlParams["sjobtype"] = appview.availableJobTypeSelected();
+						}
+						if (notUN(appview.availableDataVersionsSelected()))
+						{
+							urlParams["sdataversion"] = appview.availableDataVersionsSelected();
+						}
+						if (notUN(appview.availableTestVersionsSelected()))
+						{
+							urlParams["stestversion"] = appview.availableTestVersionsSelected();
+						}
+					}
 				}
 				return urlParams;
 			}
+			
+			function useSimpleSearch()
+			{
+				//console.log("useSimpleSearch");
+				window.parent.setUseSimpleModeFlag(true);
+				appview.viewUseSimpleSearch(true);
+				//window.parent.minimizeSliderMqa(true);
+				window.parent.reloadViewSimpleUrlPlain();
+				//console.log("useSimpleSearch hideAllButPickerColumn");
+				hideAllButPickerColumn();
+			}
+
+			function useComplexSearch()
+			{
+				//console.log("useComplexSearch");
+				// set in parent first
+				window.parent.setUseSimpleModeFlag(false);
+				appview.viewUseSimpleSearch(false);
+				//window.parent.restoreSliderMqa();
+				window.parent.redoQueryLoadComplete();
+				displayAllButPickerColumn();
+			}
+			
+			function resetSimpleSearch()
+			{
+				//useSimpleSearch();
+				//console.log("start resetSimpleSearch");
+				window.parent.setUseSimpleModeFlag(true);
+				appview.viewUseSimpleSearch(true);
+				window.parent.reloadViewSimpleUrlPlain();
+			}
 		</script>
 	</head>
-	<body id="viewMdaBody" class="body-wrapper" onresize="bodyResize();" style="display: none;" data-bind="visible: $root.makeGuiVisible()">
+	<body id="viewMdaBody" class="body-wrapper" onresize="bodyResize(appview);" style="display: none;" data-bind="visible: $root.makeGuiVisible()">
 		<div class="div-wrapper" id="id-div-wrapper">
 			<div class="div-plot-picker" id="BEV_PlotPicker">
 				<div class="div-plot-picker-title">
 					<span style="font-weight: normal; font-size: smaller;">Plot Picker</span>
-					<button type="button" style="float: right;" class="bev-control-button" 
+					<button id="plotPickerHide" type="button" style="float: right;" class="bev-control-button" 
 							data-bind="click: function () { hidePlotPicker(); globalDiagramControl.resize(); return false; }">
 						<i class="fas fa-minus-square"></i> Hide
 					</button>
@@ -205,14 +285,125 @@
 				<div class="div-plot-picker-content">
 					<div id="dbtabs">
 						<ul class="plotPickerTabText">
-							<li class="plotPickerTabText"><a class="plotPickerTabText" href="#dbtab-1">Analysis Results</a></li>
-							<li class="plotPickerTabText"><a class="plotPickerTabText" href="#dbtab-2">Dataset Details</a></li>
+							<li class="plotPickerTabText"><a class="plotPickerTabText" href="#dbtab-0">Select Data Set</a></li>
+							<li class="plotPickerTabText"><a class="plotPickerTabText" href="#dbtab-1">Visualization</a></li>
 						</ul>
+						
+						<table class="mdaCompactTable" id="dbtab-0">
+							<tbody data-bind="visible: !notUN($root.simpleModeData())">
+								<tr><td>&nbsp;</td>
+									<td>No data set values in this mode.</td>
+								</tr>
+							</tbody>
+							<tbody data-bind="visible: (notUN($root.simpleModeData())) && (true==$root.viewUseSimpleSearch())">
+								<tr><td>&nbsp;</td>
+									<td>Select a Data Set or switch to the Advanced Search Interface.</td>
+								</tr>
+								<tr><td>&nbsp;</td>
+									<td>
+										<button type="button" class="bev-control-button" onclick="useComplexSearch();" title="Switch to Advanced Interface (resets search query and search parameters)"><i class="fas fa-arrows-alt"></i> Switch to Advanced Interface</button>
+									</td>
+								</tr>
+								<tr data-bind="visible: notUN($root.availableSources())">
+									<td>Source</td><td><select data-bind="options: $root.availableSources, value: $root.availableSourcesSelected, valueAllowUnset: true"></select></td>
+								</tr>
+								<tr data-bind="visible: notUN($root.availableProgram())">
+									<td>Study ID</td><td><select data-bind="options: $root.availableProgram, value: $root.availableProgramSelected, valueAllowUnset: true"></select></td>
+								</tr>
+								<tr data-bind="visible: notUN($root.availableProjects())">
+									<td>Analysis ID</td><td><select data-bind="options: $root.availableProjects, value: $root.availableProjectsSelected, valueAllowUnset: true"></select></td>
+								</tr>
+								<tr data-bind="visible: notUN($root.availableCategories())">
+									<td>Category</td><td><select data-bind="options: $root.availableCategories, value: $root.availableCategoriesSelected, valueAllowUnset: true"></select></td>
+								</tr>
+								<tr data-bind="visible: notUN($root.availablePlatforms())">
+									<td>Platform</td><td><select data-bind="options: $root.availablePlatforms, value: $root.availablePlatformsSelected, valueAllowUnset: true"></select></td>
+								</tr>
+								<tr data-bind="visible: notUN($root.availableData())">
+									<td>Study Title</td><td><select data-bind="options: $root.availableData, value: $root.availableDataSelected, valueAllowUnset: true"></select></td>
+								</tr>
+								<tr data-bind="visible: notUN($root.availableDetails())">
+									<td>Details</td><td><select data-bind="options: $root.availableDetails, value: $root.availableDetailsSelected, valueAllowUnset: true"></select></td>
+								</tr>
+								<tr data-bind="visible: notUN($root.availableJobType())">
+									<td>DataSet Type</td><td><select data-bind="options: $root.availableJobType, value: $root.availableJobTypeSelected, valueAllowUnset: true"></select></td>
+								</tr>
+								<tr data-bind="visible: notUN($root.availableDataVersions())">
+									<td>Data Version</td><td><select data-bind="options: $root.availableDataVersions, value: $root.availableDataVersionsSelected, valueAllowUnset: true"></select></td>
+								</tr>
+								<tr data-bind="visible: notUN($root.availableTestVersions())">
+									<td>Results Version</td><td><select data-bind="options: $root.availableTestVersions, value: $root.availableTestVersionsSelected, valueAllowUnset: true"></select></td>
+								</tr>
+								<tr style="background: #E1EDE0">
+									<td>Matching Datasets</td><td><span data-bind="text: $root.availableDrillDatasets().length"></span></td>
+								</tr>
+								<tr><td>&nbsp;</td>
+									<td>
+										<button type="button" class="bev-control-button" onclick="resetSimpleSearch();" title="Clear Search Parameters"><i class="fas fa-arrows-alt"></i> Clear Parameters</button>
+									</td>
+								</tr>
+								<tr data-bind="visible: notUN($root.requestedId())">
+									<td>Download</td>
+									<td>
+										<span>
+											&nbsp;<button type="button" class="bev-control-button" 
+														  data-bind="click: function(){ sendGAEvent('action', 'mobevent-download-data', $root.humanIdentifier()); location.href='../dszipdata?id='+ $root.requestedId(); return false; }" 
+														  title="Download original data and metadata."><i class="fas fa-download" style="color: blue;"> </i> Data</button>
+										</span>
+									</td>
+								</tr>
+								<tr data-bind="visible: notUN($root.requestedId())">
+									<td>Download</td>
+									<td>
+										<span>
+											&nbsp;<button type="button" class="bev-control-button" 
+														  data-bind="click: function(){ sendGAEvent('action', 'mobevent-download-results', $root.humanIdentifier()); location.href='../dszipresults?id='+ $root.requestedId(); return false; }" 
+														  title="Download results, includes corrected data if pertinent."><i class="fas fa-download" style="color: red;"> </i> Results</button>
+										</span>
+									</td>
+								</tr>
+							</tbody>
+							<tbody data-bind="visible: (notUN($root.simpleModeData())) && (false==$root.viewUseSimpleSearch())">
+								<tr>
+									<td style="white-space: nowrap;"></td>
+									<td>Use Visualization tab to select results to view. Or select to return to simple interface.</td>
+								</tr>
+								<tr><td>&nbsp;</td>
+									<td>
+										<button type="button" class="bev-control-button" onclick="useSimpleSearch();" title="Switch to Simple Interface (resets search query and search parameters)"><i class="fas fa-compress-arrows-alt"></i> Switch to Simple Interface</button>
+									</td>
+								</tr>
+							</tbody>
+						</table>
 						<table class="mdaCompactTable" id="dbtab-1">
-							<tbody>
+							<tbody data-bind="visible: notUN($root.requestedId())">
+								<tr>
+									<td>&nbsp;</td>
+									<td>
+										<span data-bind="visible: false==$root.viewUseSimpleSearch()">
+											Use the Query Panel to change data set being viewed.
+										</span>
+										<span data-bind="visible: true==$root.viewUseSimpleSearch()">
+											Use the Data Set tab to change data set being viewed.
+										</span>
+										
+									</td>
+								</tr>
+								<tr>
+									<td>&nbsp;</td>
+									<td>
+										<span data-bind="visible: false==$root.viewUseSimpleSearch()">
+											<button type="button" class="bev-control-button" onclick="useSimpleSearch();" title="Switch to Simple Interface (resets search query and search parameters)"><i class="fas fa-compress-arrows-alt"></i> Switch to Simple Interface</button>
+										</span>
+										<span data-bind="visible: true==$root.viewUseSimpleSearch()">
+											<button type="button" class="bev-control-button" onclick="useComplexSearch();" title="Switch to Advanced Interface (resets search query and search parameters)"><i class="fas fa-arrows-alt"></i> Switch to Advanced Interface</button>
+										</span>
+									</td>
+								</tr>
 								<tr>
 									<td style="white-space: nowrap;"><span data-bind="text: $root.algorithmLabel()"></span></td>
-									<td><select data-bind="options: $root.algorithmOptions, optionsText: 'entry_label', value: $root.algorithmSelected"></select></td>
+									<!-- need valueAllowUnset: true to allow setting default value before options are properly bound -->
+									<td><select data-bind="options: $root.algorithmOptions, optionsText: 'entry_label', value: $root.algorithmSelected, valueAllowUnset: true"></select></td>
 								</tr>
 								<tr style="display: none;" data-bind="visible: (null !== $root.level1Label())">
 									<td style="white-space: nowrap;"><span data-bind="text: $root.level1Label()"></span></td>
@@ -236,31 +427,41 @@
 								<tr><td style="white-space: nowrap;">Analysis ID</td><td><span data-bind="text: $root.indexProject()"></span></td></tr>
 								<tr><td style="white-space: nowrap;">Platform</td><td><span data-bind="text: $root.indexPlatform()"></span></td></tr>
 								<tr><td style="white-space: nowrap;">Study Title</td><td><span data-bind="text: $root.indexData()"></span></td></tr>
+								<tr data-bind="visible: notUN($root.indexNotice())"><td>Notice</td><td><span data-bind="text: $root.indexNotice()"></span></td></tr>
 								<tr data-bind="visible: ('MWB' === $root.indexSource())">
 									<td>Metabolomics Workbench Link to Study</td>
 									<td><a target="_blank" data-bind="attr: { href: 'https://www.metabolomicsworkbench.org/data/DRCCMetadata.php?StudyID=' + $root.indexProgram(), title: 'Link to Study' }">Link to Study</a></td>
 								</tr>
+								<tr data-bind="visible: notUN($root.requestedId())">
+									<td>Download</td>
+									<td>
+										<span>
+											&nbsp;<button type="button" class="bev-control-button" 
+														  data-bind="click: function(){ sendGAEvent('action', 'mobevent-download-data', $root.humanIdentifier()); location.href='../dszipdata?id='+ $root.requestedId(); return false; }" 
+														  title="Download original data and metadata."><i class="fas fa-download" style="color: blue;"> </i> Data</button>
+										</span>
+									</td>
+								</tr>
+								<tr data-bind="visible: notUN($root.requestedId())">
+									<td>Download</td>
+									<td>
+										<span>
+											&nbsp;<button type="button" class="bev-control-button" 
+														  data-bind="click: function(){ sendGAEvent('action', 'mobevent-download-results', $root.humanIdentifier()); location.href='../dszipresults?id='+ $root.requestedId(); return false; }" 
+														  title="Download results, includes corrected data if pertinent."><i class="fas fa-download" style="color: red;"> </i> Results</button>
+										</span>
+									</td>
+								</tr>
 							</tbody>
-						</table>
-						<table class="mdaCompactTable" id="dbtab-2">
-							<tbody>
-								<tr><td>BEV ID</td><td><span data-bind="text: $root.requestedId()"></span></td></tr>
-								<tr><td>Source</td><td><span data-bind="text: $root.indexSource()"></span></td></tr>
-								<tr><td>Study ID</td><td><span data-bind="text: $root.indexProgram()"></span></td></tr>
-								<tr><td>Analysis ID</td><td><span data-bind="text: $root.indexProject()"></span></td></tr>
-								<tr><td>Category</td><td><span data-bind="text: $root.indexCategory()"></span></td></tr>
-								<tr><td>Platform</td><td><span data-bind="text: $root.indexPlatform()"></span></td></tr>
-								<tr><td>Study Title</td><td><span data-bind="text: $root.indexData()"></span></td></tr>
-								<tr><td>Details</td><td><span data-bind="text: $root.indexDetails()"></span></td></tr>
-								<tr><td>Job Type</td><td><span data-bind="text: $root.indexJobType()"></span></td></tr>
-								<tr><td>Data Version</td><td><span data-bind="text: $root.indexDataVersion()"></span></td></tr>
-								<tr><td>Test Version</td><td><span data-bind="text: $root.indexTestVersion()"></span></td></tr>
-								<tr><td>DataSet Type</td><td><span data-bind="text: $root.indexJobType()"></span></td></tr>
-								<tr><td>Job Id</td><td><span data-bind="text: $root.indexJobId()"></span></td></tr>
-								<tr><td>Notice</td><td><span data-bind="text: $root.indexNotice()"></span></td></tr>
-								<tr data-bind="visible: ('MWB' === $root.indexSource())">
-									<td>Metabolomics Workbench Link to Study</td>
-									<td><a target="_blank" data-bind="attr: { href: 'https://www.metabolomicsworkbench.org/data/DRCCMetadata.php?StudyID=' + $root.indexProject(), title: 'Link to Study' }">Link to Study</a></td>
+							<tbody data-bind="visible: !notUN($root.requestedId())">
+								<tr>
+									<td style="white-space: nowrap;"></td>
+									<td>Use Data Set tab to select data set. Then return here to select visualization.</td>
+								</tr>
+								<tr><td>&nbsp;</td>
+									<td>
+										<button type="button" class="bev-control-button" onclick="useComplexSearch();" title="Switch to Advanced Interface (resets search query and search parameters)"><i class="fas fa-arrows-alt"></i> Switch to Advanced Interface</button>
+									</td>
 								</tr>
 							</tbody>
 						</table>
@@ -271,7 +472,7 @@
 			<div class="div-diagram-viewer" id="BEV_Diagram">
 				<div class="div-diagram-viewer-title">
 					<span>
-						<span class="bevTitleText">&nbsp;&nbsp;MetaBatch Omic Browser Visualizer&nbsp;<span style="font-size: 60%">vBEA_VERSION_TIMESTAMP</span></span>
+						<span id="bevTitleText" class="bevTitleText">&nbsp;&nbsp;MetaBatch Omic Browser Visualizer&nbsp;<span style="font-size: 60%">vBEA_VERSION_TIMESTAMP</span></span>
 					</span>
 					<span style="display: inline-block; margin-left: auto;"> <!-- moves to right -->
 						<span style="font-weight: normal; font-size: smaller;">Data Viewer</span>
@@ -290,15 +491,15 @@
 					</span>
 				</div>
 				<div class="div-diagram-viewer-control">
-					<span style="display: none;" data-bind="visible: (null !== $root.requestedId())">
+					<span style="display: none;" data-bind="visible: notUN($root.requestedId())">
+						&nbsp;<button type="button" class="bev-control-button" 
+									  data-bind="click: function(){ sendGAEvent('action', 'mobevent-download-data', $root.humanIdentifier()); location.href='../dszipdata?id='+ $root.requestedId(); return false; }" 
+									  title="Download original data and metadata."><i class="fas fa-download" style="color: blue;"> </i> Data</button>
+					</span>
+					<span style="display: none;" data-bind="visible: notUN($root.requestedId())">
 						&nbsp;<button type="button" class="bev-control-button" 
 									  data-bind="click: function(){ sendGAEvent('action', 'mobevent-download-results', $root.humanIdentifier()); location.href='../dszipresults?id='+ $root.requestedId(); return false; }" 
 									  title="Download results, includes corrected data if pertinent."><i class="fas fa-download" style="color: red;"> </i> Results</button>
-					</span>
-					<span style="display: none;" data-bind="visible: (null !== $root.requestedId())">
-						&nbsp;<button type="button" class="bev-control-button" 
-									  data-bind="click: function(){ sendGAEvent('action', 'mobevent-download-data', $root.humanIdentifier()); location.href='../dszipdata?id='+ $root.requestedId(); return false; }" 
-									  title="Download original data and metadata."><i class="fas fa-download" style="color: firebrick;"> </i> Data</button>
 					</span>
 					<span data-bind="visible: $root.isPngDiagram()">
 						&nbsp;
@@ -311,7 +512,7 @@
 						&nbsp;
 						<button type="button" class="bev-control-button" id="BEV_SaveAsPDFButton" 
 								data-bind="click: function () { globalDiagramControl.saveAsPdf(); return false; }">
-							<i class="fas fa-file-download" style="color: royalblue;"></i> Save PDF
+							<i class="fas fa-file-download" style="color: brown;"></i> Save PDF
 						</button>
 					</span>
 				</div>

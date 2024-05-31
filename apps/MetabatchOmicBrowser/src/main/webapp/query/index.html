@@ -51,7 +51,7 @@
 
 		<script type="text/javascript">
 			/* global ko */
-
+			//console.log("query index URL = " + window.location);
 			//console.log("query js loading");
 			// this makes sure that nothing gets called until page and required JS files are loaded
 			var appview = null;
@@ -59,7 +59,7 @@
 			{
 				//("query document ready");
 				// Activates knockout.js
-				ko.options.deferUpdates = true;
+				ko.options.deferUpdates = false;
 				appview = new AppViewModel();
 				ko.applyBindings(appview);
 				initializeTooltips();
@@ -80,11 +80,18 @@
 			{
 				return window.location.origin + "/" + window.location.pathname.split("/")[1];
 			}
+			
+			function rerunSetSelectedDatasetQuery()
+			{
+				//console.log("rerunSetSelectedDatasetQuery appview.viewedDatasetId()=" + appview.viewedDatasetId());
+				setSelectedDatasetQuery(appview.viewedDatasetId());
+			}
 
 			function setSelectedDatasetQuery(theId)
 			{
 				//console.log("setSelectedDatasetQuery");
 				//console.log("setSelectedDatasetQuery theId=" + theId);
+				//console.trace();
 				if (!notUN(theId))
 				{
 					//console.log("setSelectedDatasetQuery no dataset selected, use first");
@@ -110,15 +117,19 @@
 						myPath = splitted[3];
 					}
 				}
-				//console.log("setSelectedDatasetQuery id");
+				//console.log("setSelectedDatasetQuery check viewed");
 				var viewedDataset = document.getElementById(appview.viewedDatasetId());
 				if (notUN(viewedDataset))
 				{
+					//console.log("setSelectedDatasetQuery remove highlight");
 					viewedDataset.classList.remove('viewed-dataset-highlight');
 				}
-				//console.log("setSelectedDatasetQuery viewedDatasetId");
+				//console.log("setSelectedDatasetQuery viewedDatasetId theId=" + theId);
 				appview.viewedDatasetId(theId);
 				var newDataset = document.getElementById(theId);
+				//console.log("setSelectedDatasetQuery getElementById");
+				//console.log(theId);
+				//console.log(newDataset);
 				if (notUN(newDataset))
 				{
 					//console.log("setSelectedDatasetQuery addClass");
@@ -134,7 +145,9 @@
 
 			function previousDatasetQuery(theParamsJson)
 			{
-				//console.log("previousDatasetQuery")
+				//console.log("previousDatasetQuery");
+				//console.log("previousDatasetQuery theParamsJson=");
+				//console.log(theParamsJson);
 				// called from button on MQA page
 				// find previous dataset and update view, keeping current diagram settings
 				// find previous dataset
@@ -190,7 +203,9 @@
 				}
 				if (notUN(previousIndex) && (previousIndex >= 0))
 				{
+					//console.log("previousDatasetQuery previousIndex=" + dataRows[previousIndex][1]);
 					var resultsUrl = dataRows[previousIndex][0].split(" | ")[2];
+					setSelectedDatasetQuery(dataRows[previousIndex][1]);
 					// NOTE CHANGING ORDER OF HEADERs/DATA will CHANGE INDEXES above
 					// build URL without alg or lvl1 entries
 					var urlParts = resultsUrl.split('?');
@@ -238,6 +253,9 @@
 
 			function nextDatasetQuery(theParamsJson)
 			{
+				//console.log("nextDatasetQuery");
+				//console.log("nextDatasetQuery theParamsJson=");
+				//console.log(theParamsJson);
 				// called from button on MQA page
 				// find next dataset and update view, keeping current diagram settings
 				// find next dataset
@@ -245,6 +263,7 @@
 				var testIndex = null;
 				var currentId = appview.viewedDatasetId();
 				var currentDscId = theParamsJson.dscid;
+				//console.log("nextDatasetQuery currentId=" + currentId);
 				// this does not create the table, it references one created in DAPIAppView.js
 				var dataRows = $('#resultsTable').DataTable().rows().data();
 				for (var index = 0; (index < dataRows.length) && (null === nextIndex); index++)
@@ -292,8 +311,10 @@
 				}
 				if ((notUN(nextIndex)) && (nextIndex >= 0))
 				{
+					//console.log("nextDatasetQuery nextIndex=" + dataRows[nextIndex][1]);
 					// NOTE CHANGING ORDER OF HEADERs/DATA will CHANGE INDEXES
 					var resultsUrl = dataRows[nextIndex][0].split(" | ")[2];
+					setSelectedDatasetQuery(dataRows[nextIndex][1]);
 					// build URL without alg or lvl1 entries
 					var urlParts = resultsUrl.split('?');
 					var params = new URLSearchParams(urlParts[1]);
@@ -360,7 +381,7 @@
 							</div>
 						</div>
 						<div class="availSelPaddedDiv">
-							<input type="checkbox" data-bind="checked: $root.selectedCutoffFlag">Only Show Sets with Cutoff Met</input><br>
+							<input type="checkbox" data-bind="checked: $root.selectedCutoffFlag">Only Show Sets with Cutoff Met<br>
 						</div>
 					</div>
 					<div data-bind="visible: ('kwd'===$root.urlShowParam())" class="availSelDiv">
@@ -377,7 +398,7 @@
 							</div>
 						</div>
 						<div class="availSelPaddedDiv">
-							<input type="checkbox" data-bind="checked: $root.selectedBatchesCalledFlag">Only Show Sets with Batches Called</input><br>
+							<input type="checkbox" data-bind="checked: $root.selectedBatchesCalledFlag">Only Show Sets with Batches Called<br>
 						</div>
 					</div>
 					<div data-bind="visible: ('advanced'===$root.urlShowParam())" class="availSelDiv">
@@ -440,7 +461,7 @@
 							</div>
 						</div>
 						<div class="availSelPaddedDiv">
-							<input type="checkbox" data-bind="checked: $root.selectedNanSamplesMatrix">Only Show Sets with No Matrix Samples</input><br>
+							<input type="checkbox" data-bind="checked: $root.selectedNanSamplesMatrix">Only Show Sets with No Matrix Samples<br>
 						</div>
 					</div>
 					<div data-bind="visible: ('advanced'===$root.urlShowParam())" class="availSelDiv">
@@ -503,7 +524,7 @@
 							</div>
 						</div>
 						<div class="availSelPaddedDiv">
-							<input type="checkbox" data-bind="checked: $root.selectedNanSamplesMutations">Only Show Sets with No Mutation Samples</input><br>
+							<input type="checkbox" data-bind="checked: $root.selectedNanSamplesMutations">Only Show Sets with No Mutation Samples<br>
 						</div>
 					</div>
 					<div data-bind="visible: ('advanced'===$root.urlShowParam())" class="availSelDiv">
@@ -566,7 +587,7 @@
 							</div>
 						</div>
 						<div class="availSelPaddedDiv">
-							<input type="checkbox" data-bind="checked: $root.selectedNanFeaturesMatrix">Only Show Sets with No Matrix Features</input><br>
+							<input type="checkbox" data-bind="checked: $root.selectedNanFeaturesMatrix">Only Show Sets with No Matrix Features<br>
 						</div>
 					</div>
 					<div data-bind="visible: ('advanced'===$root.urlShowParam())" class="availSelDiv">
@@ -629,7 +650,7 @@
 							</div>
 						</div>
 						<div class="availSelPaddedDiv">
-							<input type="checkbox" data-bind="checked: $root.selectedNanFeaturesMutations">Only Show Sets with No Mutation Features</input><br>
+							<input type="checkbox" data-bind="checked: $root.selectedNanFeaturesMutations">Only Show Sets with No Mutation Features<br>
 						</div>
 					</div>
 					<div data-bind="visible: ('advanced'===$root.urlShowParam())" class="availSelDiv">
@@ -692,7 +713,7 @@
 							</div>
 						</div>
 						<div class="availSelPaddedDiv">
-							<input type="checkbox" data-bind="checked: $root.selectedNanUnknownBatches">Only Show Sets with Empty Unknown Batches</input><br>
+							<input type="checkbox" data-bind="checked: $root.selectedNanUnknownBatches">Only Show Sets with Empty Unknown Batches<br>
 						</div>
 					</div>
 					<div data-bind="visible: ('advanced'===$root.urlShowParam())" class="availSelDiv">
@@ -755,7 +776,7 @@
 							</div>
 						</div>
 						<div class="availSelPaddedDiv">
-							<input type="checkbox" data-bind="checked: $root.selectedNanUniqueBatchCount">Only Show Sets with Empty Unique Batch Counts</input><br>
+							<input type="checkbox" data-bind="checked: $root.selectedNanUniqueBatchCount">Only Show Sets with Empty Unique Batch Counts<br>
 						</div>
 					</div>
 					<div data-bind="visible: ('advanced'===$root.urlShowParam())" class="availSelDiv">
@@ -818,7 +839,7 @@
 							</div>
 						</div>
 						<div class="availSelPaddedDiv">
-							<input type="checkbox" data-bind="checked: $root.selectedNanCorrelatedBatchTypes">Only Show Sets with Empty Batch Type Correlations</input><br>
+							<input type="checkbox" data-bind="checked: $root.selectedNanCorrelatedBatchTypes">Only Show Sets with Empty Batch Type Correlations<br>
 						</div>
 					</div>
 					<div data-bind="visible: ('advanced'===$root.urlShowParam())" class="availSelDiv">
@@ -881,7 +902,7 @@
 							</div>
 						</div>
 						<div class="availSelPaddedDiv">
-							<input type="checkbox" data-bind="checked: $root.selectedNanBatchTypeCount">Only Show Sets with Empty Batch Type Count</input><br>
+							<input type="checkbox" data-bind="checked: $root.selectedNanBatchTypeCount">Only Show Sets with Empty Batch Type Count<br>
 						</div>
 					</div>
 					<div data-bind="visible: ('dsc'===$root.urlShowParam())" class="availSelDiv">
@@ -901,7 +922,7 @@
 						</div>
 						<div data-bind='class: $root.classOverallDSCpvalue' id="div-selectedOverallDSCpvalue">
 							<!-- ko foreach: $root.optionsOverallDSCpvalue -->
-							<input type="checkbox" data-bind="checkedValue: $data, checked: $root.selectedOverallDSCpvalue" /><span data-bind="text: $data"></span><br>
+							<input type="checkbox" data-bind="checkedValue: $data, checked: $root.selectedOverallDSCpvalue" ><span data-bind="text: $data"></span><br>
 							<!-- /ko -->
 						</div>
 					</div>
@@ -970,7 +991,7 @@
 						</div>
 						<div data-bind='class: $root.classSources' id="div-selectedSources">
 							<!-- ko foreach: $root.optionsSources -->
-							<input type="checkbox" data-bind="checkedValue: $data, checked: $root.selectedSources" /><span data-bind="text: $data"></span><br>
+							<input type="checkbox" data-bind="checkedValue: $data, checked: $root.selectedSources" ><span data-bind="text: $data"></span><br>
 							<!-- /ko -->
 						</div>
 					</div>
@@ -995,7 +1016,7 @@
 						</div>
 						<div data-bind='class: $root.classProgram' id="div-selectedProgram">
 							<!-- ko foreach: $root.optionsProgram -->
-							<input type="checkbox" data-bind="checkedValue: $data, checked: $root.selectedProgram" /><span data-bind="text: $data"></span><br>
+							<input type="checkbox" data-bind="checkedValue: $data, checked: $root.selectedProgram" ><span data-bind="text: $data"></span><br>
 							<!-- /ko -->
 						</div>
 					</div>
@@ -1020,7 +1041,7 @@
 						</div>
 						<div data-bind='class: $root.classProjects' id="div-selectedProjects">
 							<!-- ko foreach: $root.optionsProjects -->
-							<input type="checkbox" data-bind="checkedValue: $data, checked: $root.selectedProjects" /><span data-bind="text: $data"></span><br>
+							<input type="checkbox" data-bind="checkedValue: $data, checked: $root.selectedProjects" ><span data-bind="text: $data"></span><br>
 							<!-- /ko -->
 						</div>
 					</div>
@@ -1045,7 +1066,7 @@
 						</div>
 						<div data-bind='class: $root.classCategories' id="div-selectedCategories">
 							<!-- ko foreach: $root.optionsCategories -->
-							<input type="checkbox" data-bind="checkedValue: $data, checked: $root.selectedCategories" /><span data-bind="text: $data"></span><br>
+							<input type="checkbox" data-bind="checkedValue: $data, checked: $root.selectedCategories" ><span data-bind="text: $data"></span><br>
 							<!-- /ko -->
 						</div>
 					</div>
@@ -1070,7 +1091,7 @@
 						</div>
 						<div data-bind='class: $root.classPlatforms' id="div-selectedPlatforms">
 							<!-- ko foreach: $root.optionsPlatforms -->
-							<input type="checkbox" data-bind="checkedValue: $data, checked: $root.selectedPlatforms" /><span data-bind="text: $data"></span><br>
+							<input type="checkbox" data-bind="checkedValue: $data, checked: $root.selectedPlatforms" ><span data-bind="text: $data"></span><br>
 							<!-- /ko -->
 						</div>
 					</div>
@@ -1095,7 +1116,7 @@
 						</div>
 						<div data-bind='class: $root.classData' id="div-selectedData">
 							<!-- ko foreach: $root.optionsData -->
-							<input type="checkbox" data-bind="checkedValue: $data, checked: $root.selectedData" /><span data-bind="text: $data"></span><br>
+							<input type="checkbox" data-bind="checkedValue: $data, checked: $root.selectedData" ><span data-bind="text: $data"></span><br>
 							<!-- /ko -->
 						</div>
 					</div>
@@ -1120,57 +1141,7 @@
 						</div>
 						<div data-bind='class: $root.classDataFormat' id="div-selectedDetails">
 							<!-- ko foreach: $root.optionsDetails -->
-							<input type="checkbox" data-bind="checkedValue: $data, checked: $root.selectedDetails" /><span data-bind="text: $data"></span><br>
-							<!-- /ko -->
-						</div>
-					</div>
-					<div class="availSelDiv">
-						<div class="availSelDevLabel">
-							<label class="gridSizesTitle">Data Versions</label>
-							<div>
-								<a title='Show all options' data-bind="visible: ($root.classDataVersions()==='availSelPaddedDiv divSelectedLess'), click: function () { $root.classDataVersions('availSelPaddedDiv divSelectedMore') }"><button class="qf-control-button">More</button></a>
-								<a title='Show fewer options' data-bind="visible: ($root.classDataVersions()==='availSelPaddedDiv divSelectedMore'), click: function () { $root.classDataVersions('availSelPaddedDiv divSelectedLess') }"><button class="qf-control-button">Less</button></a>
-								<a title='Clear selected' data-bind="click: function () { $root.selectedDataVersions.removeAll(); }">
-									<small><i class="fas fa-trash-alt" style="color: darkslateblue;"></i></small>
-								</a>
-								<div class="tooltip inlineblock">
-									<img id="tooltipImage_CATDataVersions" title="Versions Category" data-theme="myTooltipTheme" src="images/Tooltip_icon.png" class="guiIconDimensions" alt="More Info on Versions Category">
-									<div id="tooltipContent_CATDataVersions" class="tooltiptext">
-										<div class="marginTop10px">
-											<p>The Data Versions Category are the timestamps for when the data was acquired.</p>
-										</div>
-									</div>
-								</div>
-							</div>
-						</div>
-						<div data-bind='class: $root.classDataVersions' id="div-selectedDataVersions">
-							<!-- ko foreach: $root.optionsDataVersions -->
-							<input type="checkbox" data-bind="checkedValue: $data, checked: $root.selectedDataVersions" /><span data-bind="text: $data"></span><br>
-							<!-- /ko -->
-						</div>
-					</div>
-					<div class="availSelDiv">
-						<div class="availSelDevLabel">
-							<label class="gridSizesTitle">Test Versions</label>
-							<div>
-								<a title='Show all options' data-bind="visible: ($root.classTestVersions()==='availSelPaddedDiv divSelectedLess'), click: function () { $root.classTestVersions('availSelPaddedDiv divSelectedMore') }"><button class="qf-control-button">More</button></a>
-								<a title='Show fewer options' data-bind="visible: ($root.classTestVersions()==='availSelPaddedDiv divSelectedMore'), click: function () { $root.classTestVersions('availSelPaddedDiv divSelectedLess') }"><button class="qf-control-button">Less</button></a>
-								<a title='Clear selected' data-bind="click: function () { $root.selectedTestVersions.removeAll(); }">
-									<small><i class="fas fa-trash-alt" style="color: darkslateblue;"></i></small>
-								</a>
-								<div class="tooltip inlineblock">
-									<img id="tooltipImage_CATTestVersions" title="Versions Category" data-theme="myTooltipTheme" src="images/Tooltip_icon.png" class="guiIconDimensions" alt="More Info on Versions Category">
-									<div id="tooltipContent_CATTestVersions" class="tooltiptext">
-										<div class="marginTop10px">
-											<p>The Test Versions Category are the timestamps for when the data was acquired.</p>
-										</div>
-									</div>
-								</div>
-							</div>
-						</div>
-						<div data-bind='class: $root.classTestVersions' id="div-selectedTestVersions">
-							<!-- ko foreach: $root.optionsTestVersions -->
-							<input type="checkbox" data-bind="checkedValue: $data, checked: $root.selectedTestVersions" /><span data-bind="text: $data"></span><br>
+							<input type="checkbox" data-bind="checkedValue: $data, checked: $root.selectedDetails" ><span data-bind="text: $data"></span><br>
 							<!-- /ko -->
 						</div>
 					</div>
@@ -1195,7 +1166,57 @@
 						</div>
 						<div data-bind='class: $root.classJobType' id="div-selectedJobType">
 							<!-- ko foreach: $root.optionsJobType -->
-							<input type="checkbox" data-bind="checkedValue: $data, checked: $root.selectedJobType" /><span data-bind="text: $data"></span><br>
+							<input type="checkbox" data-bind="checkedValue: $data, checked: $root.selectedJobType" ><span data-bind="text: $data"></span><br>
+							<!-- /ko -->
+						</div>
+					</div>
+					<div class="availSelDiv">
+						<div class="availSelDevLabel">
+							<label class="gridSizesTitle">Data Versions</label>
+							<div>
+								<a title='Show all options' data-bind="visible: ($root.classDataVersions()==='availSelPaddedDiv divSelectedLess'), click: function () { $root.classDataVersions('availSelPaddedDiv divSelectedMore') }"><button class="qf-control-button">More</button></a>
+								<a title='Show fewer options' data-bind="visible: ($root.classDataVersions()==='availSelPaddedDiv divSelectedMore'), click: function () { $root.classDataVersions('availSelPaddedDiv divSelectedLess') }"><button class="qf-control-button">Less</button></a>
+								<a title='Clear selected' data-bind="click: function () { $root.selectedDataVersions.removeAll(); }">
+									<small><i class="fas fa-trash-alt" style="color: darkslateblue;"></i></small>
+								</a>
+								<div class="tooltip inlineblock">
+									<img id="tooltipImage_CATDataVersions" title="Versions Category" data-theme="myTooltipTheme" src="images/Tooltip_icon.png" class="guiIconDimensions" alt="More Info on Versions Category">
+									<div id="tooltipContent_CATDataVersions" class="tooltiptext">
+										<div class="marginTop10px">
+											<p>The Data Versions Category are the timestamps for when the data was acquired.</p>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div data-bind='class: $root.classDataVersions' id="div-selectedDataVersions">
+							<!-- ko foreach: $root.optionsDataVersions -->
+							<input type="checkbox" data-bind="checkedValue: $data, checked: $root.selectedDataVersions" ><span data-bind="text: $data"></span><br>
+							<!-- /ko -->
+						</div>
+					</div>
+					<div class="availSelDiv">
+						<div class="availSelDevLabel">
+							<label class="gridSizesTitle">Results Version</label>
+							<div>
+								<a title='Show all options' data-bind="visible: ($root.classTestVersions()==='availSelPaddedDiv divSelectedLess'), click: function () { $root.classTestVersions('availSelPaddedDiv divSelectedMore') }"><button class="qf-control-button">More</button></a>
+								<a title='Show fewer options' data-bind="visible: ($root.classTestVersions()==='availSelPaddedDiv divSelectedMore'), click: function () { $root.classTestVersions('availSelPaddedDiv divSelectedLess') }"><button class="qf-control-button">Less</button></a>
+								<a title='Clear selected' data-bind="click: function () { $root.selectedTestVersions.removeAll(); }">
+									<small><i class="fas fa-trash-alt" style="color: darkslateblue;"></i></small>
+								</a>
+								<div class="tooltip inlineblock">
+									<img id="tooltipImage_CATTestVersions" title="Versions Category" data-theme="myTooltipTheme" src="images/Tooltip_icon.png" class="guiIconDimensions" alt="More Info on Versions Category">
+									<div id="tooltipContent_CATTestVersions" class="tooltiptext">
+										<div class="marginTop10px">
+											<p>The Results Version Category are the timestamps for when the data was processed.</p>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div data-bind='class: $root.classTestVersions' id="div-selectedTestVersions">
+							<!-- ko foreach: $root.optionsTestVersions -->
+							<input type="checkbox" data-bind="checkedValue: $data, checked: $root.selectedTestVersions" ><span data-bind="text: $data"></span><br>
 							<!-- /ko -->
 						</div>
 					</div>

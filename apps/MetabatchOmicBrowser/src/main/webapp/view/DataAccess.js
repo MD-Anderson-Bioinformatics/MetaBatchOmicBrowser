@@ -42,13 +42,13 @@ class DataAccess
 	{
 		return this.internalDataAccess.isOnline();
 	};
-	setIndexAndId()
+	getIndexAndId()
 	{
-		return this.internalDataAccess.setIndexAndId();
+		return this.internalDataAccess.getIndexAndId();
 	};
-	loadLinks()
+	simpleSearchData()
 	{
-		return this.internalDataAccess.loadLinks();
+		return this.internalDataAccess.simpleSearchData();
 	};
 	loadIndexAndId(theRequestedIdKO)
 	{

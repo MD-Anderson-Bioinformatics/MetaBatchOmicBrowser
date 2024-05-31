@@ -32,9 +32,9 @@ class UtilDsc
 					+ "/" + self.indexKO().category
 					+ "/" + self.indexKO().platform
 					+ "/" + self.indexKO().data
-					+ ((""!==self.indexKO().details)?("/" + this.indexKO().details):"")
-					+ ((""!==self.indexKO().data_version)?("/" + this.indexKO().data_version):"")
-					+ ((""!==self.indexKO().test_version)?("/" + this.indexKO().test_version):"");
+					+ ((""!==self.indexKO().details)?("/" + self.indexKO().details):"")
+					+ ((""!==self.indexKO().data_version)?("/" + self.indexKO().data_version):"")
+					+ ((""!==self.indexKO().test_version)?("/" + self.indexKO().test_version):"");
 		var [plotDiv, legendDiv] = self.addDivs(document.getElementById(self.divDiagramId), document.getElementById(self.divLegendId));
 		self.plot = new BeaDsc(title, plotDiv);
 		self.getDataFileCallback(dscFile).then(function(theTextData)

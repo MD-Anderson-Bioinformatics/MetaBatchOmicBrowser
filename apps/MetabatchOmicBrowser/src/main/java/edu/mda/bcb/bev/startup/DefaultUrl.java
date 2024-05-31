@@ -19,16 +19,11 @@ package edu.mda.bcb.bev.startup;
  */
 public class DefaultUrl
 {
-	public DefaultUrl(String theMqaDefaultView, 
-			String theMqaDefaultQuery, String theMqaDefaultViewParams, String theMqaDefaultQueryParams)
+	public DefaultUrl(String theMqaDefaultViewParams, String theMqaDefaultQueryParams)
 	{
-		mqaDefaultView = theMqaDefaultView;
-		mqaDefaultQuery = theMqaDefaultQuery;
 		mqaDefaultViewParams = theMqaDefaultViewParams;
 		mqaDefaultQueryParams = theMqaDefaultQueryParams;
 	};
-	public String mqaDefaultView;
-	public String mqaDefaultQuery;
 	public String mqaDefaultViewParams;
 	public String mqaDefaultQueryParams;
 	

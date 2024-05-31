@@ -14,8 +14,8 @@ RELEASE=${2}
 USER_ID=${3}
 # outside port for Tomcat, such as 8080
 OUTSIDE_PORT=${4}
-# subnet to use for compose stack, such as 128.1.1.1/24. Use 0 for "no subnet"
-SUBNET=${5}
+# NOT USED, used to be sub-net
+NOTUSED=${5}
 # environment, usually dvlp, stag, or prod
 ENVIRON=${6}
 START_SCRIPT=/deploy-dir/${RELEASE}/10p_startPROD.bash
@@ -54,38 +54,43 @@ OUTSIDE_DATA_PATH=${DATA_PATH}/DATA
 IMAGE_URL=${10}
 # group id, such as 2002
 GROUP_ID=${11}
-
-# if SUBNET is not equal to 0, then also remove the #SUBNET comments so the IPAM gets used
-IPAM_COMMENT=#SUBNET
-if [ "${SUBNET}" != "0" ]; then
-	# replace comment with nothing, to activate IPAM settings
-	IPAM_COMMENT=
-fi
+# Dockerfile extension (used to create internally used _local dockerfile)
+DF_EXTENSION=${12}
+LOCAL_UID=${13}
+DOCKERFILE_URL=${14}
 
 echo "create Dockerfile from Dockerfile_template"
 
-rm -f ${STD_DIR}/Dockerfile
-sed -e "s|<RELEASE_VERSION>|MtOB_${RELEASE}|g" \
-    -e "s|<USERID>|${USER_ID}|g" \
-    -e "s|<GROUPID>|${GROUP_ID}|g" \
-    -e "s|<LOG_DIR>|${OUTSIDE_LOGPATH}|g" \
-    -e "s|<START_SCRIPT>|${START_SCRIPT}|g" \
-    -e "s|<STOP_SCRIPT>|${STOP_SCRIPT}|g" \
-    -e "s|<UPCHECK_SCRIPT>|${UPCHECK_SCRIPT}|g" \
-    ${STD_DIR}/Dockerfile_template > ${STD_DIR}/Dockerfile
+if [ "${LOCAL_UID}" != "" ]; then
+	echo "do local Dockerfile"
+	rm -f ${STD_DIR}/Dockerfile_newuser
+	sed -e "s|<IMAGEURL>|${DOCKERFILE_URL}|g" \
+	    -e "s|<USERID>|${USER_ID}|g" \
+	    -e "s|<LOCALUID>|${LOCAL_UID}|g" \
+	    ${STD_DIR}/Dockerfile_newuser_template > ${STD_DIR}/Dockerfile_newuser
+else
+	rm -f ${STD_DIR}/Dockerfile
+	sed -e "s|<RELEASE_VERSION>|MtOB_${RELEASE}|g" \
+	    -e "s|<USERID>|${USER_ID}|g" \
+	    -e "s|<GROUPID>|${GROUP_ID}|g" \
+	    -e "s|<LOG_DIR>|${OUTSIDE_LOGPATH}|g" \
+	    -e "s|<START_SCRIPT>|${START_SCRIPT}|g" \
+	    -e "s|<STOP_SCRIPT>|${STOP_SCRIPT}|g" \
+	    -e "s|<UPCHECK_SCRIPT>|${UPCHECK_SCRIPT}|g" \
+	    ${STD_DIR}/Dockerfile_template > ${STD_DIR}/Dockerfile
+fi
 
 echo "create docker-compose.yml from docker-compose_template.yml"
 
 rm -f ${STD_DIR}/docker-compose.yml
 sed -e "s|<OUTSIDE_PORT>|${OUTSIDE_PORT}|g" \
-    -e "s|<SUBNET>|${SUBNET}|g" \
     -e "s|<ENVIRON>|${ENVIRON}|g" \
     -e "s|<LOGPATH>|${OUTSIDE_LOGPATH}|g" \
     -e "s|<INDEXPATH>|${INDEXPATH}|g" \
     -e "s|<CONFIGPATH>|${CONFIGPATH}|g" \
     -e "s|<OUTSIDE_DATA_PATH>|${OUTSIDE_DATA_PATH}|g" \
-    -e "s|#SUBNET|${IPAM_COMMENT}|g" \
     -e "s|<IMAGEURL>|${IMAGE_URL}|g" \
+    -e "s|<DC_DF_DVLP>|${DF_EXTENSION}|g" \
     ${STD_DIR}/docker-compose_template.yml > ${STD_DIR}/docker-compose.yml
 
 # then build with docker compose -f docker-compose.yml build --force-rm --no-cache

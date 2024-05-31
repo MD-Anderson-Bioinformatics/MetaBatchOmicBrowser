@@ -67,7 +67,7 @@ ENV LD_LIBRARY_PATH=/usr/lib/jvm/java-17-openjdk/lib/server
 
 # install Tomcat 10, set to run as bcbuser
 ENV TOMCAT_MAJOR=10 \
-    TOMCAT_VERSION=10.1.18 \
+    TOMCAT_VERSION=10.1.24 \
     TOMCAT_HOME=/opt/tomcat \
     CATALINA_HOME=/opt/tomcat \
     CATALINA_OUT=/dev/null

@@ -103,7 +103,7 @@ public class ResultIndex implements IndexMixin<ResultEntry>
 		return newest;
 	}
 
-	static public void updateHashMapTreeSetForJson(HashMap<String, TreeSet<String>> theHashmap,
+	static public void filterHashMapTreeSetForJson(HashMap<String, TreeSet<String>> theHashmap,
 			String theKey, String theValue)
 	{
 		if ((null != theValue) && (!"".equals(theValue)))
@@ -118,23 +118,59 @@ public class ResultIndex implements IndexMixin<ResultEntry>
 		}
 	}
 
-	// static public HashMap<String, TreeSet<String>> availableJson(TreeSet<ResultEntry> theResults)
-	synchronized public HashMap<String, TreeSet<String>> availableJson()
+	static public void drilldownHashMapTreeSetForJson(HashMap<String, TreeSet<String>> theHashmap,
+			String theKey, String theValue)
+	{
+		if ((null != theValue) && (!"".equals(theValue)))
+		{
+			TreeSet<String> ts = theHashmap.get(theKey);
+			if (null == ts)
+			{
+				ts = new TreeSet<>();
+			}
+			ts.add(theValue);
+			theHashmap.put(theKey, ts);
+		}
+	}
+	
+	// static public HashMap<String, TreeSet<String>> availableFilterJson(TreeSet<ResultEntry> theResults)
+	synchronized public HashMap<String, TreeSet<String>> availableFilterJson()
 	{
 		HashMap<String, TreeSet<String>> hm = new HashMap<>();
 		//for(ResultEntry re: theResults)
 		for (ResultEntry re : mResultEntries)
 		{
-			updateHashMapTreeSetForJson(hm, "availableDataVersions", re.data_version);
-			updateHashMapTreeSetForJson(hm, "availableTestVersions", re.test_version);
-			updateHashMapTreeSetForJson(hm, "availableSources", re.source);
-			updateHashMapTreeSetForJson(hm, "availableProgram", re.program);
-			updateHashMapTreeSetForJson(hm, "availableProjects", re.project);
-			updateHashMapTreeSetForJson(hm, "availableCategories", re.category);
-			updateHashMapTreeSetForJson(hm, "availablePlatforms", re.platform);
-			updateHashMapTreeSetForJson(hm, "availableData", re.data);
-			updateHashMapTreeSetForJson(hm, "availableDetails", re.details);
-			updateHashMapTreeSetForJson(hm, "availableJobType", re.job_type);
+			filterHashMapTreeSetForJson(hm, "availableDataVersions", re.data_version);
+			filterHashMapTreeSetForJson(hm, "availableTestVersions", re.test_version);
+			filterHashMapTreeSetForJson(hm, "availableSources", re.source);
+			filterHashMapTreeSetForJson(hm, "availableProgram", re.program);
+			filterHashMapTreeSetForJson(hm, "availableProjects", re.project);
+			filterHashMapTreeSetForJson(hm, "availableCategories", re.category);
+			filterHashMapTreeSetForJson(hm, "availablePlatforms", re.platform);
+			filterHashMapTreeSetForJson(hm, "availableData", re.data);
+			filterHashMapTreeSetForJson(hm, "availableDetails", re.details);
+			filterHashMapTreeSetForJson(hm, "availableJobType", re.job_type);
+		}
+		return hm;
+	}
+
+	// static public HashMap<String, TreeSet<String>> availableFilterJson(TreeSet<ResultEntry> theResults)
+	synchronized public HashMap<String, TreeSet<String>> availableDrilldownJson()
+	{
+		HashMap<String, TreeSet<String>> hm = new HashMap<>();
+		//for(ResultEntry re: theResults)
+		for (ResultEntry re : mResultEntries)
+		{
+			drilldownHashMapTreeSetForJson(hm, "availableSources", re.source);
+			drilldownHashMapTreeSetForJson(hm, "availableProgram", re.program);
+			drilldownHashMapTreeSetForJson(hm, "availableProjects", re.project);
+			drilldownHashMapTreeSetForJson(hm, "availableCategories", re.category);
+			drilldownHashMapTreeSetForJson(hm, "availablePlatforms", re.platform);
+			drilldownHashMapTreeSetForJson(hm, "availableData", re.data);
+			drilldownHashMapTreeSetForJson(hm, "availableDetails", re.details);
+			drilldownHashMapTreeSetForJson(hm, "availableJobType", re.job_type);
+			drilldownHashMapTreeSetForJson(hm, "availableDataVersions", re.data_version);
+			drilldownHashMapTreeSetForJson(hm, "availableTestVersions", re.test_version);
 		}
 		return hm;
 	}
@@ -176,6 +212,34 @@ public class ResultIndex implements IndexMixin<ResultEntry>
 					&& re.filter_batch_unique_cnt(theGTE_batch_unique_cnt, theLTE_batch_unique_cnt, isNaN_batch_unique_cnt)
 					&& re.filter_correlated_batch_types(theGTE_correlated_batch_types, theLTE_correlated_batch_types, isNaN_correlated_batch_types)
 					&& re.filter_batch_type_count(theGTE_batch_type_count, theLTE_batch_type_count, isNaN_batch_type_count))
+			{
+				filtered.add(re);
+			}
+		}
+		return filtered;
+	}
+
+	synchronized public TreeSet<ResultEntry> drilldown(
+			ArrayList<String> theValues_source, ArrayList<String> theValues_program,
+			ArrayList<String> theValues_project, ArrayList<String> theValues_category,
+			ArrayList<String> theValues_platform, ArrayList<String> theValues_data,
+			ArrayList<String> theValues_details, ArrayList<String> theValues_jobtype,
+			ArrayList<String> theValues_data_version, ArrayList<String> theValues_test_version)
+	{
+		TreeSet<ResultEntry> filtered = new TreeSet<>();
+		// Note: mResultEntries is private, but is usable within this static function
+		for (ResultEntry re : LoadIndexFiles.M_RESULT_INDEX.mResultEntries)
+		{
+			if (re.filter_source(theValues_source)
+					&& re.filter_program(theValues_program)
+					&& re.filter_project(theValues_project)
+					&& re.filter_category(theValues_category)
+					&& re.filter_platform(theValues_platform)
+					&& re.filter_data(theValues_data)
+					&& re.filter_details(theValues_details)
+					&& re.filter_jobtype(theValues_jobtype)
+					&& re.filter_data_version(theValues_data_version)
+					&& re.filter_test_version(theValues_test_version))
 			{
 				filtered.add(re);
 			}

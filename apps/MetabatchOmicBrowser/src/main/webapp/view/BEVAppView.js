@@ -4,6 +4,33 @@
 // access KnockoutJS appview in this file
 var jsBEVAppView = null;
 
+function modifyIndexJson(theObject)
+{
+	if ((typeof theObject !== 'object') || (theObject === null))
+	{
+		return theObject;
+	}
+	if (Array.isArray(theObject))
+	{
+		return theObject.map(modifyIndexJson);
+	}
+	for (const key in theObject)
+	{
+		if (theObject.hasOwnProperty(key))
+		{
+			const value = theObject[key];
+			if (key === 'dropdown_label' && value === 'Test Version')
+			{
+				theObject[key] = 'Result Version'; // Change the value to 'dvorak'
+			} else
+			{
+				theObject[key] = modifyIndexJson(value); // Recursively modify nested objects/arrays
+			}
+		}
+	}
+	return theObject;
+};
+
 ////////////////////////////////////////////////////////////////
 //// GUI utility function to disable input during long running processes
 ////////////////////////////////////////////////////////////////
@@ -89,9 +116,71 @@ function getWithCheck(theJsonObj, theAttr1, theAttr2)
 	}
 	return val;
 }
-	
+
+function convertToArray(theArrayValue)
+{
+	var myArray = [];
+	if (notUN(theArrayValue))
+	{
+		if (""!==theArrayValue)
+		{
+			myArray = [ theArrayValue ];
+		}
+	}
+	return myArray;
+}
+
+function getDrilldownNoPromise(theSource, theProgram, theProject, theCategory,
+	thePlatform, theData, theDetails, theJobType, theDataVersion, theTestVersion)
+{
+	//console.log("start getDrilldownNoPromise");
+	//console.log("getDrilldownNoPromise theSource= '" + theSource + "'");
+	//console.log("getDrilldownNoPromise theProgram= '" + theProgram + "'");
+	var drillObj = {};
+	drillObj["mSources"] = convertToArray(theSource);
+	drillObj["mProgram"] = convertToArray(theProgram);
+	drillObj["mProjects"] = convertToArray(theProject);
+	drillObj["mCategories"] = convertToArray(theCategory);
+	drillObj["mPlatforms"] = convertToArray(thePlatform);
+	drillObj["mData"] = convertToArray(theData);
+	drillObj["mDetails"] = convertToArray(theDetails);
+	drillObj["mJobType"] = convertToArray(theJobType);
+	drillObj["mDataVersions"] = convertToArray(theDataVersion);
+	drillObj["mTestVersions"] = convertToArray(theTestVersion);
+	//console.log("drilldown drillObj");
+	//console.log(drillObj);
+	var drillString = JSON.stringify(drillObj);
+	//console.log(drillString);
+	var result = "{}";
+	$.ajax(
+	{
+		type: "GET",
+		dataType: 'json',
+		url: "../drilldown",
+		cache: false,
+		async: false,
+		data:
+		{
+			"drill": drillString
+		},
+		success: function(theJson)
+		{
+			//console.log("drilldown np");
+			//console.log(theJson);
+			result = theJson;
+		},
+		error: function(jqXHR, textStatus, errorThrown)
+		{
+			//console.log("drilldown call" + " :" + textStatus + " and " + errorThrown);
+			alert("drilldown call" + " :" + textStatus + " and " + errorThrown);
+		}
+	});
+	return result;
+}
+
 function getExistanceNoPromise(theRequestedId, theTextFile)
 {
+	//console.log("start getExistanceNoPromise");
 	//duplicated without promise from DataAccess.js to have synchronous option
 	var result = "false";
 	$.ajax(
@@ -112,7 +201,7 @@ function getExistanceNoPromise(theRequestedId, theTextFile)
 		},
 		error: function(jqXHR, textStatus, errorThrown)
 		{
-			console.log("dsexistsnp call" + " :" + textStatus + " and " + errorThrown);
+			//console.log("dsexistsnp call" + " :" + textStatus + " and " + errorThrown);
 			alert("dsexistsnp call" + " :" + textStatus + " and " + errorThrown);
 		}
 	});
@@ -250,7 +339,7 @@ function pickInterestingDiagram(theDiagramList, theDiagramType)
 
 function bevFindDiagram()
 {
-	//console.log("bevFindDiagram");
+	//console.log("start bevFindDiagram");
 	// all diagrams are reachable from alg (top level), which also lets us build selection pattern
 	var diaList = lookForDiagram(globalDiagramControl.mAlgOpt(), null, null, null, null, []);
 	if (diaList.length>0)
@@ -346,20 +435,6 @@ function bevDatapaneCopyAll()
 	document.execCommand('copy');
 }
 
-function copyURLString()
-{
-	// based on https://www.w3schools.com/howto/howto_js_copy_clipboard.asp
-	var copyText = document.getElementById("bevCopyURL");
-	var text = appview.newTabUrl();
-	//text = text.replace(/\"/g, "\\\"");
-	copyText.value = text;
-	copyText.select();
-	//For mobile devices
-	copyText.setSelectionRange(0, 99999);
-	document.execCommand("copy");
-	copyText.blur();
-}
-
 function processZipSelectEvent(theEvent)
 {
 	//console.log("file changed");
@@ -379,11 +454,18 @@ function processZipSelectEvent(theEvent)
 
 function BEVAppView(theUseZip)
 {
+	//console.log("start BEVAppView");
+	//console.log("BEVAppView::BEVAppView ====================================================");
+	//console.log("BEVAppView::BEVAppView ====================================================");
 	//console.log("BEVAppView::BEVAppView window.location.href=" + window.location.href);
+	//console.log("BEVAppView::BEVAppView ====================================================");
+	//console.log("BEVAppView::BEVAppView ====================================================");
 	//console.log("BEVAppView::BEVAppView id=" + new URL(window.location.href).searchParams.get("id"));
 	var self = this;
 	jsBEVAppView = this;
-	self.type = "deferred";
+	//self.type = "deferred";
+	// set for first load, to allow 
+	var firstLoad = true;
 	// used for prettifying initial load
 	self.makeGuiVisible = ko.observable(false);
 	// used for ZIP archive file buttons
@@ -391,6 +473,55 @@ function BEVAppView(theUseZip)
 	self.zipFile = ko.observable(null);
 	// selected/requested ID/index prefix for data
 	self.requestedId = ko.observable(undefined);
+	// get default value of use simple from URL
+	var url = new URL(window.location.href);
+	var tmpSimple = url.searchParams.get("useSimple");
+	if ("true" === tmpSimple)
+	{
+		tmpSimple = true;
+	} else
+	{
+		tmpSimple = false;
+	}
+	self.viewUseSimpleSearch = ko.observable(tmpSimple);
+	// Notify always, since we use setting simgple mode to true to reset dropdown contents,
+	// which requires being able to do that from simple mode
+	self.viewUseSimpleSearch.extend({ notify: 'always' });
+	var viewUseSimpleSearchOld = self.viewUseSimpleSearch.peek();
+	self.viewUseSimpleSearch.subscribe(function(theNewValue)
+	{
+		//console.log("self.viewUseSimpleSearch.subscribe theNewValue = " + theNewValue);
+		//console.log("self.viewUseSimpleSearch.subscribe viewUseSimpleSearchOld = " + viewUseSimpleSearchOld);
+		if (viewUseSimpleSearchOld !== theNewValue)
+		{
+			if (false===theNewValue)
+			{
+				//console.log("self.viewUseSimpleSearch.subscribe displayAllButPickerColumn");
+				window.parent.setUseSimpleModeFlag(false);
+				$( "#dbtabs" ).tabs({ active: 1 });
+				displayAllButPickerColumn();
+			}
+			else
+			{
+				//console.log("self.viewUseSimpleSearch.subscribe hideAllButPickerColumn");
+				window.parent.setUseSimpleModeFlag(true);
+				$( "#dbtabs" ).tabs({ active: 0 });
+				hideAllButPickerColumn();
+			}
+			viewUseSimpleSearchOld = theNewValue;
+		}
+	});
+	if (false===tmpSimple)
+	{
+		$( "#dbtabs" ).tabs({ active: 1 });
+		displayAllButPickerColumn();
+	}
+	else
+	{
+		//console.log("BEVAppView top level hideAllButPickerColumn");
+		$( "#dbtabs" ).tabs({ active: 0 });
+		hideAllButPickerColumn();
+	}
 	// JSON index from ZIP archive
 	self.jsonIndexShowNotice = ko.observable(true);
 	self.jsonIndex = ko.observable(undefined);
@@ -414,6 +545,15 @@ function BEVAppView(theUseZip)
 	// which does not change, only the contents change
 	globalDiagramControl.setValues(self.jsonIndex);
 	// Level 0 dropdown JSON index selections
+	//console.log("initialize algorithmSelected");
+	self.algorithmSelected = ko.observable(undefined);
+	self.algorithmSelected.subscribe(function(theNewValue)
+	{
+		//console.log("algorithmSelected changed");
+		//console.log(theNewValue);
+		// no longer used -- keep functionality if needed later
+		self.isPngDiagram(false);
+	});
 	self.algorithmLabel = ko.computed(function ()
 	{
 		let val = undefined;
@@ -425,18 +565,54 @@ function BEVAppView(theUseZip)
 	});
 	self.algorithmOptions = ko.computed(function ()
 	{
+		//console.log("self.algorithmOptions = ko.computed");
 		let val = undefined;
 		if (notUN(self.jsonIndex()))
 		{
+			//console.log("self.algorithmOptions = with index");
+			//console.log(self.jsonIndex().mbatch.dropdown_entries);
 			val = self.jsonIndex().mbatch.dropdown_entries;
 		}
 		return val;
 	});
-	self.algorithmSelected = ko.observable(undefined);
-	if (notUN(self.algorithmOptions()))
+	self.algorithmOptions.subscribe(function(theNewValue)
 	{
-		self.algorithmSelected(self.algorithmOptions()[0]);
-	};
+		// set to PCA+ as default, if available
+		if (notUN(theNewValue))
+		{
+			var getAlg = requestedJson.mAlg;
+			//console.log("BEVAppView self.algorithmOptions.subscribe getAlg = " + getAlg);
+			if (!notUN(getAlg))
+			{
+				getAlg = "PCA+";
+				//console.log("BEVAppView self.algorithmOptions.subscribe change to PCA+ = " + getAlg);
+			}
+			var set = false;
+			theNewValue.forEach(function(theOpt)
+			{
+				if (getAlg===theOpt.entry_label)
+				{
+					// need valueAllowUnset: true to allow setting default value before options are properly bound
+					// since subscribe hits too soon when values are being rendered in HTML,
+					// and setting the selected one here gets rejected otherwise
+					//console.log("BEVAppView self.algorithmOptions.subscribe getAlg = " + theOpt.entry_label);
+					//console.log(theOpt);
+					self.algorithmSelected(theOpt);
+					// timing issue - the if after the forEach does not recognize this value has been set
+					set = true;
+				}
+			});
+			if (!set)
+			{
+				//console.log("BEVAppView self.algorithmOptions.subscribe set default theNewValue[0] = " + theNewValue[0]);
+				self.algorithmSelected(theNewValue[0]);
+			}
+		};
+	});
+	//console.log("self.algorithmSelected = ");
+	//console.log(self.algorithmSelected());
+	//console.log("self.algorithmOptions = ");
+	//console.log(self.algorithmOptions());
 	// Level 1 dropdown JSON index selections
 	self.level1Label = ko.computed(function () 
 	{
@@ -565,95 +741,434 @@ function BEVAppView(theUseZip)
 									self.level2Options, self.level2Selected, 
 									self.level3Options, self.level3Selected, 
 									self.level4Options, self.level4Selected);
-	// selected diagram
-	self.selectedDiagram = ko.computed(function () 
-	{
-		var selected = self.level4Selected();
-		//console.log("selectedDiagram 4 = " + selected);
-		if(!notUN(selected))
-		{
-			selected = self.level3Selected();
-			//console.log("selectedDiagram 3 = " + selected);
-			if(!notUN(selected))
-			{
-				selected = self.level2Selected();
-				//console.log("selectedDiagram 2 = " + selected);
-				if(!notUN(selected))
-				{
-					selected = self.level1Selected();
-					//console.log("selectedDiagram 1 = " + selected);
-					if(!notUN(selected))
-					{
-						selected = self.algorithmSelected();
-						//console.log("selectedDiagram a = " + selected);
-					}
-				}
-			}
-		}
-		if (self.jsonIndexShowNotice())
-		{
-			if (selected)
-			{
-				if (notUN(selected.notice))
-				{
-					if (""!==selected.notice)
-					{
-						alert(selected.notice);
-						self.jsonIndexShowNotice(false);
-					}
-				}
-			}
-		}
-		globalDiagramControl.handleNewDiagram(self.requestedId(), selected);
-		return selected;
-	}).extend({ throttle: 500 });
 	//
-	self.urlQueryForm = ko.observable("");
-	self.urlBevForm = ko.observable("");
-	self.urlStdData = ko.observable("");
-
 	self.listOfBatchTypes = ko.observableArray([]);
-	//
-	Promise.all([
-		globalDataAccess.loadLinks(),
-		globalDataAccess.setIndexAndId()
-	]).then((values) =>
+	
+	////////////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////
+
+	self.availableSourcesSelected = ko.observable("");
+	self.availableProgramSelected = ko.observable("");
+	self.availableProjectsSelected = ko.observable("");
+	self.availableCategoriesSelected = ko.observable("");
+	self.availablePlatformsSelected = ko.observable("");
+	self.availableDataSelected = ko.observable("");
+	self.availableDetailsSelected = ko.observable("");
+	self.availableJobTypeSelected = ko.observable("");
+	self.availableDataVersionsSelected = ko.observable("");
+	self.availableTestVersionsSelected = ko.observable("");
+
+	self.availableDrillDatasets = ko.observableArray([]);
+	self.selectedDrillDataset = ko.computed(function () 
 	{
-		var linksJson = values[0];
-		//console.log("linksJson.queryForm");
-		//console.log(linksJson.queryForm);
-		if (notUN(linksJson.queryForm))
+		var value = null;
+		if (1===self.availableDrillDatasets().length)
 		{
-			self.urlQueryForm(linksJson.queryForm);
+			displayAllButPickerColumn();
+			value = self.availableDrillDatasets()[0];
+			//console.log("selectedDrillDataset");
+			//console.log(value);
+			self.requestedId(value[1]);
+			if (!firstLoad)
+			{
+				//console.log("selectedDrillDataset call redoQueryLoadComplete");
+				window.parent.redoQueryLoadComplete();
+			}
+			$( "#dbtabs" ).tabs({ active: 1 });
 		}
-		//console.log("linksJson.bevForm");
-		//console.log(linksJson.bevForm);
-		self.urlBevForm(linksJson.bevForm);
-		//console.log("linksJson.stdData");
-		//console.log(linksJson.stdData);
-		if (notUN(linksJson.stdData))
+		return value;
+	});
+	
+	self.simpleModeData = ko.computed(function () 
+	{
+		//console.log("start compute simpleModeData");
+		var value = getDrilldownNoPromise(
+				self.availableSourcesSelected(),
+				self.availableProgramSelected(),
+				self.availableProjectsSelected(),
+				self.availableCategoriesSelected(),
+				self.availablePlatformsSelected(),
+				self.availableDataSelected(),
+				self.availableDetailsSelected(),
+				self.availableJobTypeSelected(),
+				self.availableDataVersionsSelected(),
+				self.availableTestVersionsSelected()
+		);
+		//console.log("simpleModeData value");
+		//console.log(value);
+		if(notUN(value.data))
 		{
-			self.urlStdData(linksJson.stdData);
+			self.availableDrillDatasets(value.data);
 		}
-		var requestedJson = values[1];
+		else
+		{
+			value = null;
+		}
+		return value;
+	}, self).extend({rateLimit: {method: "notifyWhenChangesStop", timeout: 500}});
+	
+	self.availableSources = ko.computed(function () 
+	{
+		var value = self.simpleModeData();
+		if(notUN(value))
+		{
+			value = value.availableSources;
+			if(!notUN(value))
+			{
+				value = null;
+			}
+		}
+		else
+		{
+			value = null;
+		}
+		if (notUN(value))
+		{
+			if (""===self.availableSourcesSelected())
+			{
+				if (1===value.length)
+				{
+					self.availableSourcesSelected(value[0]);
+				}
+			}
+		}
+		return value;
+	});
+	
+	self.availableProgram = ko.computed(function () 
+	{
+		var value = self.simpleModeData();
+		if(notUN(value))
+		{
+			value = value.availableProgram;
+			if(!notUN(value))
+			{
+				value = null;
+			}
+		}
+		else
+		{
+			value = null;
+		}
+		if (notUN(value))
+		{
+			if (""===self.availableProgramSelected())
+			{
+				if (1===value.length)
+				{
+					self.availableProgramSelected(value[0]);
+				}
+			}
+		}
+		return value;
+	});
+	
+	self.availableProjects = ko.computed(function () 
+	{
+		var value = self.simpleModeData();
+		if(notUN(value))
+		{
+			value = value.availableProjects;
+			if(!notUN(value))
+			{
+				value = null;
+			}
+		}
+		else
+		{
+			value = null;
+		}
+		if (notUN(value))
+		{
+			if (""===self.availableProjectsSelected())
+			{
+				if (1===value.length)
+				{
+					self.availableProjectsSelected(value[0]);
+				}
+			}
+		}
+		return value;
+	});
+	
+	self.availableCategories = ko.computed(function () 
+	{
+		var value = self.simpleModeData();
+		if(notUN(value))
+		{
+			value = value.availableCategories;
+			if(!notUN(value))
+			{
+				value = null;
+			}
+		}
+		else
+		{
+			value = null;
+		}
+		if (notUN(value))
+		{
+			if (""===self.availableCategoriesSelected())
+			{
+				if (1===value.length)
+				{
+					self.availableCategoriesSelected(value[0]);
+				}
+			}
+		}
+		return value;
+	});
+	
+	self.availablePlatforms = ko.computed(function () 
+	{
+		var value = self.simpleModeData();
+		if(notUN(value))
+		{
+			value = value.availablePlatforms;
+			if(!notUN(value))
+			{
+				value = null;
+			}
+		}
+		else
+		{
+			value = null;
+		}
+		if (notUN(value))
+		{
+			if (""===self.availablePlatformsSelected())
+			{
+				if (1===value.length)
+				{
+					self.availablePlatformsSelected(value[0]);
+				}
+			}
+		}
+		return value;
+	});
+	
+	self.availableData = ko.computed(function () 
+	{
+		var value = self.simpleModeData();
+		if(notUN(value))
+		{
+			value = value.availableData;
+			if(!notUN(value))
+			{
+				value = null;
+			}
+		}
+		else
+		{
+			value = null;
+		}
+		if (notUN(value))
+		{
+			if (""===self.availableDataSelected())
+			{
+				if (1===value.length)
+				{
+					self.availableDataSelected(value[0]);
+				}
+			}
+		}
+		return value;
+	});
+	
+	self.availableDetails = ko.computed(function () 
+	{
+		var value = self.simpleModeData();
+		if(notUN(value))
+		{
+			value = value.availableDetails;
+			if(!notUN(value))
+			{
+				value = null;
+			}
+		}
+		else
+		{
+			value = null;
+		}
+		if (notUN(value))
+		{
+			if (""===self.availableDetailsSelected())
+			{
+				if (1===value.length)
+				{
+					self.availableDetailsSelected(value[0]);
+				}
+			}
+		}
+		return value;
+	});
+	
+	self.availableJobType = ko.computed(function () 
+	{
+		var value = self.simpleModeData();
+		if(notUN(value))
+		{
+			value = value.availableJobType;
+			if(!notUN(value))
+			{
+				value = null;
+			}
+		}
+		else
+		{
+			value = null;
+		}
+		if (notUN(value))
+		{
+			if (""===self.availableJobTypeSelected())
+			{
+				if (1===value.length)
+				{
+					self.availableJobTypeSelected(value[0]);
+				}
+			}
+		}
+		return value;
+	});
+	
+	self.availableDataVersions = ko.computed(function () 
+	{
+		var value = self.simpleModeData();
+		if(notUN(value))
+		{
+			value = value.availableDataVersions;
+			if(!notUN(value))
+			{
+				value = null;
+			}
+		}
+		else
+		{
+			value = null;
+		}
+		if (notUN(value))
+		{
+			if (""===self.availableDataVersionsSelected())
+			{
+				if (1===value.length)
+				{
+					self.availableDataVersionsSelected(value[0]);
+				}
+			}
+		}
+		return value;
+	});
+	
+	self.availableTestVersions = ko.computed(function () 
+	{
+		var value = self.simpleModeData();
+		if(notUN(value))
+		{
+			value = value.availableTestVersions;
+			if(!notUN(value))
+			{
+				value = null;
+			}
+		}
+		else
+		{
+			value = null;
+		}
+		if (notUN(value))
+		{
+			if (""===self.availableTestVersionsSelected())
+			{
+				if (1===value.length)
+				{
+					self.availableTestVersionsSelected(value[0]);
+				}
+			}
+		}
+		return value;
+	});
+	
+	////////////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////
+	//console.log("handle displaying diagrams and processing URL");
+	try
+	{
+		var requestedJson = globalDataAccess.getIndexAndId();
 		//console.log("requestedJson");
 		//console.log(requestedJson);
 		if(notUN(requestedJson))
 		{
+			if(notUN(requestedJson.ssource))
+			{
+				self.availableSourcesSelected(requestedJson.ssource);
+			}
+			if(notUN(requestedJson.sprogram))
+			{
+				self.availableProgramSelected(requestedJson.sprogram);
+			}
+			if(notUN(requestedJson.sproject))
+			{
+				self.availableProjectsSelected(requestedJson.sproject);
+			}
+			if(notUN(requestedJson.scategory))
+			{
+				self.availableCategoriesSelected(requestedJson.scategory);
+			}
+			if(notUN(requestedJson.splatform))
+			{
+				self.availablePlatformsSelected(requestedJson.splatform);
+			}
+			if(notUN(requestedJson.sdata))
+			{
+				self.availableDataSelected(requestedJson.sdata);
+			}
+			if(notUN(requestedJson.sdetails))
+			{
+				self.availableDetailsSelected(requestedJson.sdetails);
+			}
+			if(notUN(requestedJson.sjobtype))
+			{
+				self.availableJobTypeSelected(requestedJson.sjobtype);
+			}
+			if(notUN(requestedJson.sdataversion))
+			{
+				self.availableDataVersionsSelected(requestedJson.sdataversion);
+			}
+			if(notUN(requestedJson.stestversion))
+			{
+				self.availableTestVersionsSelected(requestedJson.stestversion);
+			}
 			if(notUN(requestedJson.mID))
 			{
 				self.requestedId(requestedJson.mID);
+				//console.log("set viewUseSimpleSearch to " + requestedJson.useSimple);
+				self.viewUseSimpleSearch(requestedJson.useSimple);
 				// handles URL containing link to specific dataset and diagram
+				//console.log("BEVAppView requestedJson.mID = " + requestedJson.mID);
 				globalDataAccess.loadIndexAndId(self.requestedId).then((theIndexJson) =>
 				{
+					//console.log("start loadIndexAndId");
+					//console.log("BEVAppView requestedJson");
+					//console.log(requestedJson);
+					theIndexJson = modifyIndexJson(theIndexJson);
 					self.jsonIndex(theIndexJson);
 					if(notUN(requestedJson.mAlg))
 					{
+						var getAlg = requestedJson.mAlg;
+						if (!notUN(getAlg))
+						{
+							getAlg = "PCA+";
+						}
 						self.algorithmOptions().forEach(function(theOpt)
 						{
-							if (requestedJson.mAlg===theOpt.entry_label)
+							//console.log("BEVAppView theOpt = " + theOpt.entry_label);
+							if (getAlg===theOpt.entry_label)
 							{
+								//console.log("BEVAppView select algorithm " + theOpt.entry_label);
+								//console.log(theOpt);
 								self.algorithmSelected(theOpt);
+								self.algorithmSelected.valueHasMutated();
+								//console.log("BEVAppView post set " + theOpt.entry_label);
+								//console.log(theOpt);
 							}
 						});
 					}
@@ -734,6 +1249,7 @@ function BEVAppView(theUseZip)
 					// mark index as changed
 					self.jsonIndexShowNotice(true);
 					self.makeGuiVisible(true);
+					firstLoad = false;
 				});
 				// handle batch types
 				globalDataAccess.loadListOfBatchTypes(self.requestedId).then((theBatchTypesJson) =>
@@ -763,79 +1279,78 @@ function BEVAppView(theUseZip)
 					globalDiagramControl.resize();
 				}
 			}
-			self.makeGuiVisible(true);
-		}
-		else
-		{
-			self.makeGuiVisible(true);
-		}
-		try
-		{
-			if (notUN(window.parent.setCurrentViewDiagramMqa))
-			{
-				//console.log("BEVAppView setCurrentViewDiagramMqa");
-				//console.log(self.requestedId());
-				window.parent.setCurrentViewDiagramMqa(self.requestedId());
-			}
 			else
 			{
-				console.log("Skipping call to setCurrentViewDiagramMqa (not integrated)");
+				self.makeGuiVisible(true);
+				firstLoad = false;
 			}
 		}
-		catch(exp)
-		{
-			console.log("BEVAppView catch");
-			console.log(exp);
-			alert("Error loading diagram");
-		}
-	});
-
-	self.newTabUrl = ko.computed(function () 
+	}
+	catch(exp)
 	{
-		let tabUrl = null;
-		//console.log("newTabUrl");
-		if (false === self.usezip())
+		console.log("BEVAppView catch");
+		console.log(exp);
+		alert("Error loading diagram");
+	}
+	
+	// selected diagram
+	self.selectedDiagram = ko.computed(function () 
+	{
+		//console.log("start selectedDiagram");
+		var selected = self.level4Selected();
+		//console.log("selectedDiagram 4 = ");
+		//console.log(selected);
+		if(!notUN(selected))
 		{
-			//console.log("newTabUrl process URL");
-			var url = new URL(window.location.href);
-			var tmpId = url.searchParams.get("id");
-			var tmpIndex = url.searchParams.get("index");
-			if ((null !== tmpId) && (null !== tmpIndex))
+			selected = self.level3Selected();
+			//console.log("selectedDiagram 3 = ");
+			//console.log(selected);
+			if(!notUN(selected))
 			{
-				tabUrl = self.urlBevForm() 
-						+ '/?id='+ encodeURIComponent(tmpId) 
-						+ '&index='+ encodeURIComponent(tmpIndex);
-				if (notUN(self.algorithmSelected()))
+				selected = self.level2Selected();
+				//console.log("selectedDiagram 2 = ");
+				//console.log(selected);
+				if(!notUN(selected))
 				{
-					tabUrl = tabUrl + '&alg='+ encodeURIComponent(self.algorithmSelected().entry_label);
-				}
-				if (notUN(self.level1Selected()))
-				{
-					tabUrl = tabUrl + '&lvl1='+ encodeURIComponent(self.level1Selected().entry_label);
-				}
-				if (notUN(self.level2Selected()))
-				{
-					tabUrl = tabUrl + '&lvl2='+ encodeURIComponent(self.level2Selected().entry_label);
-				}
-				if (notUN(self.level3Selected()))
-				{
-					tabUrl = tabUrl + '&lvl3='+ encodeURIComponent(self.level3Selected().entry_label);
-				}
-				if (notUN(self.level4Selected()))
-				{
-					tabUrl = tabUrl + '&lvl4='+ encodeURIComponent(self.level4Selected().entry_label);
+					selected = self.level1Selected();
+					//console.log("selectedDiagram 1 = ");
+					//console.log(selected);
+					if(!notUN(selected))
+					{
+						selected = self.algorithmSelected();
+						//console.log("selectedDiagram a = ");
+						//console.log(selected);
+					}
 				}
 			}
 		}
-		if ((notUN(tabUrl))&&(tabUrl.length>=2000))
+		if (self.jsonIndexShowNotice())
 		{
-			alert("Too many criteria selected - resulting URL is too long and may not function properly. Please select fewer criteria.");
+			if (selected)
+			{
+				if (notUN(selected.notice))
+				{
+					if (""!==selected.notice)
+					{
+						alert(selected.notice);
+						self.jsonIndexShowNotice(false);
+					}
+				}
+			}
 		}
-		return tabUrl;
-	});
+		//console.log("selectedDiagram computed");
+		//console.log(self.requestedId());
+		//console.log(selected);
+		//console.log("call handleNewDiagram");
+		globalDiagramControl.handleNewDiagram(self.requestedId(), selected);
+		return selected;
+	}, self).extend({rateLimit: {method: "notifyWhenChangesStop", timeout: 500}});
+
+	self.makeGuiVisible(true);
 
 	self.getViewSearchFromPath = function(theId, thePath)
 	{
+		//console.log("start getViewSearchFromPath");
 		var result = "";
 		// id=ed4fa338574fcdd831e6fee5cc793dd4&amp;alg=PCA%2B&amp;lvl1=batch_id&amp;lvl2=ManyToMany&amp;lvl3=DATA_2018-08-23&amp;lvl4=TEST_2022_12_28_1300
 		if (""!==theId)
@@ -957,14 +1472,10 @@ function BEVAppView(theUseZip)
 	});
 	
 	self.isPngDiagram = ko.observable(false);
-	self.algorithmSelected.subscribe(function(theNewValue)
-	{
-		// no longer used -- keep funcationality if needed later
-		self.isPngDiagram(false);
-	});
 
 	self.humanIdentifier = ko.computed(function ()
 	{
+		//console.log("start humanIdentifier");
 		let val =	"BEV ID : " + self.requestedId() + " | " +
 					"Source : " + self.indexSource() + " | " +
 					"Program : " + self.indexProgram() + " | " +
@@ -975,11 +1486,11 @@ function BEVAppView(theUseZip)
 					"Details : " + self.indexDetails() + " | " +
 					"Job Type : " + self.indexJobType() + " | " +
 					"Data Version : " + self.indexDataVersion() + " | " +
-					"Test Version : " + self.indexTestVersion() + " | " +
+					"Results Version : " + self.indexTestVersion() + " | " +
 					"Job Id : " + self.indexJobId() + " | " +
 					"Notice : " + self.indexNotice();
 		return val;
-	}).extend({ rateLimit: 500, method: "notifyWhenChangesStop" });
+	}, self).extend({rateLimit: {method: "notifyWhenChangesStop", timeout: 500}});
 
 	self.humanIdentifier.subscribe(function (theValue)
 	{

@@ -3,17 +3,19 @@
 /* *************************** */
 
 /* header height is 4 pixels larger for space around logo */
-
+/* webapp/index.html defines restored defaults in tmpAheight, tempBheight, tempAwidth, and tempBwidth */
 :root
 {
 	--body-margin: 4px;
 	--header-height: 36px;
 	--grid-gap: 0px;
 	--dragger-size: 12px;
+/*	--row-A-height: 100vh;
+	--row-B-height: 0vh;	*/
 	--row-A-height: 65vh;
-	--row-B-height: 35vh;	
-	--col-A-width: 65vw;
-	--col-B-width: 35vw;	
+	--row-B-height: 35vh;
+	--col-A-width: 1vw;
+	--col-B-width: 99vw;	
 }
 
 *{ font-family: Arial,sans-serif; }

@@ -69,16 +69,22 @@ function AppViewModel()
 	//console.log("DAPIAppView::AppViewModel id=" + new URL(window.location.href).searchParams.get("id"));
 	//console.log("MQA AppViewModel starting");
 	var self = this;
-	self.type = "deferred";
+	//self.type = "deferred";
 
 	// used to mark currently displayed dataset
 	self.viewedDatasetId = ko.observable(null);
-	self.viewedDatasetDscid = ko.observable(null);
 
 	//console.log("MQA AppViewModel URL");
 	var url = new URL(window.location.href);
 
 	// ADV-FILTER handle show=advanced
+	var tmpDatasetId = url.searchParams.get("id");
+	//console.log("MQA AppViewModel URL id = " + tmpDatasetId);
+	if (notUN(tmpDatasetId))
+	{
+		self.viewedDatasetId(tmpDatasetId);
+	}
+	//
 	var tmpUrlShowParam = url.searchParams.get("show");
 	self.urlShowParam = ko.observable("");
 	if ("dsc" === tmpUrlShowParam)
@@ -116,6 +122,7 @@ function AppViewModel()
 
 	self.populateMinMax = function (theSelected, theEntered, theQuery, theLoadMarker)
 	{
+		//console.log("populateMinMax theLoadMarker=" + theLoadMarker);
 		if (notUN(theQuery))
 		{
 			theSelected(theQuery);
@@ -135,6 +142,7 @@ function AppViewModel()
 		{
 			result = self.defaultQuery()[theAttribute];
 		}
+		// console.log("Query Default [" + theAttribute + "]=" + result);
 		return result;
 	}
 
@@ -146,79 +154,123 @@ function AppViewModel()
 	self.selectedPipelineStatus = ko.observableArray();
 	self.classPipelineStatus = ko.observable("availSelPaddedDiv divSelectedLess");
 	self.urlPipelineStatus = getQueryDefault("pipeline_status");
-	self.defaultPipelineStatus = [];
+	if (notUN(self.urlPipelineStatus))
+	{
+		self.selectedPipelineStatus(self.urlPipelineStatus);
+	}
 
 	self.optionsDataFormat = ko.observableArray();
 	self.selectedDataFormat = ko.observableArray();
 	self.classDataFormat = ko.observable("availSelPaddedDiv divSelectedLess");
 	self.urlDataFormat = getQueryDefault("data_format");
-	self.defaultDataFormat = [];
+	if (notUN(self.urlDataFormat))
+	{
+		self.selectedDataFormat(self.urlDataFormat);
+	}
 
 	self.optionsPca = ko.observableArray();
 	self.selectedPca = ko.observableArray();
 	self.classPca = ko.observable("availSelPaddedDiv divSelectedLess");
 	self.urlPca = getQueryDefault("pca");
-	self.defaultPca = [];
+	if (notUN(self.urlPca))
+	{
+		self.selectedPca(self.urlPca);
+	}
 
 	self.optionsBoxplot = ko.observableArray();
 	self.selectedBoxplot = ko.observableArray();
 	self.classBoxplot = ko.observable("availSelPaddedDiv divSelectedLess");
 	self.urlBoxplot = getQueryDefault("boxplot");
-	self.defaultBoxplot = [];
+	if (notUN(self.urlBoxplot))
+	{
+		self.selectedBoxplot(self.urlBoxplot);
+	}
 
 	self.optionsCdp = ko.observableArray();
 	self.selectedCdp = ko.observableArray();
 	self.classCdp = ko.observable("availSelPaddedDiv divSelectedLess");
 	self.urlCdp = getQueryDefault("cdp");
-	self.defaultCdp = [];
-
+	if (notUN(self.urlCdp))
+	{
+		self.selectedCdp(self.urlCdp);
+	}
+	
 	self.optionsHierClust = ko.observableArray();
 	self.selectedHierClust = ko.observableArray();
 	self.classHierClust = ko.observable("availSelPaddedDiv divSelectedLess");
 	self.urlHierClust = getQueryDefault("h_c");
-	self.defaultHierClust = [];
+	if (notUN(self.urlHierClust))
+	{
+		self.selectedHierClust(self.urlHierClust);
+	}
 
 	self.optionsDsc = ko.observableArray();
 	self.selectedDsc = ko.observableArray();
 	self.classDsc = ko.observable("availSelPaddedDiv divSelectedLess");
 	self.urlDsc = getQueryDefault("dsc");
-	self.defaultDsc = [];
+	if (notUN(self.urlDsc))
+	{
+		self.selectedDsc(self.urlDsc);
+	}
 
 	self.optionsDiscrete = ko.observableArray();
 	self.selectedDiscrete = ko.observableArray();
 	self.classDiscrete = ko.observable("availSelPaddedDiv divSelectedLess");
 	self.urlDiscrete = getQueryDefault("discrete");
-	self.defaultDiscrete = [];
-
+	if (notUN(self.urlDiscrete))
+	{
+		self.selectedDiscrete(self.urlDiscrete);
+	}
+	
 	self.optionsNgchm = ko.observableArray();
 	self.selectedNgchm = ko.observableArray();
 	self.classNgchm = ko.observable("availSelPaddedDiv divSelectedLess");
 	self.urlNgchm = getQueryDefault("ngchm");
-	self.defaultNgchm = [];
+	if (notUN(self.urlNgchm))
+	{
+		self.selectedNgchm(self.urlNgchm);
+	}
 
 	self.optionsSuperClust = ko.observableArray();
 	self.selectedSuperClust = ko.observableArray();
 	self.classSuperClust = ko.observable("availSelPaddedDiv divSelectedLess");
 	self.urlSuperClust = getQueryDefault("superclust");
-	self.defaultSuperClust = [];
+	if (notUN(self.urlSuperClust))
+	{
+		self.selectedSuperClust(self.urlSuperClust);
+	}
 
 	self.optionsUmap = ko.observableArray();
 	self.selectedUmap = ko.observableArray();
 	self.classUmap = ko.observable("availSelPaddedDiv divSelectedLess");
 	self.urlUmap = getQueryDefault("umap");
-	self.defaultUmap = [];
-
+	if (notUN(self.urlUmap))
+	{
+		self.selectedUmap(self.urlUmap);
+	}
+	
 	self.enteredGteSamplesMatrix = ko.observable();
 	self.selectedGteSamplesMatrix = ko.observable();
+	self.urlGteSamplesMatrix = getQueryDefault("GTE_samples_matrix");
+	if (notUN(self.urlGteSamplesMatrix))
+	{
+		self.selectedGteSamplesMatrix(self.urlGteSamplesMatrix);
+	}
+
 	self.enteredLteSamplesMatrix = ko.observable();
 	self.selectedLteSamplesMatrix = ko.observable();
-	self.selectedNanSamplesMatrix = ko.observable(false);
-	self.urlGteSamplesMatrix = getQueryDefault("GTE_samples_matrix");
-	self.defaultGteSamplesMatrix = "";
 	self.urlLteSamplesMatrix = getQueryDefault("LTE_samples_matrix");
-	self.defaultLteSamplesMatrix = "";
+	if (notUN(self.urlLteSamplesMatrix))
+	{
+		self.selectedLteSamplesMatrix(self.urlLteSamplesMatrix);
+	}
+	
+	self.selectedNanSamplesMatrix = ko.observable(false);
 	self.urlNanSamplesMatrix = getQueryDefault("isNaN_samples_matrix");
-	self.defaultNanSamplesMatrix = false;
+	if (notUN(self.urlNanSamplesMatrix))
+	{
+		self.selectedNanSamplesMatrix(self.urlNanSamplesMatrix);
+	}
 
 	self.enteredGteSamplesMutations = ko.observable();
 	self.selectedGteSamplesMutations = ko.observable();
@@ -226,11 +278,20 @@ function AppViewModel()
 	self.selectedLteSamplesMutations = ko.observable();
 	self.selectedNanSamplesMutations = ko.observable(false);
 	self.urlGteSamplesMutations = getQueryDefault("GTE_samples_mutations");
-	self.defaultGteSamplesMutations = "";
+	if (notUN(self.urlGteSamplesMutations))
+	{
+		self.selectedGteSamplesMutations(self.urlGteSamplesMutations);
+	}
 	self.urlLteSamplesMutations = getQueryDefault("LTE_samples_mutations");
-	self.defaultLteSamplesMutations = "";
+	if (notUN(self.urlLteSamplesMutations))
+	{
+		self.selectedLteSamplesMutations(self.urlLteSamplesMutations);
+	}
 	self.urlNanSamplesMutations = getQueryDefault("isNaN_samples_mutations");
-	self.defaultNanSamplesMutations = false;
+	if (notUN(self.urlNanSamplesMutations))
+	{
+		self.selectedNanSamplesMutations(self.urlNanSamplesMutations);
+	}
 
 	self.enteredGteFeaturesMatrix = ko.observable();
 	self.selectedGteFeaturesMatrix = ko.observable();
@@ -238,11 +299,20 @@ function AppViewModel()
 	self.selectedLteFeaturesMatrix = ko.observable();
 	self.selectedNanFeaturesMatrix = ko.observable(false);
 	self.urlGteFeaturesMatrix = getQueryDefault("GTE_features_matrix");
-	self.defaultGteFeaturesMatrix = "";
+	if (notUN(self.urlGteFeaturesMatrix))
+	{
+		self.selectedGteFeaturesMatrix(self.urlGteFeaturesMatrix);
+	}
 	self.urlLteFeaturesMatrix = getQueryDefault("LTE_features_matrix");
-	self.defaultLteFeaturesMatrix = "";
+	if (notUN(self.urlLteFeaturesMatrix))
+	{
+		self.selectedLteFeaturesMatrix(self.urlLteFeaturesMatrix);
+	}
 	self.urlNanFeaturesMatrix = getQueryDefault("isNaN_features_matrix");
-	self.defaultNanFeaturesMatrix = false;
+	if (notUN(self.urlNanFeaturesMatrix))
+	{
+		self.selectedNanFeaturesMatrix(self.urlNanFeaturesMatrix);
+	}
 
 	self.enteredGteFeaturesMutations = ko.observable();
 	self.selectedGteFeaturesMutations = ko.observable();
@@ -250,11 +320,20 @@ function AppViewModel()
 	self.selectedLteFeaturesMutations = ko.observable();
 	self.selectedNanFeaturesMutations = ko.observable(false);
 	self.urlGteFeaturesMutations = getQueryDefault("GTE_features_mutations");
-	self.defaultGteFeaturesMutations = "";
+	if (notUN(self.urlGteFeaturesMutations))
+	{
+		self.selectedGteFeaturesMutations(self.urlGteFeaturesMutations);
+	}
 	self.urlLteFeaturesMutations = getQueryDefault("LTE_features_mutations");
-	self.defaultLteFeaturesMutations = "";
+	if (notUN(self.urlLteFeaturesMutations))
+	{
+		self.selectedLteFeaturesMutations(self.urlLteFeaturesMutations);
+	}
 	self.urlNanFeaturesMutations = getQueryDefault("isNaN_features_mutations");
-	self.defaultNanFeaturesMutations = false;
+	if (notUN(self.urlNanFeaturesMutations))
+	{
+		self.selectedNanFeaturesMutations(self.urlNanFeaturesMutations);
+	}
 
 	self.enteredGteUnknownBatches = ko.observable();
 	self.selectedGteUnknownBatches = ko.observable();
@@ -262,11 +341,20 @@ function AppViewModel()
 	self.selectedLteUnknownBatches = ko.observable();
 	self.selectedNanUnknownBatches = ko.observable(false);
 	self.urlGteUnknownBatches = getQueryDefault("GTE_unknown_batches");
-	self.defaultGteUnknownBatches = "";
+	if (notUN(self.urlGteUnknownBatches))
+	{
+		self.selectedGteUnknownBatches(self.urlGteUnknownBatches);
+	}
 	self.urlLteUnknownBatches = getQueryDefault("LTE_unknown_batches");
-	self.defaultLteUnknownBatches = "";
+	if (notUN(self.urlLteUnknownBatches))
+	{
+		self.selectedLteUnknownBatches(self.urlLteUnknownBatches);
+	}
 	self.urlNanUnknownBatches = getQueryDefault("isNaN_unknown_batches");
-	self.defaultNanUnknownBatches = false;
+	if (notUN(self.urlNanUnknownBatches))
+	{
+		self.selectedNanUnknownBatches(self.urlNanUnknownBatches);
+	}
 
 	self.enteredGteUniqueBatchCount = ko.observable();
 	self.selectedGteUniqueBatchCount = ko.observable();
@@ -274,11 +362,20 @@ function AppViewModel()
 	self.selectedLteUniqueBatchCount = ko.observable();
 	self.selectedNanUniqueBatchCount = ko.observable(false);
 	self.urlGteUniqueBatchCount = getQueryDefault("GTE_batch_unique_cnt");
-	self.defaultGteUniqueBatchCount = "";
+	if (notUN(self.urlGteUniqueBatchCount))
+	{
+		self.selectedGteUniqueBatchCount(self.urlGteUniqueBatchCount);
+	}
 	self.urlLteUniqueBatchCount = getQueryDefault("LTE_batch_unique_cnt");
-	self.defaultLteUniqueBatchCount = "";
+	if (notUN(self.urlLteUniqueBatchCount))
+	{
+		self.selectedLteUniqueBatchCount(self.urlLteUniqueBatchCount);
+	}
 	self.urlNanUniqueBatchCount = getQueryDefault("isNaN_batch_unique_cnt");
-	self.defaultNanUniqueBatchCount = false;
+	if (notUN(self.urlNanUniqueBatchCount))
+	{
+		self.selectedNanUniqueBatchCount(self.urlNanUniqueBatchCount);
+	}
 
 	self.enteredGteCorrelatedBatchTypes = ko.observable();
 	self.selectedGteCorrelatedBatchTypes = ko.observable();
@@ -286,11 +383,20 @@ function AppViewModel()
 	self.selectedLteCorrelatedBatchTypes = ko.observable();
 	self.selectedNanCorrelatedBatchTypes = ko.observable(false);
 	self.urlGteCorrelatedBatchTypes = getQueryDefault("GTE_correlated_batch_types");
-	self.defaultGteCorrelatedBatchTypes = "";
+	if (notUN(self.urlGteCorrelatedBatchTypes))
+	{
+		self.selectedGteCorrelatedBatchTypes(self.urlGteCorrelatedBatchTypes);
+	}
 	self.urlLteCorrelatedBatchTypes = getQueryDefault("LTE_correlated_batch_types");
-	self.defaultLteCorrelatedBatchTypes = "";
+	if (notUN(self.urlLteCorrelatedBatchTypes))
+	{
+		self.selectedLteCorrelatedBatchTypes(self.urlLteCorrelatedBatchTypes);
+	}
 	self.urlNanCorrelatedBatchTypes = getQueryDefault("isNaN_correlated_batch_types");
-	self.defaultNanCorrelatedBatchTypes = false;
+	if (notUN(self.urlNanCorrelatedBatchTypes))
+	{
+		self.selectedNanCorrelatedBatchTypes(self.urlNanCorrelatedBatchTypes);
+	}
 
 	self.enteredGteBatchTypeCount = ko.observable();
 	self.selectedGteBatchTypeCount = ko.observable();
@@ -298,11 +404,20 @@ function AppViewModel()
 	self.selectedLteBatchTypeCount = ko.observable();
 	self.selectedNanBatchTypeCount = ko.observable(false);
 	self.urlGteBatchTypeCount = getQueryDefault("GTE_batch_type_count");
-	self.defaultGteBatchTypeCount = "";
+	if (notUN(self.urlGteBatchTypeCount))
+	{
+		self.selectedGteBatchTypeCount(self.urlGteBatchTypeCount);
+	}
 	self.urlLteBatchTypeCount = getQueryDefault("LTE_batch_type_count");
-	self.defaultLteBatchTypeCount = "";
+	if (notUN(self.urlLteBatchTypeCount))
+	{
+		self.selectedLteBatchTypeCount(self.urlLteBatchTypeCount);
+	}
 	self.urlNanBatchTypeCount = getQueryDefault("isNaN_batch_type_count");
-	self.defaultNanBatchTypeCount = false;
+	if (notUN(self.urlNanBatchTypeCount))
+	{
+		self.selectedNanBatchTypeCount(self.urlNanBatchTypeCount);
+	}
 
 	////////////////////////////////////////////////////////////////
 	//// source
@@ -310,8 +425,11 @@ function AppViewModel()
 	self.optionsSources = ko.observableArray();
 	self.selectedSources = ko.observableArray();
 	self.urlSources = getQueryDefault("mSources");
-	self.defaultSources = [];
 	self.classSources = ko.observable("availSelPaddedDiv divSelectedLess");
+	if (notUN(self.urlSources))
+	{
+		self.selectedSources(self.urlSources);
+	}
 
 	////////////////////////////////////////////////////////////////
 	//// program
@@ -319,17 +437,23 @@ function AppViewModel()
 	self.optionsProgram = ko.observableArray();
 	self.selectedProgram = ko.observableArray();
 	self.urlProgram = getQueryDefault("mProgram");
-	self.defaultProgram = [];
 	self.classProgram = ko.observable("availSelPaddedDiv divSelectedLess");
-
+	if (notUN(self.urlProgram))
+	{
+		self.selectedProgram(self.urlProgram);
+	}
+	
 	////////////////////////////////////////////////////////////////
 	//// project
 	////////////////////////////////////////////////////////////////
 	self.optionsProjects = ko.observableArray();
 	self.selectedProjects = ko.observableArray();
 	self.urlProjects = getQueryDefault("mProjects");
-	self.defaultProjects = [];
 	self.classProjects = ko.observable("availSelPaddedDiv divSelectedLess");
+	if (notUN(self.urlProjects))
+	{
+		self.selectedProjects(self.urlProjects);
+	}
 
 	////////////////////////////////////////////////////////////////
 	//// categories
@@ -337,8 +461,11 @@ function AppViewModel()
 	self.optionsCategories = ko.observableArray();
 	self.selectedCategories = ko.observableArray();
 	self.urlCategories = getQueryDefault("mCategories");
-	self.defaultCategories = [];
 	self.classCategories = ko.observable("availSelPaddedDiv divSelectedLess");
+	if (notUN(self.urlCategories))
+	{
+		self.selectedCategories(self.urlCategories);
+	}
 
 	////////////////////////////////////////////////////////////////
 	//// platform
@@ -346,8 +473,11 @@ function AppViewModel()
 	self.optionsPlatforms = ko.observableArray();
 	self.selectedPlatforms = ko.observableArray();
 	self.urlPlatforms = getQueryDefault("mPlatforms");
-	self.defaultPlatforms = [];
 	self.classPlatforms = ko.observable("availSelPaddedDiv divSelectedLess");
+	if (notUN(self.urlPlatforms))
+	{
+		self.selectedPlatforms(self.urlPlatforms);
+	}
 
 	////////////////////////////////////////////////////////////////
 	//// data
@@ -355,8 +485,11 @@ function AppViewModel()
 	self.optionsData = ko.observableArray();
 	self.selectedData = ko.observableArray();
 	self.urlData = getQueryDefault("mData");
-	self.defaultData = [];
 	self.classData = ko.observable("availSelPaddedDiv divSelectedLess");
+	if (notUN(self.urlData))
+	{
+		self.selectedData(self.urlData);
+	}
 
 	////////////////////////////////////////////////////////////////
 	//// detail
@@ -364,8 +497,11 @@ function AppViewModel()
 	self.optionsDetails = ko.observableArray();
 	self.selectedDetails = ko.observableArray();
 	self.urlDetails = getQueryDefault("mDetails");
-	self.defaultDetails = [];
 	self.classDetails = ko.observable("availSelPaddedDiv divSelectedLess");
+	if (notUN(self.urlDetails))
+	{
+		self.selectedDetails(self.urlDetails);
+	}
 
 	////////////////////////////////////////////////////////////////
 	//// data version
@@ -373,8 +509,11 @@ function AppViewModel()
 	self.optionsDataVersions = ko.observableArray();
 	self.selectedDataVersions = ko.observableArray();
 	self.urlDataVersions = getQueryDefault("mDataVersions");
-	self.defaultDataVersions = [];
 	self.classDataVersions = ko.observable("availSelPaddedDiv divSelectedLess");
+	if (notUN(self.urlDataVersions))
+	{
+		self.selectedDataVersions(self.urlDataVersions);
+	}
 
 	////////////////////////////////////////////////////////////////
 	//// test version
@@ -382,8 +521,11 @@ function AppViewModel()
 	self.optionsTestVersions = ko.observableArray();
 	self.selectedTestVersions = ko.observableArray();
 	self.urlTestVersions = getQueryDefault("mTestVersions");
-	self.defaultTestVersions = [];
 	self.classTestVersions = ko.observable("availSelPaddedDiv divSelectedLess");
+	if (notUN(self.urlTestVersions))
+	{
+		self.selectedTestVersions(self.urlTestVersions);
+	}
 
 	////////////////////////////////////////////////////////////////
 	//// jobtype
@@ -391,8 +533,11 @@ function AppViewModel()
 	self.optionsJobType = ko.observableArray();
 	self.selectedJobType = ko.observableArray();
 	self.urlJobType = getQueryDefault("mJobType");
-	self.defaultJobType = [];
 	self.classJobType = ko.observable("availSelPaddedDiv divSelectedLess");
+	if (notUN(self.urlJobType))
+	{
+		self.selectedJobType(self.urlJobType);
+	}
 	
 	////
 	//// DSC and Advanced
@@ -404,8 +549,11 @@ function AppViewModel()
 	self.optionsAnalysisPath = ko.observableArray();
 	self.selectedAnalysisPath = ko.observableArray();
 	self.urlAnalysisPath = getQueryDefault("mAnalysisPath");
-	self.defaultAnalysisPath = [];
 	self.classAnalysisPath = ko.observable("availSelPaddedDiv divSelectedLess");
+	if (notUN(self.urlAnalysisPath))
+	{
+		self.selectedAnalysisPath(self.urlAnalysisPath);
+	}
 
 	////
 	//// KWD
@@ -417,8 +565,11 @@ function AppViewModel()
 	self.optionsNegLog10PValue = ko.observableArray();
 	self.selectedNegLog10PValue = ko.observableArray();
 	self.urlNegLog10PValue = getQueryDefault("mNegLog10PValue");
-	self.defaultNegLog10PValue = [];
 	self.classNegLog10PValue = ko.observable("availSelPaddedDiv divSelectedLess");
+	if (notUN(self.urlNegLog10PValue))
+	{
+		self.selectedNegLog10PValue(self.urlNegLog10PValue);
+	}
 
 	////////////////////////////////////////////////////////////////
 	//// NegLog10Cutoff
@@ -426,8 +577,11 @@ function AppViewModel()
 	self.optionsNegLog10Cutoff = ko.observableArray();
 	self.selectedNegLog10Cutoff = ko.observableArray();
 	self.urlNegLog10Cutoff = getQueryDefault("mNegLog10Cutoff");
-	self.defaultNegLog10Cutoff = [];
 	self.classNegLog10Cutoff = ko.observable("availSelPaddedDiv divSelectedLess");
+	if (notUN(self.urlNegLog10Cutoff))
+	{
+		self.selectedNegLog10Cutoff(self.urlNegLog10Cutoff);
+	}
 
 	////////////////////////////////////////////////////////////////
 	//// BatchesCalled
@@ -435,8 +589,11 @@ function AppViewModel()
 	self.optionsBatchesCalled = ko.observableArray();
 	self.selectedBatchesCalled = ko.observableArray();
 	self.urlBatchesCalled = getQueryDefault("mBatchesCalled");
-	self.defaultBatchesCalled = [];
 	self.classBatchesCalled = ko.observable("availSelPaddedDiv divSelectedLess");
+	if (notUN(self.urlBatchesCalled))
+	{
+		self.selectedBatchesCalled(self.urlBatchesCalled);
+	}
 
 	////
 	//// DSC
@@ -448,6 +605,10 @@ function AppViewModel()
 	self.selectedOverallDSCmin = ko.observable("");
 	self.enteredOverallDSCmin = ko.observable("");
 	self.urlOverallDSCmin = getQueryDefault("mOverallDSCmin");
+	if (notUN(self.urlOverallDSCmin))
+	{
+		self.selectedOverallDSCmin(self.urlOverallDSCmin);
+	}
 
 	////////////////////////////////////////////////////////////////
 	//// max
@@ -455,6 +616,10 @@ function AppViewModel()
 	self.selectedOverallDSCmax = ko.observable("");
 	self.enteredOverallDSCmax = ko.observable("");
 	self.urlOverallDSCmax = getQueryDefault("mOverallDSCmax");
+	if (notUN(self.urlOverallDSCmax))
+	{
+		self.selectedOverallDSCmax(self.urlOverallDSCmax);
+	}
 
 	////////////////////////////////////////////////////////////////
 	//// overall dsc p-value
@@ -463,6 +628,10 @@ function AppViewModel()
 	self.selectedOverallDSCpvalue = ko.observableArray();
 	self.urlOverallDSCpvalue = getQueryDefault("mOverallDSCpvalue");
 	self.classOverallDSCpvalue = ko.observable("availSelPaddedDiv divSelectedLess");
+	if (notUN(self.urlOverallDSCpvalue))
+	{
+		self.selectedOverallDSCpvalue(self.urlOverallDSCpvalue);
+	}
 
 	////////////////////////////////////////////////////////////////
 	//// overall dsc
@@ -471,17 +640,27 @@ function AppViewModel()
 	self.selectedOverallDSC = ko.observableArray();
 	self.urlOverallDSC = getQueryDefault("mOverallDSC");
 	self.classOverallDSC = ko.observable("availSelPaddedDiv divSelectedLess");
+	if (notUN(self.urlOverallDSC))
+	{
+		self.selectedOverallDSC(self.urlOverallDSC);
+	}
 
 	////////////////////////////////////////////////////////////////
 	//// kwd flags
 	////////////////////////////////////////////////////////////////
 	self.selectedCutoffFlag = ko.observable(false);
 	self.urlCutoffFlag = getQueryDefault("mCutoffFlag");
-	self.defaultCutoffFlag = false;
+	if (notUN(self.urlCutoffFlag))
+	{
+		self.selectedCutoffFlag(self.urlCutoffFlag);
+	}
 
 	self.selectedBatchesCalledFlag = ko.observable(false);
 	self.urlBatchesCalledFlag = getQueryDefault("mBatchesCalledFlag");
-	self.defaultBatchesCalledFlag = false;
+	if (notUN(self.urlBatchesCalledFlag))
+	{
+		self.selectedBatchesCalledFlag(self.urlBatchesCalledFlag);
+	}
 
 	////////////////////////////////////////////////////////////////
 	//// functions
@@ -544,6 +723,7 @@ function AppViewModel()
 		// ADV-FILTER handle show=advanced
 		if ('advanced' === self.urlShowParam())
 		{
+			//console.log("jsonQueryString other advanced");
 			// TODO: ADV-FILTER populate only with needed, or query URL is too long
 			var jsonObj = {};
 			jsonObj = setJsonObjectFromObservableArray(self.selectedSources, jsonObj, "mSources");
@@ -593,6 +773,7 @@ function AppViewModel()
 			jqString = JSON.stringify(jsonObj);
 		} else if ('dsc' === self.urlShowParam())
 		{
+			//console.log("jsonQueryString dsc");
 			jqString = JSON.stringify(
 					{
 						mSources: getJsonFromObservableArray(self.selectedSources),
@@ -612,6 +793,7 @@ function AppViewModel()
 					});
 		} else if ('kwd' === self.urlShowParam())
 		{
+			//console.log("jsonQueryString kwd");
 			jqString = JSON.stringify(
 					{
 						mSources: getJsonFromObservableArray(self.selectedSources),
@@ -630,6 +812,7 @@ function AppViewModel()
 					});
 		} else
 		{
+			//console.log("jsonQueryString default");
 			jqString = JSON.stringify(
 					{
 						mSources: getJsonFromObservableArray(self.selectedSources),
@@ -645,7 +828,7 @@ function AppViewModel()
 					});
 		}
 		return jqString;
-	}, self).extend({rateLimit: {method: "notifyWhenChangesStop", timeout: 250, notify: 'always'}});
+	}, self).extend({rateLimit: {method: "notifyWhenChangesStop", timeout: 500, notify: 'always' }});
 	self.jsonQueryString.subscribe(function (theNewValue)
 	{
 		if (theNewValue.length >= 900)
@@ -756,7 +939,7 @@ function AppViewModel()
 			jqString = jqString.slice(0, -2);
 		}
 		return jqString;
-	}, self).extend({rateLimit: {method: "notifyWhenChangesStop", timeout: 250, notify: 'always'}});
+	}, self).extend({rateLimit: {method: "notifyWhenChangesStop", timeout: 500, notify: 'always' }});
 	self.populatedOnlyQueryString.subscribe(function (theNewValue)
 	{
 		if (theNewValue.length >= 900)
@@ -877,23 +1060,27 @@ function AppViewModel()
 		// Any failure to fire issues, add similar outside-the-if variables.
 		var jqsObj = self.jsonQueryString;
 		var jqs = jqsObj();
-		//console.log("populateQueryResults jqs=" + jqs);
+		//console.log("populateQueryResults jqs=");
+		//console.log(jqs);
 		var gui = self.makeGuiVisible();
 		var loadLen = self.doneLoading().length;
 		var first = self.firstLoad();
 		//console.log("gui=" + gui);
 		//console.log("loadLen=" + loadLen);
 		//console.log("first=" + first);
+		//console.log("self.doneLoading()=" + self.doneLoading());
+		//console.log(self.doneLoading());
 		// prevent double calls when setting default values
-		if (((gui) && (loadLen < 1)) ||
-				(true === first))
+		if ( (true===gui) || (true===first))
 		{
-			var url = new URL(window.location.href);
+			//var url = new URL(window.location.href);
 			//console.log("populateQueryResults computing");
 			//console.log("populateQueryResults url=" + url);
 			//console.log("populateQueryResults id=" + url.searchParams.get("id"));
-			var loadDefaults = self.firstLoad();
-			self.firstLoad(false);
+			if (true===first)
+			{
+				self.firstLoad(false);
+			}
 			var date = new Date();
 			var start = date.getTime();
 			disableInput();
@@ -915,7 +1102,7 @@ function AppViewModel()
 							//console.log("query" + " :" + JSON.stringify(theJson));
 							date = new Date();
 							var finish = date.getTime();
-							console.log("Time for query: " + ((finish - start) / 1000.0) + " seconds");
+							//console.log("Time for query: " + ((finish - start) / 1000.0) + " seconds");
 							self.queryResultLength(theJson.data.length);
 							GlobalHeaders = theJson.headers;
 							if (theJson.skippedEmptyResult)
@@ -953,345 +1140,6 @@ function AppViewModel()
 							self.updateObsArray(self.optionsNegLog10Cutoff, theJson.availableNegLog10Cutoff, self.selectedNegLog10Cutoff);
 							self.updateObsArray(self.optionsBatchesCalled, theJson.availableBatchesCalled, self.selectedBatchesCalled);
 							//
-							if (true === loadDefaults)
-							{
-								// can set, since only done to initialize
-								// Sources
-								if (notUN(self.urlSources))
-								{
-									self.selectedSources(self.urlSources);
-								} else if (self.defaultSources.length > 0)
-								{
-									self.selectedSources(self.defaultSources);
-								}
-								// Program
-								if (notUN(self.urlProgram))
-								{
-									self.selectedProgram(self.urlProgram);
-								} else if (self.defaultProgram.length > 0)
-								{
-									self.selectedProgram(self.defaultProgram);
-								}
-								// Projects
-								if (notUN(self.urlProjects))
-								{
-									self.selectedProjects(self.urlProjects);
-								} else if (self.defaultProjects.length > 0)
-								{
-									self.selectedProjects(self.defaultProjects);
-								}
-								// Categories
-								if (notUN(self.urlCategories))
-								{
-									self.selectedCategories(self.urlCategories);
-								} else if (self.defaultCategories.length > 0)
-								{
-									self.selectedCategories(self.defaultCategories);
-								}
-								// Platforms
-								if (notUN(self.urlPlatforms))
-								{
-									self.selectedPlatforms(self.urlPlatforms);
-								} else if (self.defaultPlatforms.length > 0)
-								{
-									self.selectedPlatforms(self.defaultPlatforms);
-								}
-								// Platforms
-								if (notUN(self.urlPlatforms))
-								{
-									self.selectedPlatforms(self.urlPlatforms);
-								} else if (self.defaultPlatforms.length > 0)
-								{
-									self.selectedPlatforms(self.defaultPlatforms);
-								}
-								// Data
-								if (notUN(self.urlData))
-								{
-									self.selectedData(self.urlData);
-								} else if (self.defaultData.length > 0)
-								{
-									self.selectedData(self.defaultData);
-								}
-								// Details
-								if (notUN(self.urlDetails))
-								{
-									self.selectedDetails(self.urlDetails);
-								} else if (self.defaultDetails.length > 0)
-								{
-									self.selectedDetails(self.defaultDetails);
-								}
-								// Data
-								if (notUN(self.urlData))
-								{
-									self.selectedData(self.urlData);
-								} else if (self.defaultData.length > 0)
-								{
-									self.selectedData(self.defaultData);
-								}
-								// Data Versions
-								if (notUN(self.urlDataVersions))
-								{
-									self.selectedDataVersions(self.urlDataVersions);
-								} else if (self.defaultDataVersions.length > 0)
-								{
-									self.selectedDataVersions(self.defaultDataVersions);
-								}
-								// Test Versions
-								if (notUN(self.urlTestVersions))
-								{
-									self.selectedTestVersions(self.urlTestVersions);
-								} else if (self.defaultTestVersions.length > 0)
-								{
-									self.selectedTestVersions(self.defaultTestVersions);
-								}
-								// OverallDSCpvalue
-								if (notUN(self.urlOverallDSCpvalue))
-								{
-									self.selectedOverallDSCpvalue(self.urlOverallDSCpvalue);
-								}
-								// also do min/max dsc settings
-								self.populateMinMax(self.selectedOverallDSCmin, self.enteredOverallDSCmin, self.urlOverallDSCmin, "DSC-min");
-								self.populateMinMax(self.selectedOverallDSCmax, self.enteredOverallDSCmax, self.urlOverallDSCmax, "DSC-max");
-								// TODO: ADV-FILTER add defaults for advanced filter options
-								if (notUN(self.urlPipelineStatus))
-								{
-									self.selectedPipelineStatus(self.urlPipelineStatus);
-								} else
-								{
-									self.selectedPipelineStatus(self.defaultPipelineStatus);
-								}
-								if (notUN(self.urlDataFormat))
-								{
-									self.selectedDataFormat(self.urlDataFormat);
-								} else
-								{
-									self.selectedDataFormat(self.defaultDataFormat);
-								}
-								if (notUN(self.urlPca))
-								{
-									self.selectedPca(self.urlPca);
-								} else
-								{
-									self.selectedPca(self.defaultPca);
-								}
-								if (notUN(self.urlBoxplot))
-								{
-									self.selectedBoxplot(self.urlBoxplot);
-								} else
-								{
-									self.selectedBoxplot(self.defaultBoxplot);
-								}
-								if (notUN(self.urlCdp))
-								{
-									self.selectedCdp(self.urlCdp);
-								} else
-								{
-									self.selectedCdp(self.defaultCdp);
-								}
-								if (notUN(self.urlHierClust))
-								{
-									self.selectedHierClust(self.urlHierClust);
-								} else
-								{
-									self.selectedHierClust(self.defaultHierClust);
-								}
-								if (notUN(self.urlDsc))
-								{
-									self.selectedDsc(self.urlDsc);
-								} else
-								{
-									self.selectedDsc(self.defaultDsc);
-								}
-								if (notUN(self.urlDiscrete))
-								{
-									self.selectedDiscrete(self.urlDiscrete);
-								} else
-								{
-									self.selectedDiscrete(self.defaultDiscrete);
-								}
-								if (notUN(self.urlNgchm))
-								{
-									self.selectedNgchm(self.urlNgchm);
-								} else
-								{
-									self.selectedNgchm(self.defaultNgchm);
-								}
-								if (notUN(self.urlSuperClust))
-								{
-									self.selectedSuperClust(self.urlSuperClust);
-								} else
-								{
-									self.selectedSuperClust(self.defaultSuperClust);
-								}
-								if (notUN(self.urlUmap))
-								{
-									self.selectedUmap(self.urlUmap);
-								} else
-								{
-									self.selectedUmap(self.defaultUmap);
-								}
-								if (notUN(self.urlGteSamplesMatrix))
-								{
-									self.selectedGteSamplesMatrix(self.urlGteSamplesMatrix);
-								} else
-								{
-									self.selectedGteSamplesMatrix(self.defaultGteSamplesMatrix);
-								}
-								self.enteredGteSamplesMatrix(self.selectedGteSamplesMatrix());
-								if (notUN(self.urlLteSamplesMatrix))
-								{
-									self.selectedLteSamplesMatrix(self.urlLteSamplesMatrix);
-								} else
-								{
-									self.selectedLteSamplesMatrix(self.defaultLteSamplesMatrix);
-								}
-								self.enteredLteSamplesMatrix(self.selectedLteSamplesMatrix());
-								if (notUN(self.urlNanSamplesMatrix))
-								{
-									self.selectedNanSamplesMatrix(self.urlNanSamplesMatrix);
-								} else
-								{
-									self.selectedNanSamplesMatrix(self.defaultNanSamplesMatrix);
-								}
-								if (notUN(self.urlGteFeaturesMatrix))
-								{
-									self.selectedGteFeaturesMatrix(self.urlGteFeaturesMatrix);
-								} else
-								{
-									self.selectedGteFeaturesMatrix(self.defaultGteFeaturesMatrix);
-								}
-								self.enteredGteFeaturesMatrix(self.selectedGteFeaturesMatrix());
-								if (notUN(self.urlLteFeaturesMatrix))
-								{
-									self.selectedLteFeaturesMatrix(self.urlLteFeaturesMatrix);
-								} else
-								{
-									self.selectedLteFeaturesMatrix(self.defaultLteFeaturesMatrix);
-								}
-								self.enteredLteFeaturesMatrix(self.selectedLteFeaturesMatrix());
-								if (notUN(self.urlNanFeaturesMatrix))
-								{
-									self.selectedNanFeaturesMatrix(self.urlNanFeaturesMatrix);
-								} else
-								{
-									self.selectedNanFeaturesMatrix(self.defaultNanFeaturesMatrix);
-								}
-								if (notUN(self.urlGteFeaturesMutations))
-								{
-									self.selectedGteFeaturesMutations(self.urlGteFeaturesMutations);
-								} else
-								{
-									self.selectedGteFeaturesMutations(self.defaultGteFeaturesMutations);
-								}
-								self.enteredGteFeaturesMutations(self.selectedGteFeaturesMutations());
-								if (notUN(self.urlLteFeaturesMutations))
-								{
-									self.selectedLteFeaturesMutations(self.urlLteFeaturesMutations);
-								} else
-								{
-									self.selectedLteFeaturesMutations(self.defaultLteFeaturesMutations);
-								}
-								self.enteredLteFeaturesMutations(self.selectedLteFeaturesMutations());
-								if (notUN(self.urlNanFeaturesMutations))
-								{
-									self.selectedNanFeaturesMutations(self.urlNanFeaturesMutations);
-								} else
-								{
-									self.selectedNanFeaturesMutations(self.defaultNanFeaturesMutations);
-								}
-								if (notUN(self.urlGteUnknownBatches))
-								{
-									self.selectedGteUnknownBatches(self.urlGteUnknownBatches);
-								} else
-								{
-									self.selectedGteUnknownBatches(self.defaultGteUnknownBatches);
-								}
-								self.enteredGteUnknownBatches(self.selectedGteUnknownBatches());
-								if (notUN(self.urlLteUnknownBatches))
-								{
-									self.selectedLteUnknownBatches(self.urlLteUnknownBatches);
-								} else
-								{
-									self.selectedLteUnknownBatches(self.defaultLteUnknownBatches);
-								}
-								self.enteredLteUnknownBatches(self.selectedLteUnknownBatches());
-								if (notUN(self.urlNanUnknownBatches))
-								{
-									self.selectedNanUnknownBatches(self.urlNanUnknownBatches);
-								} else
-								{
-									self.selectedNanUnknownBatches(self.defaultNanUnknownBatches);
-								}
-								if (notUN(self.urlGteUniqueBatchCount))
-								{
-									self.selectedGteUniqueBatchCount(self.urlGteUniqueBatchCount);
-								} else
-								{
-									self.selectedGteUniqueBatchCount(self.defaultGteUniqueBatchCount);
-								}
-								self.enteredGteUniqueBatchCount(self.selectedGteUniqueBatchCount());
-								if (notUN(self.urlLteUniqueBatchCount))
-								{
-									self.selectedLteUniqueBatchCount(self.urlLteUniqueBatchCount);
-								} else
-								{
-									self.selectedLteUniqueBatchCount(self.defaultLteUniqueBatchCount);
-								}
-								self.enteredLteUniqueBatchCount(self.selectedLteUniqueBatchCount());
-								if (notUN(self.urlNanUniqueBatchCount))
-								{
-									self.selectedNanUniqueBatchCount(self.urlNanUniqueBatchCount);
-								} else
-								{
-									self.selectedNanUniqueBatchCount(self.defaultNanUniqueBatchCount);
-								}
-								if (notUN(self.urlGteCorrelatedBatchTypes))
-								{
-									self.selectedGteCorrelatedBatchTypes(self.urlGteCorrelatedBatchTypes);
-								} else
-								{
-									self.selectedGteCorrelatedBatchTypes(self.defaultGteCorrelatedBatchTypes);
-								}
-								self.enteredGteCorrelatedBatchTypes(self.selectedGteCorrelatedBatchTypes());
-								if (notUN(self.urlLteCorrelatedBatchTypes))
-								{
-									self.selectedLteCorrelatedBatchTypes(self.urlLteCorrelatedBatchTypes);
-								} else
-								{
-									self.selectedLteCorrelatedBatchTypes(self.defaultLteCorrelatedBatchTypes);
-								}
-								self.enteredLteCorrelatedBatchTypes(self.selectedLteCorrelatedBatchTypes());
-								if (notUN(self.urlNanCorrelatedBatchTypes))
-								{
-									self.selectedNanCorrelatedBatchTypes(self.urlNanCorrelatedBatchTypes);
-								} else
-								{
-									self.selectedNanCorrelatedBatchTypes(self.defaultNanCorrelatedBatchTypes);
-								}
-								if (notUN(self.urlGteBatchTypeCount))
-								{
-									self.selectedGteBatchTypeCount(self.urlGteBatchTypeCount);
-								} else
-								{
-									self.selectedGteBatchTypeCount(self.defaultGteBatchTypeCount);
-								}
-								self.enteredGteBatchTypeCount(self.selectedGteBatchTypeCount());
-								if (notUN(self.urlLteBatchTypeCount))
-								{
-									self.selectedLteBatchTypeCount(self.urlLteBatchTypeCount);
-								} else
-								{
-									self.selectedLteBatchTypeCount(self.defaultLteBatchTypeCount);
-								}
-								self.enteredLteBatchTypeCount(self.selectedLteBatchTypeCount());
-								if (notUN(self.urlNanBatchTypeCount))
-								{
-									self.selectedNanBatchTypeCount(self.urlNanBatchTypeCount);
-								} else
-								{
-									self.selectedNanBatchTypeCount(self.defaultNanBatchTypeCount);
-								}
-							}
 							// destroy: true eleminates the old datatable object
 							// order: start with 1, since 0 (ID) is present but hidden
 							if (0 === theJson.headers.length)
@@ -1333,9 +1181,9 @@ function AppViewModel()
 											// Data 6
 											// Details 7
 											// Data Version 8
-											// Test Version 9
+											// Result Version 9
 											order: [[2, 'asc'], [3, 'asc'], [4, 'asc'], [5, 'asc'], 
-												[6, 'asc'], [7, 'asc'], [8, 'asc'], [10, 'asc'], [9, 'asc']],
+												[6, 'asc'], [7, 'asc'], [8, 'asc'], [9, 'asc'], [10, 'asc']],
 											info: false, // hide paging info at bottom of screen
 											deferRender: true, // requiref for most other options to work
 											paging: false, // no paging, hide page selection at top and bottom
@@ -1348,6 +1196,7 @@ function AppViewModel()
 										});
 								$('#resultsTable').on('click', 'tbody tr td:not(:first-child)', function (theEvent)
 								{
+									//console.log("dataTable::click");
 									var rowId = theEvent.currentTarget.parentElement.id;
 									var dataRows = $('#resultsTable').DataTable().rows().data();
 									var matched = null;
@@ -1356,16 +1205,23 @@ function AppViewModel()
 										if (rowId === dataRows[index][1])
 										{
 											matched = dataRows[index];
-											//console.log("DAPIAppView matched=" + matched);
+											//console.log("dataTable matched=" + matched);
 										}
 									}
+									//console.log("dataTable selected dataset matched=" + matched);
+									//console.log(matched);
 									if (null !== matched)
 									{
 										var splitted = matched[0].split(" | ");
 										if ("" !== splitted[2])
 										{
-											// TODO: look up current algorithm
-											window.open(getUrlpath() + splitted[2] + "&alg=PCA%2B", 'viewIframe');
+											var selectedId = matched[1];
+											//console.log("dataTable selected dataset selectedId=" + selectedId);
+											setSelectedDatasetQuery(selectedId);
+											var newURL = getUrlpath() + splitted[2] + window.parent.urlParamsViewOnly() + "&useSimple=false&stamp=" + jQuery.now();
+											//console.log("dataTable TODO: look up current algorithm = ");
+											//console.log(newURL);
+											window.open(newURL, 'viewIframe');
 										}
 									}
 								});
@@ -1391,7 +1247,7 @@ function AppViewModel()
 						}
 					});
 		}
-	}, self).extend({rateLimit: {method: "notifyWhenChangesStop", timeout: 500, notify: 'always'}});
+	}, self).extend({rateLimit: {method: "notifyWhenChangesStop", timeout: 500, notify: 'always' }});
 
 	self.checkForValue = function (theQueryEntry, theValue)
 	{
@@ -1457,33 +1313,6 @@ function urlParamsJson()
 	var text = appview.jsonQueryString();
 	urlParams["default"] = text;
 	return urlParams;
-}
-
-function copyURLString()
-{
-	// based on https://www.w3schools.com/howto/howto_js_copy_clipboard.asp
-	var copyText = document.getElementById("dapiCopyURL");
-	var text = appview.jsonQueryString();
-	var show = "";
-	if ('dsc' === appview.urlShowParam())
-	{
-		show = "show=dsc&";
-	} else if ('kwd' === appview.urlShowParam())
-	{
-		show = "show=kwd&";
-	} else if ('advanced' === appview.urlShowParam())
-	{
-		show = "show=advanced&";
-	}
-	var pageLength = $('#resultsTable').DataTable().page.len();
-	var url = window.location.origin + window.location.pathname + "?" + "pageLength=" + pageLength + "&" + show + "default=" + encodeURIComponent(text);
-	//text = text.replace(/\"/g, "\\\"");
-	copyText.value = url;
-	copyText.select();
-	//For mobile devices
-	copyText.setSelectionRange(0, 99999);
-	document.execCommand("copy");
-	copyText.blur();
 }
 
 function updateEnteredSelected(theEntered, theSelected, theElementId)

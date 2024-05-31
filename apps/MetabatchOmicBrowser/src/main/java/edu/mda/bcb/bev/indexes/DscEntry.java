@@ -305,7 +305,7 @@ public class DscEntry extends EntryMixin
 				+ "\n { \"title\": \"Study Title\" },"
 				+ "\n { \"title\": \"Details\" },"
 				+ "\n { \"title\": \"Data Version\" },"
-				+ "\n { \"title\": \"Test Version\" },"
+				+ "\n { \"title\": \"Result Version\" },"
 				+ "\n { \"title\": \"DataSet Type\" },"
 				+ "\n { \"title\": \"Analysis Path\" },"
 				+ "\n { \"title\": \"Overall DSC P-Value\" },"
@@ -328,7 +328,7 @@ public class DscEntry extends EntryMixin
 				"\tData" +
 				"\tDetails" +
 				"\tData Version" +
-				"\tTest Version" +
+				"\tResult Version" +
 				"\tDataSet Type" +
 				"\tAnalysis Path" +
 				"\tOverall DSC P-Value" +
@@ -393,9 +393,9 @@ public class DscEntry extends EntryMixin
 		list.add(this.platform);
 		list.add(this.data);
 		list.add(this.details);
+		list.add(this.job_type);
 		list.add(this.data_version);
 		list.add(this.test_version);
-		list.add(this.job_type);
 		list.add(this.analysis_path);
 		list.add(this.mOverallDSCpvalue);
 		list.add(this.mOverallDSC_Orig);

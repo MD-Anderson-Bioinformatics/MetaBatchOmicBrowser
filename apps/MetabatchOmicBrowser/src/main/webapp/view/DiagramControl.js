@@ -156,8 +156,10 @@ class DiagramControl
 		{
 			alg = "PCA+";
 		}
+		//console.log("DiagramControl::selectDiagram alg = " + alg);
 		if(alg!==this.mAlgSel().entry_label)
 		{
+			//console.log("DiagramControl::selectDiagram this.mAlgSel().entry_label = " + this.mAlgSel().entry_label);
 			this.mAlgSel(this.getMatchingList(this.mAlgOpt(), alg));
 		}
 		if((notUN(this.mLv1Sel()))&&(lv1!==this.mLv1Sel().entry_label))
@@ -216,6 +218,7 @@ class DiagramControl
 
 	handleNewDiagram(theDatasetId, theNewDiagram)
 	{
+		//console.log("start handleNewDiagram");
 		//console.log("DiagramControl::handleNewDiagram called");
 		//console.log("handleNewDiagram start");
 		if (notUN(theNewDiagram))
@@ -284,7 +287,7 @@ class DiagramControl
 				}
 				else
 				{
-					console.log("Unknown diagram type:" + diagramType);
+					//console.log("Unknown diagram type:" + diagramType);
 					//console.log(theNewDiagram);
 				}
 				// do not use async, call in finished called for diagrams
@@ -389,7 +392,7 @@ class DiagramControl
 				var ub = new UtilVolcano(passedThis.dataAccess, passedThis.divDiagramId, passedThis.divLegendId, passedThis.divDatapaneId, theNewDiagram, passedThis.indexKO, theDatasetId);
 				ub.newVolcano(passedThis.makeDataPointLog);
 				passedThis.resizeUtil = ub;
-				console.log("DiagramControl::handleNewVolcano post newBoxplot");
+				//console.log("DiagramControl::handleNewVolcano post newBoxplot");
 				// passedThis.dataAccess.addImage(theDatasetId, theNewDiagram.diagram_image, passedThis.divDiagramId);
 				//passedThis.dataAccess.addImage(theDatasetId, theNewDiagram.legend_image, passedThis.divLegendId);
 				// call through globalDiagramControl in order to trigger other gui events
@@ -771,9 +774,9 @@ class DiagramControl
 			let docPdf = new PDFDocument({compress: false, size: [612, 792]});
 			// getSVGContent
 			let hiddenDiv = document.getElementById('renderSvgForPrinting');
-			console.log("Before Call myThis.resizeUtil.plot.getSVGContent()");
+			//console.log("Before Call myThis.resizeUtil.plot.getSVGContent()");
 			hiddenDiv.innerHTML = theSvg;
-			console.log("After Call myThis.resizeUtil.plot.getSVGContent()");
+			//console.log("After Call myThis.resizeUtil.plot.getSVGContent()");
 			SVGtoPDF(docPdf, hiddenDiv.firstChild, 0, 0, {useCSS: true, assumePt: false, preserveAspectRatio: 'xMinYMin meet', width: 612, height: 792});
 			hiddenDiv.innerHTML = "";
 			// handle plots that also have HTML content (like PCA+)
@@ -892,9 +895,9 @@ class DiagramControl
 						{
 							// getSVGContent
 							let hiddenDiv = document.getElementById('renderSvgForPrinting');
-							console.log("Before Call myThis.resizeUtil.plot.getSVGContent()");
+							//console.log("Before Call myThis.resizeUtil.plot.getSVGContent()");
 							hiddenDiv.innerHTML = myThis.resizeUtil.plot.getSVGContent();
-							console.log("After Call myThis.resizeUtil.plot.getSVGContent()");
+							//console.log("After Call myThis.resizeUtil.plot.getSVGContent()");
 							SVGtoPDF(docPdf, hiddenDiv.firstChild, 0, 0, {useCSS: true, assumePt: false, preserveAspectRatio: 'xMinYMin meet', width: 612, height: 792});
 							hiddenDiv.innerHTML = "";
 							// handle plots that also have HTML content (like PCA+)

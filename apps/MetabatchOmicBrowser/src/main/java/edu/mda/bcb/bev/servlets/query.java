@@ -67,7 +67,7 @@ public class query extends HttpServlet
 		{
 			this.log("Query handleKWDFilter count = " + filtered.size());
 		}
-		// HashMap<String, TreeSet<String>> availableJson = ResultIndex.availableJson(filtered);
+		// HashMap<String, TreeSet<String>> availableFilterJson = ResultIndex.availableFilterJson(filtered);
 		HashMap<String, TreeSet<String>> availableJson = LoadIndexFiles.M_KWD_INDEX.availableJson();
 		try (PrintWriter out = response.getWriter())
 		{
@@ -141,8 +141,8 @@ public class query extends HttpServlet
 		{
 			this.log("Query handleAdvancedFilter count = " + filtered.size());
 		}
-		// HashMap<String, TreeSet<String>> availableJson = ResultIndex.availableJson(filtered);
-		HashMap<String, TreeSet<String>> availableJson = LoadIndexFiles.M_RESULT_INDEX.availableJson();
+		// HashMap<String, TreeSet<String>> availableFilterJson = ResultIndex.availableFilterJson(filtered);
+		HashMap<String, TreeSet<String>> availableJson = LoadIndexFiles.M_RESULT_INDEX.availableFilterJson();
 		try (PrintWriter out = response.getWriter())
 		{
 			if (null != filtered)
@@ -215,8 +215,8 @@ public class query extends HttpServlet
 		{
 			this.log("Query handleAdvancedFilter count = " + filtered.size());
 		}
-		// HashMap<String, TreeSet<String>> availableJson = ResultIndex.availableJson(filtered);
-		HashMap<String, TreeSet<String>> availableJson = LoadIndexFiles.M_RESULT_INDEX.availableJson();
+		// HashMap<String, TreeSet<String>> availableFilterJson = ResultIndex.availableFilterJson(filtered);
+		HashMap<String, TreeSet<String>> availableJson = LoadIndexFiles.M_RESULT_INDEX.availableFilterJson();
 		try (PrintWriter out = response.getWriter())
 		{
 			if (null != filtered)
@@ -289,7 +289,7 @@ public class query extends HttpServlet
 		{
 			this.log("Query handleAdvancedFilter count = " + filtered.size());
 		}
-		// HashMap<String, TreeSet<String>> availableJson = ResultIndex.availableJson(filtered);
+		// HashMap<String, TreeSet<String>> availableFilterJson = ResultIndex.availableFilterJson(filtered);
 		HashMap<String, TreeSet<String>> availableJson = LoadIndexFiles.M_DSC_INDEX.availableJson();
 		try (PrintWriter out = response.getWriter())
 		{

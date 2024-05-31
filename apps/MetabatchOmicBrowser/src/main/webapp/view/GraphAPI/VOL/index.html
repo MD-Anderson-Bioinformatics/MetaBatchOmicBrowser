@@ -36,17 +36,14 @@
 		</script>
     </head>
     <body onload="loadVolcanoDiagram()" style="height:90%; width:90%;">
-		<div id="DivLoadVolcanoDiagram" style="width: 100%; height: 100%;">
+		<div style="width: 100%">
+			<svg id="VolcanoPlottingDivSVG" width="100%" height="50">
+				<g id="VolcanoPlottingTitle"></g>
+			</svg>
+		</div>
+		<div id="DivLoadVolcanoDiagram" style="width: 100%; height: 90%;">
 			<div class="columnDiv">
-				<div id="VolcanoPlottingDiv" class="VolcanoPlottingDiv plotAboveStrip">
-					<!-- svg id="VolcanoPlottingDivSVG" width="100%" height="100%">
-						<g id="VolcanoPlottingTitle" width="100%" height="90"></g>
-						<g id="VolcanoMouseG">
-							< !-- move over and down for axis and title space -- >
-							<g id='VolcanoMetaG' transform="translate(15,30)">
-							</g>
-						</g>
-					</svg -->
+				<div id="VolcanoPlottingDiv" style="height: 100%;" class="VolcanoPlottingDiv plotAboveStrip">
 					<div id="VolcanoPlottingG"></div>
 				</div>
 				<div id="VolcanoControlDiv" class="controlStrip">

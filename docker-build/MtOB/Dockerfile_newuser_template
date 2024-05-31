@@ -1,0 +1,23 @@
+FROM <IMAGEURL>
+
+LABEL edu.mda.bcb.uid="<LOCALUID>"
+
+####
+#### change bcbuser to new user id
+####
+
+USER root
+RUN usermod -u <LOCALUID> bcbuser && \
+    chown <LOCALUID> /BEA && \
+    find /home -user <USERID> -exec chown <LOCALUID> {} \; && \
+    find /opt/tomcat -user <USERID> -exec chown <LOCALUID> {} \;
+
+####
+#### End of build steps
+####
+
+# switch from root to bcbuser user
+USER bcbuser
+
+CMD ["/opt/tomcat/bin/catalina.sh", "run"]
+

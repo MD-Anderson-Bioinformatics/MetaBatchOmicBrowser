@@ -234,9 +234,9 @@ class UtilVenn
 					+ "/" + self.indexKO().category
 					+ "/" + self.indexKO().platform
 					+ "/" + self.indexKO().data
-					+ ((""!==self.indexKO().details)?("/" + this.indexKO().details):"")
-					+ ((""!==self.indexKO().data_version)?("/" + this.indexKO().data_version):"")
-					+ ((""!==self.indexKO().test_version)?("/" + this.indexKO().test_version):"");
+					+ ((""!==self.indexKO().details)?("/" + self.indexKO().details):"")
+					+ ((""!==self.indexKO().data_version)?("/" + self.indexKO().data_version):"")
+					+ ((""!==self.indexKO().test_version)?("/" + self.indexKO().test_version):"");
 		var [plotDiv, controlDiv, legendDiv ] = self.addDivs(theIframeDiagramDiv, document.getElementById(self.divLegendId));
 
 		Promise.all([

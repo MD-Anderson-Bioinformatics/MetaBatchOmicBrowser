@@ -195,6 +195,7 @@ var globalColumnCWidth_DB = 0;
 
 function hidePlotPicker()
 {
+	//console.log("start hidePlotPicker");
 	// get current widths
 	let drgAB = getComputedStyle(document.documentElement).getPropertyValue('--dragger-AB-size');
 	let colA = getComputedStyle(document.documentElement).getPropertyValue('--column-A-width');
@@ -218,6 +219,7 @@ function hidePlotPicker()
 
 function displayPlotPicker()
 {
+	//console.log("start displayPlotPicker");
 	// get current values
 	let colA = getComputedStyle(document.documentElement).getPropertyValue('--column-A-width');
 	let colB = getComputedStyle(document.documentElement).getPropertyValue('--column-B-width');
@@ -253,6 +255,7 @@ var globalColumnCWidth_LP = 0;
 
 function hideLegPaneColumn()
 {
+	//console.log("start hideLegPaneColumn");
 	// get current widths
 	let drgBC = getComputedStyle(document.documentElement).getPropertyValue('--dragger-BC-size');
 	let colA = getComputedStyle(document.documentElement).getPropertyValue('--column-A-width');
@@ -276,6 +279,7 @@ function hideLegPaneColumn()
 
 function displayLegPaneColumn()
 {
+	//console.log("start displayLegPaneColumn");
 	// get current values
 	let colA = getComputedStyle(document.documentElement).getPropertyValue('--column-A-width');
 	let colB = getComputedStyle(document.documentElement).getPropertyValue('--column-B-width');
@@ -304,41 +308,103 @@ function displayLegPaneColumn()
 	globalOn_LP = false;
 }
 
+var globalDragABWidth_LP = 0;
+var globalHideAll = false;
+
+function hideAllButPickerColumn()
+{
+	//console.log("start hideAllButPickerColumn");
+	//console.log((new Error()).stack);
+	// get current widths
+	let drgAB = getComputedStyle(document.documentElement).getPropertyValue('--dragger-AB-size');
+	let drgBC = getComputedStyle(document.documentElement).getPropertyValue('--dragger-BC-size');
+	let colA = getComputedStyle(document.documentElement).getPropertyValue('--column-A-width');
+	let colB = getComputedStyle(document.documentElement).getPropertyValue('--column-B-width');
+	let colC = getComputedStyle(document.documentElement).getPropertyValue('--column-C-width');
+	// store current widths
+	globalDragABWidth_LP = drgAB;
+	globalDragBCWidth_LP = drgBC;
+	globalColumnAWidth_LP = colA;
+	globalColumnBWidth_LP = colB;
+	globalColumnCWidth_LP = colC;
+	// set values
+	document.documentElement.style.setProperty('--column-A-width', "100%");
+	document.documentElement.style.setProperty('--dragger-AB-size', "0px");
+	document.documentElement.style.setProperty('--dragger-BC-size', "0px");
+	document.documentElement.style.setProperty('--column-B-width', "0%");
+	document.documentElement.style.setProperty('--column-C-width', "0px");
+	// toggle the hide-plotpicker class
+	toggleClass(['id-a-b-drag-bar', 'BEV_Diagram', 'bevTitleText', 'plotPickerHide', 'BEV_LegPaneButton'], 'hide-visualizer');
+	toggleClass(['id-b-c-drag-bar', 'BEV_LegPane', 'BEV_LegPaneButton'], 'hide-legpane');
+	globalHideAll = true;
+}
+
+function displayAllButPickerColumn()
+{
+	//console.log("start displayAllButPickerColumn");
+	if (true===globalHideAll)
+	{
+		// set values
+		document.documentElement.style.setProperty('--dragger-AB-size', globalDragABWidth_LP);
+		document.documentElement.style.setProperty('--dragger-BC-size', globalDragBCWidth_LP);
+		document.documentElement.style.setProperty('--column-A-width', globalColumnAWidth_LP);
+		document.documentElement.style.setProperty('--column-B-width', globalColumnBWidth_LP);
+		document.documentElement.style.setProperty('--column-C-width', globalColumnCWidth_LP);
+		// toggle the hide-plotpicker class
+		toggleClass(['id-a-b-drag-bar', 'BEV_Diagram', 'bevTitleText', 'plotPickerHide', 'BEV_LegPaneButton'], 'hide-visualizer');
+		toggleClass(['id-b-c-drag-bar', 'BEV_LegPane', 'BEV_LegPaneButton'], 'hide-legpane');
+		globalHideAll = false;
+	}
+}
+
 var globalOn_Auto_DB = false;
 var globalOn_Auto_LP = false;
 
-function bodyResize()
+function bodyResize(theAppView)
 {
+	//console.log("start bodyResize");
 	const vw = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
 	//console.log("bodyResize vw = " + vw);
 	//const vh = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
-	if ((false===globalOn_Auto_DB)&&(false===globalOn_DB)&&(vw<800))
+	//console.log("bodyResize theAppView.viewUseSimpleSearch()=" + theAppView.viewUseSimpleSearch());
+	// do not use this within simple search
+	if (false===theAppView.viewUseSimpleSearch())
 	{
-		globalOn_Auto_DB = true;
-		hidePlotPicker();
+		if ((false===globalOn_Auto_DB)&&(false===globalOn_DB)&&(vw<800))
+		{
+			globalOn_Auto_DB = true;
+			hidePlotPicker();
+		}
+		if ((false===globalOn_Auto_LP)&&(false===globalOn_LP)&&(vw<600))
+		{
+			globalOn_Auto_LP = true;
+			hideLegPaneColumn();
+		}
+		if ((true===globalOn_Auto_DB)&&(true===globalOn_DB)&&(vw>800))
+		{
+			globalOn_Auto_DB = false;
+			displayPlotPicker();
+		}
+		else if ((true===globalOn_Auto_DB)&&(false===globalOn_DB))
+		{
+			globalOn_Auto_DB = false;
+		}
+		if ((true===globalOn_Auto_LP)&&(true===globalOn_LP)&&(vw>600))
+		{
+			globalOn_Auto_LP = false;
+			displayLegPaneColumn();
+		}
+		else if ((true===globalOn_Auto_LP)&&(false===globalOn_LP))
+		{
+			globalOn_Auto_LP = false;
+		}
 	}
-	if ((false===globalOn_Auto_LP)&&(false===globalOn_LP)&&(vw<600))
+	else if ((true===globalOn_Auto_DB)&&(true===globalOn_DB))
 	{
-		globalOn_Auto_LP = true;
-		hideLegPaneColumn();
-	}
-	if ((true===globalOn_Auto_DB)&&(true===globalOn_DB)&&(vw>800))
-	{
+		// should not occur, since you can't switch to simple with Plot Picker hidden, but...
+		globalOn_DB = false;
 		globalOn_Auto_DB = false;
 		displayPlotPicker();
-	}
-	else if ((true===globalOn_Auto_DB)&&(false===globalOn_DB))
-	{
-		globalOn_Auto_DB = false;
-	}
-	if ((true===globalOn_Auto_LP)&&(true===globalOn_LP)&&(vw>600))
-	{
-		globalOn_Auto_LP = false;
-		displayLegPaneColumn();
-	}
-	else if ((true===globalOn_Auto_LP)&&(false===globalOn_LP))
-	{
-		globalOn_Auto_LP = false;
 	}
 	globalDiagramControl.resize();
 }

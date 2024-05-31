@@ -59,27 +59,21 @@ class DataAccess_file
 		}
 	};
 
-	setIndexAndId()
+	getIndexAndId()
 	{
-		return new Promise((resolve, reject) => 
-		{
-			resolve(null);
-		});
+		return null;
 	};
 	
-	loadLinks()
+	simpleSearchData()
 	{
 		return new Promise((resolve, reject) => 
 		{
 			resolve(
 			{
-				"queryForm": "",
-				"bevForm": "",
-				"stdData": ""
 			});
 		});
 	};
-
+	
 	loadIndexAndId()
 	{
 		// in loaded zip this.zip, get "index.json" as json, and set to theIndexJsonKO(theJson);

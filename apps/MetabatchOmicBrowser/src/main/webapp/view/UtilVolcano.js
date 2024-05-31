@@ -30,9 +30,9 @@ class UtilVolcano
 		this.plot.resizePlot(Math.floor(boxWidth), Math.floor(boxHeight));
 	}
 	
-	buildLegendData(theBatchType, theBatchName, theFoldchangecut, theTranspvaluecut)
+	buildLegendData(theBatchType, theBatchName, theFoldchangecut, theTranspvaluecut, thePvaluecut)
 	{
-		//console.log(theVolcanoData);
+		console.log("buildLegendData thePvaluecut=" + thePvaluecut);
 		var legendData = [];
 		legendData[0] = {};
 		legendData[0].finder = null;
@@ -41,7 +41,7 @@ class UtilVolcano
 		legendData[1] = {};
 		legendData[1].finder = "bar-pvalue";
 		legendData[1].color = "#005500";
-		legendData[1].legend = "Negative Log10 P-Value Cutoff = " + theTranspvaluecut.toFixed(4);
+		legendData[1].legend = "-Log10 P-Value Cutoff = " + theTranspvaluecut.toFixed(4) + " (p=" + thePvaluecut +")";
 		legendData[2] = {};
 		legendData[2].finder = "bar-cutoff";
 		legendData[2].color = "#00FF00";
@@ -161,7 +161,7 @@ class UtilVolcano
 						+ " / " + self.indexKO().category
 						+ " / " + self.indexKO().platform
 						+ " / " + self.indexKO().data
-						+ ((""!==self.indexKO().details)?(" / " + this.indexKO().details):"")
+						+ ((""!==self.indexKO().details)?(" / " + self.indexKO().details):"")
 						+ ((""!==dataVersion)?(" / " + dataVersion):"")
 						+ ((""!==testVersion)?(" / " + testVersion):"")
 						+ " / " + self.newDiagram.batch_type + " - " + self.newDiagram.batch_id;
@@ -169,18 +169,19 @@ class UtilVolcano
 			var fold_change_list = voldata.values.map((line) => line.fold_change);
 			var foldchangecut = Math.log2(2.0);
 			var trans_pvalue_list = voldata.values.map((line) => line.trans_pvalue);
-			var transpvaluecut = -Math.log2(0.05);
+			var pvaluecut = 0.05;
+			var transpvaluecut = -Math.log10(pvaluecut);
 			// var maxFoldchange = fold_change_list.reduce((a, b) => Math.max(a, b), 0);
 			// var minFoldchange = fold_change_list.reduce((a, b) => Math.min(a, b), 0);
 			// var maxTranspvalue = trans_pvalue_list.reduce((a, b) => Math.max(a, b), 0);
 			// var minTranspvalue = trans_pvalue_list.reduce((a, b) => Math.min(a, b), 0);
 			var feature_list = voldata.values.map((line) => line.feature);
 			var legendValues = self.buildLegendData(voldata.batch_type, voldata.batch_name,
-													foldchangecut, transpvaluecut);
+													foldchangecut, transpvaluecut, pvaluecut);
 			// VolcanoPlot.BasicModel = function (theTitle, theCutoff, thePvalue, theBatches, theVersion, theLegend)
 			var model = theModelFun(title, foldchangecut, transpvaluecut,
 									fold_change_list, trans_pvalue_list, feature_list, 
-									version, legendValues);
+									version, legendValues, pvaluecut);
 			var params = theParam;
 			params.showDetailFunc = (struct) =>
 			{ // showDetailFunc

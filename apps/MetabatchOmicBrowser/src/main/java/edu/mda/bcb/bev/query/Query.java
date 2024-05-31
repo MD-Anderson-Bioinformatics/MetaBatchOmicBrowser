@@ -117,4 +117,60 @@ public class Query
 //	{
 //		return theIndexes.query(this, theSC);
 //	}
+	
+	public void setNullToEmpty()
+	{
+		if (null==mFiles)
+		{
+			mFiles = new ArrayList<>();
+		}
+		if (null==mSources)
+		{
+			mSources = new ArrayList<>();
+		}
+		if (null==mProgram)
+		{
+			mProgram = new ArrayList<>();
+		}
+		if (null==mProjects)
+		{
+			mProjects = new ArrayList<>();
+		}
+		if (null==mCategories)
+		{
+			mCategories = new ArrayList<>();
+		}
+		if (null==mPlatforms)
+		{
+			mPlatforms = new ArrayList<>();
+		}
+		if (null==mData)
+		{
+			mData = new ArrayList<>();
+		}
+		if (null==mDetails)
+		{
+			mDetails = new ArrayList<>();
+		}
+		if (null==mDataVersions)
+		{
+			mDataVersions = new ArrayList<>();
+		}
+		if (null==mTestVersions)
+		{
+			mTestVersions = new ArrayList<>();
+		}
+		if (null==mJobType)
+		{
+			mJobType = new ArrayList<>();
+		}
+		if (null==mAnalysisPath)
+		{
+			mAnalysisPath = new ArrayList<>();
+		}
+		if (null==mOverallDSCpvalue)
+		{
+			mOverallDSCpvalue = new ArrayList<>();
+		}
+	}
 }

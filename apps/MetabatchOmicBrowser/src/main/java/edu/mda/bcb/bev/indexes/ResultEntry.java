@@ -322,9 +322,9 @@ public class ResultEntry extends EntryMixin
 				+ ",\n { \"title\": \"Platform\" }"
 				+ ",\n { \"title\": \"Study Title\" }"
 				+ ",\n { \"title\": \"Details\" }"
-				+ ",\n { \"title\": \"Data Version\" }"
-				+ ",\n { \"title\": \"Test Version\" }"
 				+ ",\n { \"title\": \"DataSet Type\" }"
+				+ ",\n { \"title\": \"Data Version\" }"
+				+ ",\n { \"title\": \"Result Version\" }"
 				+ (theIncludeAdvancedFlag
 						? (",\n { \"title\": \"Samples Matrix Count\" }"
 						+ ",\n { \"title\": \"Samples Mutations Count\" }"
@@ -351,9 +351,9 @@ public class ResultEntry extends EntryMixin
 				+ "\tPlatform"
 				+ "\tData"
 				+ "\tDetails"
-				+ "\tData Version"
-				+ "\tTest Version"
 				+ "\tDataSet Type"
+				+ "\tData Version"
+				+ "\tResult Version"
 				+ (theIncludeAdvancedFlag ? ("\tSamples Matrix Count"
 						+ "\tSamples Mutations Count"
 						+ "\tFeatures Matrix Count"
@@ -437,9 +437,9 @@ public class ResultEntry extends EntryMixin
 		list.add(this.platform);
 		list.add(this.data);
 		list.add(this.details);
+		list.add(this.job_type);
 		list.add(this.data_version);
 		list.add(this.test_version);
-		list.add(this.job_type);
 		if (theIncludeAdvancedFlag)
 		{
 			list.add(this.samples_matrix.toString());

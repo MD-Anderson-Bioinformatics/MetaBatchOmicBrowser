@@ -30,13 +30,18 @@ public class LoadIndexFiles implements ServletContextListener
 {
 
 	static public String M_VERSION = "BEV BEA_VERSION_TIMESTAMP";
+	static public String M_CONFIG_PROP = "/BEA/DAPI_MOB/CONFIG/dapi.properties";
 	// *mapped-dir* <- used for searching for hard-coded paths
+	// USE THESE VALUES FOR testing and checking in MOB and MOB/MtOB
 	static public String M_BEV_DIA_INDEX_FILE = "/BEA/DAPI_MOB/INDEXES/data_index_mwb.tsv";
 	static public String M_BEV_DSC_INDEX_FILE = "/BEA/DAPI_MOB/INDEXES/dsc_index_mwb.tsv";
 	static public String M_BEV_KWD_INDEX_FILE = "/BEA/DAPI_MOB/INDEXES/kwd_index_mwb.tsv";
-	static public String M_CONFIG_PROP = "/BEA/DAPI_MOB/CONFIG/dapi.properties";
 	static public String M_BEI_DATA_DIR = "/BEA/DAPI_MOB/DATA";
-	//TDC// static public String M_CONFIG_FILTER = "/DAPI/CONFIG/dapi-filter.tsv";
+	// USE THESE VALUES FOR testing BEI/MBA
+	//static public String M_BEV_DIA_INDEX_FILE = "/BEA/DAPI_MOB/INDEXES/DNE_data_index_mwb.tsv_DNE";
+	//static public String M_BEV_DSC_INDEX_FILE = "/BEA/DAPI_MOB/INDEXES/DNE_dsc_index_mwb.tsv_DNE";
+	//static public String M_BEV_KWD_INDEX_FILE = "/BEA/DAPI_MOB/INDEXES/DNE_kwd_index_mwb.tsv_DNE";
+	//static public String M_BEI_DATA_DIR = "/BEA/website";
 
 	static public Indexes M_PATH_LOOKUP = null;
 	static public DefaultUrl M_CONFIG_PROPERTIES = null;
@@ -53,7 +58,6 @@ public class LoadIndexFiles implements ServletContextListener
 		sce.getServletContext().log("LoadIndexFiles::contextInitialized Read DSC indexes from: " + M_BEV_DSC_INDEX_FILE);
 		sce.getServletContext().log("LoadIndexFiles::contextInitialized Read KWD indexes from: " + M_BEV_KWD_INDEX_FILE);
 		sce.getServletContext().log("LoadIndexFiles::contextInitialized Read config properties from: " + M_CONFIG_PROP);
-		//TDC// sce.getServletContext().log("LoadIndexFiles::contextInitialized Read config filter from: " + M_CONFIG_FILTER);
 
 		try
 		{
@@ -112,11 +116,9 @@ public class LoadIndexFiles implements ServletContextListener
 				try (FileInputStream is = new FileInputStream(dapiProp))
 				{
 					props.loadFromXML(is);
-					String defaultView = props.getProperty("DEFAULT_VIEW");
-					String defaultQuery = props.getProperty("DEFAULT_QUERY");
 					String defaultViewParams = props.getProperty("DEFAULT_VIEW_PARAMS");
 					String defaultQueryParams = props.getProperty("DEFAULT_QUERY_PARAMS");
-					M_CONFIG_PROPERTIES = new DefaultUrl(defaultView, defaultQuery, defaultViewParams, defaultQueryParams);
+					M_CONFIG_PROPERTIES = new DefaultUrl(defaultViewParams, defaultQueryParams);
 				}
 			}
 			else

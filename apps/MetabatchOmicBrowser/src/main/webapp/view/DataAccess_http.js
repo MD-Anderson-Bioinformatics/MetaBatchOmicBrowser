@@ -49,156 +49,176 @@ class DataAccess_http
 		}
 	};
 
-	setIndexAndId()
+	getIndexAndId()
 	{
 		var url = new URL(window.location.href);
 		var tmpId = url.searchParams.get("id");
-		//console.log("setIndexAndId tmpId=" + tmpId);
+		//console.log("getIndexAndId tmpId=" + tmpId);
 		if (null === tmpId)
 		{
-			//console.log("setIndexAndId No ID Found");
-			return new Promise((resolve, reject) => 
-			{
-				resolve(
-				{
-					"mID": null,
-					"mAlg": null,
-					"mLvl1": null,
-					"mLvl2": null,
-					"mLvl3": null,
-					"mLvl4": null,
-					"mData": null,
-					"mTest": null,
-					"hideDB": null,
-					"hideLP": null
-				});
-			});
-			/* return new Promise((resolve, reject) => 
-			{
-				$.ajax(
-				{
-					type: "GET",
-					dataType: 'json',
-					url: "../defaults",
-					cache: false,
-					success: function (theJson)
-					{
-						resolve(theJson);
-					},
-					error: function (jqXHR, textStatus, errorThrown)
-					{
-						console.log("defaults" + " :" + textStatus + " and " + errorThrown);
-						alert("defaults" + " :" + textStatus + " and " + errorThrown);
-					}
-				});
-			}); */
-		}
-		else
+			//console.log("getIndexAndId No ID Found");
+			return {
+				"mID": null,
+				"mAlg": null,
+				"mLvl1": null,
+				"mLvl2": null,
+				"mLvl3": null,
+				"mLvl4": null,
+				"mData": null,
+				"mTest": null,
+				"hideDB": null,
+				"hideLP": null,
+				"useSimple": null
+			};
+
+		} else
 		{
-			return new Promise((resolve, reject) => 
+			let alg = url.searchParams.get("alg");
+			let lvl1 = url.searchParams.get("lvl1");
+			let lvl2 = url.searchParams.get("lvl2");
+			let lvl3 = url.searchParams.get("lvl3");
+			let lvl4 = url.searchParams.get("lvl4");
+			let hideDB = url.searchParams.get("hideDB");
+			let useSimple = url.searchParams.get("useSimple");
+			//console.log("hideDB 1=" + hideDB);
+			if ("true" === useSimple)
 			{
-				let alg = url.searchParams.get("alg");
-				let lvl1 = url.searchParams.get("lvl1");
-				let lvl2 = url.searchParams.get("lvl2");
-				let lvl3 = url.searchParams.get("lvl3");
-				let lvl4 = url.searchParams.get("lvl4");
-				let data = url.searchParams.get("data");
-				let test = url.searchParams.get("test");
-				let hideDB = url.searchParams.get("hideDB");
-				//console.log("hideDB 1=" + hideDB);
-				if ("true"===hideDB)
-				{
-					hideDB = true;
-				}
-				else
-				{
-					hideDB = false;
-				}
-				//console.log("hideDB 2=" + hideDB);
-				let hideLP = url.searchParams.get("hideLP");
-				//console.log("hideLP 1=" + hideLP);
-				if ("true"===hideLP)
-				{
-					hideLP = true;
-				}
-				else
-				{
-					hideLP = false;
-				}
-				//console.log("hideLP 2=" + hideLP);
-				resolve(
-				{
-					"mID": tmpId,
-					"mAlg": alg,
-					"mLvl1": lvl1,
-					"mLvl2": lvl2,
-					"mLvl3": lvl3,
-					"mLvl4": lvl4,
-					"mData": data,
-					"mTest": test,
-					"hideDB": hideDB,
-					"hideLP": hideLP
-				});
-			});
+				useSimple = true;
+			} else
+			{
+				useSimple = false;
+			}
+			if ("true" === hideDB)
+			{
+				hideDB = true;
+			} else
+			{
+				hideDB = false;
+			}
+			//console.log("hideDB 2=" + hideDB);
+			let hideLP = url.searchParams.get("hideLP");
+			//console.log("hideLP 1=" + hideLP);
+			if ("true" === hideLP)
+			{
+				hideLP = true;
+			} else
+			{
+				hideLP = false;
+			}
+			//console.log("hideLP 2=" + hideLP);
+			let ssource = url.searchParams.get("ssource");
+			let sprogram = url.searchParams.get("sprogram");
+			let sproject = url.searchParams.get("sproject");
+			let scategory = url.searchParams.get("scategory");
+			let splatform = url.searchParams.get("splatform");
+			let sdata = url.searchParams.get("sdata");
+			let sdetails = url.searchParams.get("sdetails");
+			let sjobtype = url.searchParams.get("sjobtype");
+			let sdataversion = url.searchParams.get("sdataversion");
+			let stestversion = url.searchParams.get("stestversion");
+
+			return {
+				"mID": tmpId,
+				"mAlg": alg,
+				"mLvl1": lvl1,
+				"mLvl2": lvl2,
+				"mLvl3": lvl3,
+				"mLvl4": lvl4,
+				"hideDB": hideDB,
+				"hideLP": hideLP,
+				"useSimple": useSimple,
+				"stestversion": stestversion,
+				"sdataversion": sdataversion,
+				"sjobtype": sjobtype,
+				"sdetails": sdetails,
+				"sdata": sdata,
+				"splatform": splatform,
+				"scategory": scategory,
+				"sproject": sproject,
+				"sprogram": sprogram,
+				"ssource": ssource
+			};
 		}
 	};
 	
-	loadLinks()
+	simpleSearchData()
 	{
 		return $.ajax(
 		{
 			type: "GET",
 			dataType: 'json',
-			url: "../urls",
+			url: "../drilldown",
 			cache: false,
 			error: function (jqXHR, textStatus, errorThrown)
 			{
-				console.log("urls" + " :" + textStatus + " and " + errorThrown);
-				alert("urls" + " :" + textStatus + " and " + errorThrown);
+				console.log("drilldown" + " :" + textStatus + " and " + errorThrown);
+				alert("drilldown" + " :" + textStatus + " and " + errorThrown);
 			}
 		});
 	};
 	
 	loadListOfBatchTypes(theRequestedIdKO)
 	{
-		//console.log("loadIndexAndId = " + theRequestedIdKO());
-		return $.ajax(
+		var requested = theRequestedIdKO();
+		//console.log("loadListOfBatchTypes = " + requested);
+		//console.log(requested);
+		//console.log("loadListOfBatchTypes notUN(theRequestedIdKO()) = " + notUN(requested));
+		if (notUN(requested))
 		{
-			type: "GET",
-			dataType: 'json',
-			url: "../dsbtypes",
-			cache: false,
-			data:
+			return $.ajax(
 			{
-				id: theRequestedIdKO()
-			},
-			error: function (jqXHR, textStatus, errorThrown)
-			{
-				console.log("dsbtypes" + " :" + textStatus + " and " + errorThrown);
-				alert("dsbtypes" + " :" + textStatus + " and " + errorThrown);
-			}
-		});
+				type: "GET",
+				dataType: 'json',
+				url: "../dsbtypes",
+				cache: false,
+				data:
+				{
+					id: requested
+				},
+				error: function (jqXHR, textStatus, errorThrown)
+				{
+					console.log("dsbtypes" + " :" + textStatus + " and " + errorThrown);
+					alert("dsbtypes" + " :" + textStatus + " and " + errorThrown);
+				}
+			});
+		}
+		else
+		{
+			// gets called with undefined when clearing existing values...
+			return undefined;
+		}
 	};
 
 	loadIndexAndId(theRequestedIdKO)
 	{
-		//console.log("loadIndexAndId = " + theRequestedIdKO());
-		return $.ajax(
+		var requested = theRequestedIdKO();
+		//console.log("loadIndexAndId = " + requested);
+		//console.log(requested);
+		//console.log("loadIndexAndId notUN(theRequestedIdKO()) = " + notUN(requested));
+		if (notUN(requested))
 		{
-			type: "GET",
-			dataType: 'json',
-			url: "../dsindex",
-			cache: false,
-			data:
+			return $.ajax(
 			{
-				id: theRequestedIdKO()
-			},
-			error: function (jqXHR, textStatus, errorThrown)
-			{
-				console.log("dsindex" + " :" + textStatus + " and " + errorThrown);
-				alert("dsindex" + " :" + textStatus + " and " + errorThrown);
-			}
-		});
+				type: "GET",
+				dataType: 'json',
+				url: "../dsindex",
+				cache: false,
+				data:
+				{
+					id: requested
+				},
+				error: function (jqXHR, textStatus, errorThrown)
+				{
+					console.log("dsindex" + " :" + textStatus + " and " + errorThrown);
+					alert("dsindex" + " :" + textStatus + " and " + errorThrown);
+				}
+			});
+		}
+		else
+		{
+			// gets called with undefined when clearing existing values...
+			return undefined;
+		}
 	};
 	
 	getExistance(theRequestedId, theTextFile)

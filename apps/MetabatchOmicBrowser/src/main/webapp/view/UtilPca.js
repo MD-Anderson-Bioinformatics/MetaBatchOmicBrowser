@@ -224,7 +224,7 @@ class UtilPca
 						+ " / " + self.indexKO().category
 						+ " / " + self.indexKO().platform
 						+ " / " + self.indexKO().data
-						+ ((""!==self.indexKO().details)?(" / " + this.indexKO().details):"")
+						+ ((""!==self.indexKO().details)?(" / " + self.indexKO().details):"")
 						+ ((""!==dataVersion)?(" / " + dataVersion):"")
 						+ ((""!==testVersion)?(" / " + testVersion):"")
 						+ " / " + batchType;

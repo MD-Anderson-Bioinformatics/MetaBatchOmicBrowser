@@ -2,16 +2,32 @@
 /* Top Level CSS               */
 /* *************************** */
 
+/*
+restoreColumnAwidth = "35%";
+restoreDraggerABsize = "5px";
+restoreColumnBwidth = "45%";
+restoreDraggerBCsize = "5px";
+restoreColumnCwidth = "20%";
+*/
+
+/*
+	--column-A-width: 100%;
+	--dragger-AB-size: 0px;
+	--column-B-width: 0%;
+	--dragger-BC-size: 0px;
+	--column-C-width: 0%;
+*/
+
 :root
 {
 	--body-margin: 4px;
 	--grid-gap: 0px;
 
-	--column-A-width: 25%;
+	--column-A-width: 35%;
 	--dragger-AB-size: 5px;
-	--column-B-width: 50%;
+	--column-B-width: 45%;
 	--dragger-BC-size: 5px;
-	--column-C-width: 25%;
+	--column-C-width: 20%;
 
 	--column-A-col: 1;
 	--dragger-AB-col: 2;
@@ -559,6 +575,12 @@ table.autoWidth
 {
 	display: none;
 }
+
+.hide-visualizer
+{
+	display: none;
+}
+
 
 .div-legend
 {

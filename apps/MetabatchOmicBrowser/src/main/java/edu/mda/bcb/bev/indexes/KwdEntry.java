@@ -161,9 +161,9 @@ public class KwdEntry extends EntryMixin
 				+ "\n { \"title\": \"Platform\" },"
 				+ "\n { \"title\": \"Study Title\" },"
 				+ "\n { \"title\": \"Details\" },"
-				+ "\n { \"title\": \"Data Version\" },"
-				+ "\n { \"title\": \"Test Version\" },"
 				+ "\n { \"title\": \"DataSet Type\" },"
+				+ "\n { \"title\": \"Data Version\" },"
+				+ "\n { \"title\": \"Result Version\" },"
 				+ "\n { \"title\": \"Analysis Path\" },"
 				+ "\n { \"title\": \"Negative Log 10 P-Value\" },"
 				+ "\n { \"title\": \"Batches Called\" },"
@@ -186,7 +186,7 @@ public class KwdEntry extends EntryMixin
 				+ "\tData"
 				+ "\tDetails"
 				+ "\tData Version"
-				+ "\tTest Version"
+				+ "\tResult Version"
 				+ "\tDataSet Type"
 				+ "\tAnalysis Path"
 				+ "\tNegative Log 10 P-Value"
@@ -252,9 +252,9 @@ public class KwdEntry extends EntryMixin
 		list.add(this.platform);
 		list.add(this.data);
 		list.add(this.details);
+		list.add(this.job_type);
 		list.add(this.data_version);
 		list.add(this.test_version);
-		list.add(this.job_type);
 		list.add(this.analysis_path);
 		list.add(this.NegLog10PValue);
 		list.add(this.BatchesCalled);

@@ -20,6 +20,7 @@ function drawVolcano(theFCValues, theTPValues, theFeatures,
 					theWidth, theHeight)
 {
 	let plotdiv = thePlotDiv;
+	
 	// list of foldChange values
 	let xvals = theFCValues;
 	// list of -log10 pvalues
@@ -28,7 +29,6 @@ function drawVolcano(theFCValues, theTPValues, theFeatures,
 	let names = theFeatures;
 	let colors = [];
 	let classes = [];
-	let plotTitle = theTitle;
 	xvals.forEach((xval, index) => {
 		if (xval > foldChangeCut && yvals[index] > pvalueCut)
 		{
@@ -77,13 +77,11 @@ function drawVolcano(theFCValues, theTPValues, theFeatures,
 	var foldchangeMax = Math.max(Math.abs(minX), Math.max(maxX));
 	var maxY = yvals.reduce((a, b) => Math.max(a, b), 0)+0.2;
 	var minY = yvals.reduce((a, b) => Math.min(a, b), 0)-0.2;
+	//	height: theHeight,
 	var layout = {
 		dragmode: 'pan',
-		title: {
-			text: plotTitle,
-			font: {
-				size: 22
-			}
+		margin: {
+			t: 10
 		},
 		width: theWidth,
 		height: theHeight,
@@ -143,6 +141,18 @@ function drawVolcano(theFCValues, theTPValues, theFeatures,
 			range: [minY, maxY]
 		}
 	};
+	// HANDLE NEW TITLE HERE
+	// height from volcano index.html
+	const dataText = [{text: theTitle}];
+	new d3plus.TextBox()
+			.select("#VolcanoPlottingTitle")
+			.data(dataText)
+			.fontSize(10)
+			.textAnchor("middle")
+			.width(theWidth)
+			.height(90)
+			.x(10)
+			.render();
 	// let mypromise = Plotly.newPlot(plotdiv, data, layout, {scrollZoom: true, displayModeBar: false});
 	// let newPlot = await mypromise;
 	let newPlot = Plotly.newPlot(plotdiv, data, layout, {scrollZoom: true, displayModeBar: false});
@@ -168,21 +178,6 @@ function VolcanoPlot(theModel, thePlotDivObj, theLegendDivObj, theParams)
 	};
 	console.log("BEA VolcanoDiagram: " + mThis.version());
 
-	mThis.addTitle = function (theTitle, theWidth, theHeight)
-	{
-		const data = [{text: theTitle}];
-		//d3.select("#VolcanoPlottingTitle").text(theTitle);
-		new d3plus.TextBox()
-				.select("#VolcanoPlottingTitle")
-				.data(data)
-				.fontSize(10)
-				.textAnchor("middle")
-				.width(theWidth-20)
-				.height(theHeight)
-				.x(10)
-				.render();
-	};
-
 	function customizePlot()
 	{
 		$('#VolcanoResetZoomButton').on('click', function(event, ui) 
@@ -198,10 +193,10 @@ function VolcanoPlot(theModel, thePlotDivObj, theLegendDivObj, theParams)
 		// subtract 30 so there is padding for labels on axis
 		var width = bbox.width - 30;
 		mThis.mXscaleLinear.range([ 0, width]);
-		var height = bbox.height - 90; // substract 90 for title
-		mThis.addTitle(mThis.mModel.getTitle(), width, 90);
+		var height = bbox.height; // do not substract 90 for title - different box
 		let myG = document.getElementById("VolcanoPlottingG");
-		// myG is a div, not a G. Do not do remove, since plotly does complete replace.
+		myG.innerHTML = null;
+		// myG is a div, not a G.
 		// Do not use d3 select to get div - will throw a r.getAttribute is not method error.
 		// var myG = d3.select('#VolcanoPlottingG');
 		// myG.selectAll("*").remove();
@@ -435,7 +430,7 @@ function VolcanoPlot(theModel, thePlotDivObj, theLegendDivObj, theParams)
 
 VolcanoPlot.BasicModel = function(theTitle, theFoldChangeCut, theTransPvalueCut,
 								  theFoldChangeValues, theTransPvalues, theFeatures,
-								  theVersion, theLegend)
+								  theVersion, theLegend, thePvalueCut)
 {
 	function model()
 	{}
@@ -447,6 +442,10 @@ VolcanoPlot.BasicModel = function(theTitle, theFoldChangeCut, theTransPvalueCut,
 	model.getFoldChangeCut = function ()
 	{
 		return theFoldChangeCut;
+	};
+	model.getPvalueCut = function ()
+	{
+		return thePvalueCut;
 	};
 	model.getTransPvalueCut = function ()
 	{
